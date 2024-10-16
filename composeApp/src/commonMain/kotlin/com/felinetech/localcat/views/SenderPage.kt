@@ -1,0 +1,249 @@
+package com.felinetech.localcat.views
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.felinetech.localcat.components.FileItem
+import com.felinetech.localcat.components.ScanFile
+import com.felinetech.localcat.components.ServerItem
+import com.felinetech.localcat.view_model.HomeViewModel
+import com.felinetech.localcat.view_model.HomeViewModel.scanFile
+import com.felinetech.localcat.view_model.HomeViewModel.serviceList
+import com.felinetech.localcat.view_model.MainViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+
+
+/**
+ * 发送者
+ */
+@Composable
+fun Sender(turnState: Boolean) {
+    val turn = remember { Animatable(if (turnState) -180f else 0f) }
+    val deepStart = remember { Animatable(if (turnState) 0.6f else 1f) }
+    val viewModel = HomeViewModel
+    val scanFileList by viewModel.scanFileList.collectAsState()
+    val serverList by serviceList.collectAsState()
+    val scanFileState by scanFile.collectAsState()
+    if (turnState) {
+        LaunchedEffect(false) {
+            deepStart.animateTo(
+                targetValue = 0.55f,
+                animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing)
+            )
+
+            deepStart.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing)
+            )
+        }
+        LaunchedEffect(false) {
+            turn.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
+    // 创建一个 Animatable 对象用于控制旋转角度
+    val rotationDegrees = remember { Animatable(0f) }
+
+    // 启动一个协程来处理旋转动画
+    LaunchedEffect(scanFileState) {
+        if (scanFileState) {
+            while (true) {
+                rotationDegrees.animateTo(
+                    targetValue = rotationDegrees.value + 360f,
+                    animationSpec = tween(
+                        durationMillis = 1000,
+                        easing = androidx.compose.animation.core.LinearEasing
+                    )
+                )
+                // 重置角度以便下次循环
+                rotationDegrees.snapTo(rotationDegrees.value % 360)
+            }
+        } else {
+            // 停止旋转，重置角度
+            rotationDegrees.stop()
+        }
+    }
+
+    // 创建一个 Animatable 对象用于控制旋转角度
+    val rotationDegrees2 = remember { Animatable(0f) }
+    var isRotating2 by remember { mutableStateOf(false) }
+    // 启动一个协程来处理旋转动画
+    LaunchedEffect(isRotating2) {
+        if (isRotating2) {
+            while (true) {
+                rotationDegrees2.animateTo(
+                    targetValue = rotationDegrees.value + 360f,
+                    animationSpec = tween(
+                        durationMillis = 1000,
+                        easing = androidx.compose.animation.core.LinearEasing
+                    )
+                )
+                // 重置角度以便下次循环
+                rotationDegrees2.snapTo(rotationDegrees.value % 360)
+            }
+        } else {
+            // 停止旋转，重置角度
+            rotationDegrees2.stop()
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer(
+                rotationY = turn.value,
+                scaleX = deepStart.value,
+                scaleY = deepStart.value
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .height(600.dp)
+                .padding(5.dp),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(45.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "搜索接收者")
+                IconButton(onClick = {
+                    isRotating2 = !isRotating2
+                }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh, contentDescription = "搜索接收者",
+                        modifier = Modifier.graphicsLayer(
+                            rotationZ = rotationDegrees2.value
+                        )
+                    )
+                }
+            }
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .graphicsLayer(
+                        rotationY = turn.value,
+                        scaleX = deepStart.value,
+                        scaleY = deepStart.value
+                    ),
+                color = Color(0x99ffffff),
+                shape = RoundedCornerShape(5.dp)
+            ) {
+                LazyColumn() {
+                    items(serverList) { item ->
+                        ServerItem(item)
+                    }
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(45.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "扫描待上传的文件")
+                IconButton(onClick = {
+                    scanFile()
+                }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh,
+                        contentDescription = "扫描待上传的文件",
+                        modifier = Modifier.graphicsLayer(
+                            rotationZ = rotationDegrees.value
+                        )
+                    )
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                items(scanFileList) { item ->
+                    FileItem(item)
+                }
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .align(alignment = Alignment.BottomEnd),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            Button(
+                onClick = { viewModel.senderClick() }
+            ) {
+                Text(
+                    text = "开始上传",
+                    modifier = Modifier.width(100.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+    }
+    if (scanFileState) {
+        Dialog(
+            onDismissRequest = { },
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+
+            ) {
+                ScanFile()
+            }
+        }
+    }
+    MainViewModel.sendState = true
+    MainViewModel.receiveState = false
+}
