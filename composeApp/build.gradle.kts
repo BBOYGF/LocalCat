@@ -16,6 +16,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
+
     
     jvm("desktop")
     
@@ -25,6 +26,8 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation("com.airbnb.android:lottie-compose:4.2.0")
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -38,23 +41,25 @@ kotlin {
 
             implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
-
-            // tollie
-            implementation("io.github.alexzhirkevich:compottie:2.0.0-rc01")
-            implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
-            implementation("io.github.alexzhirkevich:compottie-network:2.0.0-rc01")
-            implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
-
-
+            
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
 
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(compose.components.resources)
+            // tollie Desktop 用
+            implementation("io.github.alexzhirkevich:compottie:2.0.0-rc01")
+            implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
+            implementation("io.github.alexzhirkevich:compottie-network:2.0.0-rc01")
+            implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
         }
+
     }
+
 }
 
 android {
@@ -98,4 +103,6 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+
 }
+
