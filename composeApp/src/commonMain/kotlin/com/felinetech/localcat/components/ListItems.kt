@@ -182,7 +182,6 @@ fun RuleItem() {
             Text(text = "", modifier = Modifier.weight(1f))
             Text(text = "编辑", color = MaterialTheme.colorScheme.tertiary)
             Text(text = "删除", color = MaterialTheme.colorScheme.tertiary)
-
         }
     }
 }

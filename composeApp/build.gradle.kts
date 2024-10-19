@@ -41,7 +41,9 @@ kotlin {
 
             implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
-            
+
+            implementation ("com.github.YarikSOffice:lingver:1.3.0")
+
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
@@ -56,6 +58,8 @@ kotlin {
             implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-network:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
+
+            implementation("com.google.code.gson:gson:2.11.0")
         }
 
     }
@@ -90,7 +94,9 @@ android {
 }
 
 dependencies {
+
     debugImplementation(compose.uiTooling)
+
 }
 
 compose.desktop {

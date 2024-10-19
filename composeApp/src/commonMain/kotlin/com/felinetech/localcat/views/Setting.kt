@@ -37,7 +37,6 @@ import java.util.*
 fun Setting() {
     var showReluDialog by remember { mutableStateOf(false) }
 
-
     ColorBackground()
     Column(
         modifier = Modifier
@@ -63,7 +62,7 @@ fun Setting() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(500.dp),
-//            color = Color(0x99ffffff),
+            color = Color(0x99ffffff),
             shape = RoundedCornerShape(5.dp)
         ) {
             Column(
@@ -365,7 +364,7 @@ fun ComboBox(selectedOption: MutableState<String>, items: MutableState<List<Stri
             readOnly = true,
             value = selectedOption.value,
             onValueChange = {},
-//                                label = { Text("选择选项") },
+            label = { Text("选择选项") },
             trailingIcon = {
                 Icon(
                     imageVector = if (expanded) Icons.Filled.Done else Icons.Filled.ArrowDropDown,
