@@ -8,16 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.alexzhirkevich.compottie.Compottie
-import io.github.alexzhirkevich.compottie.LottieCompositionSpec
-import io.github.alexzhirkevich.compottie.animateLottieCompositionAsState
-import io.github.alexzhirkevich.compottie.rememberLottieComposition
-import io.github.alexzhirkevich.compottie.rememberLottiePainter
+import io.github.alexzhirkevich.compottie.*
 import localcat.composeapp.generated.resources.Res
-import localcat.composeapp.generated.resources.animation_search
-import localcat.composeapp.generated.resources.compose_multiplatform
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import java.io.File
 
 
 // 接收动画
@@ -27,11 +20,11 @@ actual fun ReceiverAnimation() {
 
     val composition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
-//            File("src/commonMain/composeResources/drawable/animation_search.json")
+//            File("src/commonMain/composeResources/files/animation_search.json")
 //                .run {
 //                    readText(Charsets.UTF_8)
 //                }
-            Res.readBytes("drawable/animation_search.json").decodeToString()
+            Res.readBytes("files/animation_search.json").decodeToString()
         )
     }
     val progress by animateLottieCompositionAsState(composition)
@@ -57,7 +50,7 @@ actual fun ScanFile() {
 //                .run {
 //                    readText(Charsets.UTF_8)
 //                }
-            Res.readBytes("drawable/search_file.json").decodeToString()
+            Res.readBytes("files/search_file.json").decodeToString()
         )
     }
     val progress by animateLottieCompositionAsState(
