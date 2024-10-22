@@ -27,6 +27,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation("com.airbnb.android:lottie-compose:4.2.0")
+            implementation("com.google.code.gson:gson:2.11.0")
 
         }
         commonMain.dependencies {
@@ -44,6 +45,8 @@ kotlin {
 
             implementation ("com.github.YarikSOffice:lingver:1.3.0")
 
+            implementation("com.google.code.gson:gson:2.11.0")
+
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
@@ -60,6 +63,7 @@ kotlin {
             implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
 
             implementation("com.google.code.gson:gson:2.11.0")
+
         }
 
     }
@@ -94,6 +98,7 @@ android {
 }
 
 dependencies {
+
 
     debugImplementation(compose.uiTooling)
 

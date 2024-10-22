@@ -73,6 +73,7 @@ fun HomePage() {
         } else {
             Receiver(!MainViewModel.receiveState)
         }
+
     }
 }
 
