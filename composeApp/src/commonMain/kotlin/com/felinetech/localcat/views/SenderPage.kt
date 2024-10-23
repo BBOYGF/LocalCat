@@ -41,10 +41,12 @@ import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.FileItem
 import com.felinetech.localcat.components.ScanFile
 import com.felinetech.localcat.components.ServerItem
+import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
 import com.felinetech.localcat.view_model.HomeViewModel.serviceList
 import com.felinetech.localcat.view_model.MainViewModel
+import java.util.Locale
 
 
 /**
@@ -146,12 +148,12 @@ fun Sender(turnState: Boolean) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "搜索接收者")
+                Text(text = getNames(Locale.getDefault().language).searchForRecipient)
                 IconButton(onClick = {
                     isRotating2 = !isRotating2
                 }) {
                     Icon(
-                        imageVector = Icons.Outlined.Refresh, contentDescription = "搜索接收者",
+                        imageVector = Icons.Outlined.Refresh, contentDescription = getNames(Locale.getDefault().language).searchForRecipient,
                         modifier = Modifier.graphicsLayer(
                             rotationZ = rotationDegrees2.value
                         )
@@ -183,13 +185,13 @@ fun Sender(turnState: Boolean) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "扫描待上传的文件")
+                Text(text = getNames(Locale.getDefault().language).scanTheFile)
                 IconButton(onClick = {
                     scanFile()
                 }) {
                     Icon(
                         imageVector = Icons.Outlined.Refresh,
-                        contentDescription = "扫描待上传的文件",
+                        contentDescription = getNames(Locale.getDefault().language).scanTheFile,
                         modifier = Modifier.graphicsLayer(
                             rotationZ = rotationDegrees.value
                         )
@@ -218,7 +220,7 @@ fun Sender(turnState: Boolean) {
                 onClick = { viewModel.senderClick() }
             ) {
                 Text(
-                    text = "开始上传",
+                    text = getNames(Locale.getDefault().language).startUploading,
                     modifier = Modifier.width(100.dp),
                     textAlign = TextAlign.Center
                 )

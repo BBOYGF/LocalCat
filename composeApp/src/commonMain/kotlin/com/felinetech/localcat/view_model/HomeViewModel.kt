@@ -8,11 +8,13 @@ import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
+import com.felinetech.localcat.utlis.getNames
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 object HomeViewModel {
     /**
@@ -39,7 +41,7 @@ object HomeViewModel {
     /**
      * 接收按钮状态
      */
-    val receiverButtonTitle = MutableStateFlow("开始接收")
+    val receiverButtonTitle = MutableStateFlow(getNames(Locale.getDefault().language).startReceiving)
     val receiverAnimation = MutableStateFlow(false)
 
     /**

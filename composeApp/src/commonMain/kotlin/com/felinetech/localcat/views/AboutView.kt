@@ -39,9 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.ColorBackground
+import com.felinetech.localcat.utlis.getNames
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.money
 import org.jetbrains.compose.resources.painterResource
+import java.util.Locale
 
 
 @Composable
@@ -56,7 +58,7 @@ fun About() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "设置",
+            text = getNames(Locale.getDefault().language).aboutAppTitleText,
             color = Color.White,
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
@@ -72,7 +74,7 @@ fun About() {
                 .offset(y = -30.dp), tint = MaterialTheme.colorScheme.surfaceTint
         )
         Text(
-            text = "         FastCat 快猫 是一款非常方便的设备间传输数据的软件，它可帮助用户轻松将多个设备中的文件自动传输到电脑端，该软件分为Android移动端和Win桌面端，通过局域网可将多个手机内容随时备份到桌面指定目录，软件支持断点续传可将大文件按照1M大小分块然后再上传到到电脑端，上传中断后下次可继续传输，该软件还支持自动发现新文件并上传功能，用户可以设置好要上传目录的过滤条件，软件会自动扫描当前目录是否有新的文件产生如果有将会自动上传到电脑端。该软件适用于对经常需要将手机数据上传到电脑端处理的用户，它可帮助您减少大量琐碎工作，让您将注意力集中到更多更重要的事情上。",
+            text = getNames(Locale.getDefault().language).aboutContentText,
             style = TextStyle(
                 fontSize = TextUnit(12f, TextUnitType.Sp),
                 color = Color.White,
@@ -94,7 +96,7 @@ fun About() {
 
         }) {
             Text(
-                text = "问题反馈",
+                text = getNames(Locale.getDefault().language).feedBackTitle,
                 modifier = Modifier.width(150.dp),
                 textAlign = TextAlign.Center
             )
@@ -104,13 +106,13 @@ fun About() {
             openDialog = true
         }) {
             Text(
-                text = "输入注册码成为会员",
+                text = getNames(Locale.getDefault().language).registrationCode,
                 modifier = Modifier.width(150.dp),
                 textAlign = TextAlign.Center
             )
         }
         Text(
-            text = "本软件及其相关",
+            text = getNames(Locale.getDefault().language).aboutAppOtherText,
             color = MaterialTheme.colorScheme.tertiary,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable {

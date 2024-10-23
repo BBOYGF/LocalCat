@@ -1,19 +1,44 @@
 package com.felinetech.localcat.views
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-
-
-import androidx.compose.runtime.*
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,10 +52,12 @@ import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.RuleItem
 import com.felinetech.localcat.enums.FileType
+import com.felinetech.localcat.utlis.getNames
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_gray
 import org.jetbrains.compose.resources.painterResource
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +72,7 @@ fun Setting() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "设置",
+            text = getNames(Locale.getDefault().language).setting,
             color = Color.White,
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
@@ -54,7 +81,7 @@ fun Setting() {
 
             )
         Text(
-            text = "发送设置：",
+            text = getNames(Locale.getDefault().language).sendSettings,
             style = TextStyle(fontSize = TextUnit(13f, TextUnitType.Sp)),
             modifier = Modifier.fillMaxWidth()
         )
@@ -72,7 +99,7 @@ fun Setting() {
             ) {
                 Box {
                     Button(onClick = { showReluDialog = true }) {
-                        Text(text = "添加规则")
+                        Text(text =  getNames(Locale.getDefault().language).addRules)
                     }
                 }
             }
@@ -88,7 +115,7 @@ fun Setting() {
 
         }
         Text(
-            text = "接收设置：",
+            text = getNames(Locale.getDefault().language).receiveSettings,
             style = TextStyle(fontSize = TextUnit(13f, TextUnitType.Sp)),
             modifier = Modifier.fillMaxWidth()
         )
@@ -108,7 +135,7 @@ fun Setting() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "文件保存位置：", modifier = Modifier
+                        text = getNames(Locale.getDefault().language).saveLocation, modifier = Modifier
                             .height(40.dp)
                             .padding(3.dp)
                     )
@@ -136,12 +163,12 @@ fun Setting() {
                             .padding(3.dp)
 
                     ) {
-                        Text(text = "设置")
+                        Text(text = getNames(Locale.getDefault().language).setting)
                     }
                 }
                 Row {
                     Text(
-                        text = "缓存保存位置：", modifier = Modifier
+                        text = getNames(Locale.getDefault().language).cacheSave, modifier = Modifier
                             .height(40.dp)
                             .padding(3.dp)
                     )
@@ -169,7 +196,7 @@ fun Setting() {
                             .padding(3.dp)
 
                     ) {
-                        Text(text = "设置")
+                        Text(text = getNames(Locale.getDefault().language).setting)
                     }
                 }
             }
@@ -204,12 +231,12 @@ fun Setting() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text(text = "规则设置")
+                    Text(text =  getNames(Locale.getDefault().language).ruleSetting)
                     Row(
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "筛选目录：")
+                        Text(text = getNames(Locale.getDefault().language).filterDirectory)
                         Text(
                             text = "文件名", modifier = Modifier
                                 .width(100.dp)
@@ -227,7 +254,7 @@ fun Setting() {
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "文件后缀：")
+                        Text(text = getNames(Locale.getDefault().language).fileExtension)
                         val selectedOption = remember { mutableStateOf("") } // 默认选项
                         val suffixList = remember {
                             mutableStateOf(
@@ -240,9 +267,9 @@ fun Setting() {
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "什么时间后：")
+                        Text(text =getNames(Locale.getDefault().language).afterWhatTime)
                         Text(
-                            text = "日期",
+                            text =getNames(Locale.getDefault().language).date,
                             modifier = Modifier
                                 .width(80.dp)
                                 .clickable {
@@ -250,7 +277,7 @@ fun Setting() {
                                 }, textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "时间",
+                            text = getNames(Locale.getDefault().language).time,
                             modifier = Modifier
                                 .width(80.dp)
                                 .clickable {
@@ -264,10 +291,10 @@ fun Setting() {
                             .height(50.dp), horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Button(onClick = { showReluDialog = false }) {
-                            Text(text = "确定")
+                            Text(text = getNames(Locale.getDefault().language).okText)
                         }
                         Button(onClick = { showReluDialog = false }) {
-                            Text(text = "取消")
+                            Text(text = getNames(Locale.getDefault().language).cancelButton)
                         }
                     }
 
@@ -301,10 +328,10 @@ fun Setting() {
                             .height(200.dp), horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Button(onClick = { showTimePicker = false }) {
-                            Text(text = "确定")
+                            Text(text = getNames(Locale.getDefault().language).okText)
                         }
                         Button(onClick = { showTimePicker = false }) {
-                            Text(text = "取消")
+                            Text(text = getNames(Locale.getDefault().language).cancelButton)
                         }
                     }
                 }
@@ -335,10 +362,10 @@ fun Setting() {
                             .height(200.dp), horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Button(onClick = { showDatePicker = false }) {
-                            Text(text = "确定")
+                            Text(text = getNames(Locale.getDefault().language).okText)
                         }
                         Button(onClick = { showDatePicker = false }) {
-                            Text(text = "取消")
+                            Text(text = getNames(Locale.getDefault().language).cancelButton)
                         }
                     }
                 }

@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
@@ -28,6 +27,8 @@ import com.felinetech.localcat.components.FileItem
 import com.felinetech.localcat.enums.FileType
 import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.pojo.FileItemVo
+import com.felinetech.localcat.utlis.getNames
+import java.util.Locale
 
 
 @Composable
@@ -39,7 +40,7 @@ fun History() {
     ) {
         var index by remember { mutableStateOf(0) }
         Text(
-            text = "历史记录", color = Color.White,
+            text = getNames(Locale.getDefault().language).history, color = Color.White,
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
                 fontSize = TextUnit(20f, TextUnitType.Sp)
@@ -54,19 +55,17 @@ fun History() {
             Tab(
                 selected = true, onClick = {
                     index = 0
-                    print("当前选择0")
                 }, modifier = Modifier.background(Color(0xFF018786))
             ) {
-                Text(text = "已接收列表")
+                Text(text = getNames(Locale.getDefault().language).downloadListRetrieved)
             }
             Tab(
                 selected = false, onClick =
                 {
-                    print("当前选择1")
                     index = 1
                 }, modifier = Modifier.background(Color(0xFF018786))
             ) {
-                Text(text = "已发送列表")
+                Text(text = getNames(Locale.getDefault().language).uploadListCompleted)
             }
         }
         val scanFileList = mutableListOf<FileItemVo>()

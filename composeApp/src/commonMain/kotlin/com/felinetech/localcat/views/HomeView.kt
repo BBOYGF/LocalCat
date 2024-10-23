@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.MainViewModel
+import java.util.Locale
 
 
 @Composable
@@ -38,7 +39,7 @@ fun HomePage() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = getNames("ch").homePageTitle,
+            text = getNames(Locale.getDefault().language).homePageTitle,
             color = Color.White,
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
@@ -58,14 +59,14 @@ fun HomePage() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                Text("切换为：")
-                Text("接收者")
+                Text(getNames(Locale.getDefault().language).switchTo)
+                Text(getNames(Locale.getDefault().language).recipient)
                 Switch(checked = turnState, onCheckedChange = {
                     //当进行切换操作时，更改状态
                     MainViewModel.turnFun(it)
                 }, colors = SwitchDefaults.colors(uncheckedBorderColor = Color(0x00ffffff)))
-                Text("发送者")
-                Text(text = "网络:")
+                Text(getNames(Locale.getDefault().language).sender)
+                Text(text = getNames(Locale.getDefault().language).network)
                 Text(text = "404_5")
             }
         }
