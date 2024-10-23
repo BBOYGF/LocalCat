@@ -7,11 +7,28 @@ import com.google.gson.Gson
 
 private var gson = Gson()
 
-actual fun loadLocalization(language: String): LocalNames {
-    val context = MainActivity.instance
-    val inputStream = context.resources.openRawResource(R.raw.names)
-    val text = inputStream.bufferedReader().use { it.readText() }
-    return gson.fromJson(text, LocalNames::class.java)
-}
+var localName: LocalNames? = null
 
-//}
+var prevStr: String = ""
+actual fun getNames(language: String): LocalNames {
+
+    if (localName == null || prevStr != language) {
+        val context = MainActivity.instance
+        val inputStream = if (language == "ch") {
+            context.resources.openRawResource(R.raw.names_ch)
+        } else {
+            context.resources.openRawResource(R.raw.names_en)
+        }
+        val text = inputStream.bufferedReader().use { it.readText() }
+        localName = try {
+            gson.fromJson(text, LocalNames::class.java)
+        } catch (e: Exception) {
+            println("解析失败！${e.message}")
+            LocalNames()
+        }
+        prevStr = language
+        return localName as LocalNames
+    } else {
+        return localName as LocalNames
+    }
+}

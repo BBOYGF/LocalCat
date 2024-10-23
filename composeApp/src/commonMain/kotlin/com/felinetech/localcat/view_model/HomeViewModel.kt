@@ -8,8 +8,6 @@ import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
-import com.felinetech.localcat.utlis.LocalNames
-import com.felinetech.localcat.utlis.loadLocalization
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -88,9 +86,7 @@ object HomeViewModel {
         val list = serviceList.value.toMutableList()
         list.add(ServicePo(1, "192.168.1.1", ConnectStatus.未连接, ConnectButtonState.连接))
         serviceList.value = list
-        var localNames: LocalNames = loadLocalization("" )
 
-        println("结果是：${localNames.aboutAppOtherText}")
 
     }
 

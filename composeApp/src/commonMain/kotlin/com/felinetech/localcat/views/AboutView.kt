@@ -39,8 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.ColorBackground
-import com.felinetech.localcat.utlis.LocalNames
-import com.felinetech.localcat.utlis.loadLocalization
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.money
 import org.jetbrains.compose.resources.painterResource

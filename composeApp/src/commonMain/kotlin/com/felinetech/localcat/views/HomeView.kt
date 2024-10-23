@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.felinetech.localcat.components.ColorBackground
+import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.MainViewModel
 
 
@@ -37,7 +38,7 @@ fun HomePage() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "主页",
+            text = getNames("ch").homePageTitle,
             color = Color.White,
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
