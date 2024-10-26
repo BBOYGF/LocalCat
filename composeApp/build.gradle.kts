@@ -28,7 +28,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation("com.airbnb.android:lottie-compose:4.2.0")
             implementation("com.google.code.gson:gson:2.11.0")
-
+            implementation("com.google.accompanist:accompanist-permissions:0.36.0")
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -63,6 +63,8 @@ kotlin {
             implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
 
             implementation("com.google.code.gson:gson:2.11.0")
+
+
 
         }
 

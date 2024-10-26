@@ -14,6 +14,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.SocketTimeoutException
 import java.util.Locale
 
 object HomeViewModel {
@@ -41,7 +44,8 @@ object HomeViewModel {
     /**
      * 接收按钮状态
      */
-    val receiverButtonTitle = MutableStateFlow(getNames(Locale.getDefault().language).startReceiving)
+    val receiverButtonTitle =
+        MutableStateFlow(getNames(Locale.getDefault().language).startReceiving)
     val receiverAnimation = MutableStateFlow(false)
 
     /**
@@ -50,23 +54,85 @@ object HomeViewModel {
     private val defaultScope = CoroutineScope(Dispatchers.Default)
 
     /**
+     * 开始接收服务器
+     */
+    private var accept: Boolean = true
+
+    /**
+     * UDP 服务接口
+     */
+    private const val ACCEPT_SERVER_POST = 8200
+
+    /**
+     * 显示隐私权限
+     */
+
+
+    /**
      * 开始接收按钮被点击
      */
     fun clickReceiverButton() {
         if (ServiceButtonState.开始接收.name == receiverButtonTitle.value) {
+            // 开始接收
             receiverButtonTitle.value = ServiceButtonState.关闭接收.name
             receiverAnimation.value = true
-            clickService()
-            receiverClick()
+            // 开启接收客户端
+            serverAccept()
+            // 添加接受者
+            receiverFileList()
         } else {
+            // 关闭接收
             receiverButtonTitle.value = ServiceButtonState.开始接收.name
             receiverAnimation.value = false
+            accept = false
+        }
+    }
 
+    /**
+     * 开启服务器接收
+     */
+    private fun serverAccept() {
+        accept = true
+        defaultScope.launch {
+            var socket: DatagramSocket? = null
+            try {
+                while (accept) {
+                    socket =
+                        DatagramSocket(ACCEPT_SERVER_POST)
+                    socket!!
+                    socket.setSoTimeout(10000)
+                    val buffer = ByteArray(1024)
+                    val packet = DatagramPacket(buffer, buffer.size)
+                    socket.receive(packet)
+                    println("监听客户接收到数据来自: " + packet.address)
+                    val response = "OK".toByteArray()
+                    val responsePacket =
+                        DatagramPacket(response, response.size, packet.address, packet.port)
+                    socket.send(responsePacket)
+                    val clientList = clineList.value.toMutableList()
+                    clientList.add(
+                        ClientVo(
+                            clientList.size + 1,
+                            packet.address.toString().replace("/", ""),
+                            ConnectStatus.被发现
+                        )
+                    )
+                    clineList.value = clientList
+                }
+            } catch (e: Exception) {
+                if (e is SocketTimeoutException) {
+                    println("监听客户超时...")
+                } else {
+                    println("监听客户产生了异常...${e.message}")
+                }
+                socket?.close()
+                throw e
+            }
         }
     }
 
 
-    private fun clickService() {
+    private fun receiverFileList() {
         val item = list[0]
         item.percent = (item.percent + 1)
         list[0] = item.copy()
@@ -77,12 +143,6 @@ object HomeViewModel {
         scanFileList.value = newList
     }
 
-
-    private fun receiverClick() {
-        val list = clineList.value.toMutableList()
-        list.add(ClientVo(1, "192.168.1.1", ConnectStatus.被发现))
-        clineList.value = list
-    }
 
     fun senderClick() {
         val list = serviceList.value.toMutableList()

@@ -77,5 +77,9 @@ fun HomePage() {
         }
 
     }
-}
+    // 请求权限
+    PermissionRequest()
 
+}
+@Composable
+expect fun PermissionRequest()
