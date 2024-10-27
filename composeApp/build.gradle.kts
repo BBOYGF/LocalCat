@@ -102,6 +102,7 @@ android {
 dependencies {
 
 
+//    implementation(libs.androidx.foundation.desktop)
     debugImplementation(compose.uiTooling)
 
 }
