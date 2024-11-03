@@ -97,8 +97,7 @@ object HomeViewModel {
             var socket: DatagramSocket? = null
             try {
                 while (accept) {
-                    socket =
-                        DatagramSocket(ACCEPT_SERVER_POST)
+                    socket = DatagramSocket(ACCEPT_SERVER_POST)
                     socket!!
                     socket.setSoTimeout(10000)
                     val buffer = ByteArray(1024)
@@ -126,7 +125,6 @@ object HomeViewModel {
                     println("监听客户产生了异常...${e.message}")
                 }
                 socket?.close()
-                throw e
             }
         }
     }

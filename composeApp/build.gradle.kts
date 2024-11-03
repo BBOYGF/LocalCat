@@ -26,6 +26,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(compose.components.resources)
             implementation("com.airbnb.android:lottie-compose:4.2.0")
             implementation("com.google.code.gson:gson:2.11.0")
             implementation("com.google.accompanist:accompanist-permissions:0.36.0")

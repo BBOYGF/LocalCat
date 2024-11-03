@@ -1,11 +1,8 @@
-package com.felinetech.localcat.views
+package com.felinetech.localcat
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Build
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,22 +34,26 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.felinetech.localcat.Constants.PRIVACY
 import com.felinetech.localcat.utlis.getNames
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import java.util.Locale
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@SuppressLint("PermissionLaunchedDuringComposition")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 actual fun PermissionRequest() {
     val context = LocalContext.current
-    val sharedPreferences =
-        remember { context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE) }
+    val sharedPreferences =remember { context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE) }
     // 读取存储的值
-    var showPrivate by remember { mutableStateOf(sharedPreferences.getBoolean(PRIVACY, true)) }
+    var showPrivate by remember {
+        mutableStateOf(
+            sharedPreferences.getBoolean(
+                Constants.PRIVACY,
+                true
+            )
+        )
+    }
 
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -60,13 +61,13 @@ actual fun PermissionRequest() {
             Manifest.permission.READ_MEDIA_IMAGES,
             Manifest.permission.READ_MEDIA_VIDEO,
             Manifest.permission.READ_MEDIA_AUDIO,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_WIFI_STATE,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.NEARBY_WIFI_DEVICES,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.REQUEST_INSTALL_PACKAGES
+//                Manifest.permission.READ_EXTERNAL_STORAGE,
+//                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+//                Manifest.permission.REQUEST_INSTALL_PACKAGES,
         )
     )
     // 检查权限状态
@@ -74,27 +75,24 @@ actual fun PermissionRequest() {
         if (permissionsState.allPermissionsGranted) {
             // 所有权限均已授予
             Toast.makeText(context, "权限都已授权！", Toast.LENGTH_LONG).show()
-//            sharedPreferences.edit().putBoolean(PRIVACY, false).apply()
+            sharedPreferences.edit().putBoolean(Constants.PRIVACY, false).apply()
         } else {
             // 至少有一个权限未被授予
-            Toast.makeText(context, "至少有一个权限未被授予！", Toast.LENGTH_LONG).show()
-//            sharedPreferences.edit().putBoolean(PRIVACY, true).apply()
+            Toast.makeText(
+                context, "权限未被授予！", Toast.LENGTH_LONG
+            ).show()
+            sharedPreferences.edit().putBoolean(Constants.PRIVACY, true).apply()
+            showPrivate = true
+            getTextToShowGivenPermissions(
+                permissionsState.revokedPermissions,
+                permissionsState.shouldShowRationale
+            )
         }
     }
-    // 显示请求权限的按钮
-//    Button(onClick = { permissionsState.launchMultiplePermissionRequest() }) {
-//        Text("Request Permissions")
-//    }
-
-    // 显示权限状态
-//    permissionsState.permissions.forEach { permission ->
-//        Text(text = "${permission.permission}: ${if (permission.status.isGranted) "Granted" else "Denied"}")
-//    }
     if (showPrivate) {
         Dialog(onDismissRequest = { }) {
             Card(
-                modifier = Modifier.fillMaxWidth()
-                    .height(300.dp)
+                modifier = Modifier.fillMaxWidth().height(300.dp)
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -108,9 +106,7 @@ actual fun PermissionRequest() {
                         fontWeight = FontWeight.Bold
                     )
                     Column(
-                        modifier = Modifier.fillMaxWidth()
-                            .height(220.dp)
-                            .padding(10.dp)
+                        modifier = Modifier.fillMaxWidth().height(220.dp).padding(10.dp)
                             .background(Color.White, shape = RoundedCornerShape(10.dp))
                             .verticalScroll(ScrollState(0), enabled = true)
                     ) {
@@ -125,9 +121,8 @@ actual fun PermissionRequest() {
                     ) {
                         Button(
                             onClick = {
-
-                            },
-                            colors = ButtonColors(
+                                MainActivity.instance.finish()
+                            }, colors = ButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.White,
                                 disabledContainerColor = MaterialTheme.colorScheme.primary,
@@ -143,7 +138,8 @@ actual fun PermissionRequest() {
                             onClick = {
                                 permissionsState.launchMultiplePermissionRequest()
                                 showPrivate = false
-                                sharedPreferences.edit().putBoolean(PRIVACY, false).apply()
+                                sharedPreferences.edit().putBoolean(Constants.PRIVACY, false)
+                                    .apply()
                             },
 
                             colors = ButtonColors(
@@ -163,4 +159,43 @@ actual fun PermissionRequest() {
             }
         }
     }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+private fun getTextToShowGivenPermissions(
+    permissions: List<PermissionState>,
+    shouldShowRationale: Boolean
+): String {
+    val revokedPermissionsSize = permissions.size
+    if (revokedPermissionsSize == 0) return ""
+
+    val textToShow = StringBuilder().apply {
+        append("The ")
+    }
+
+    for (i in permissions.indices) {
+        textToShow.append(permissions[i].permission)
+        when {
+            revokedPermissionsSize > 1 && i == revokedPermissionsSize - 2 -> {
+                textToShow.append(", and ")
+            }
+
+            i == revokedPermissionsSize - 1 -> {
+                textToShow.append(" ")
+            }
+
+            else -> {
+                textToShow.append(", ")
+            }
+        }
+    }
+    textToShow.append(if (revokedPermissionsSize == 1) "permission is" else "permissions are")
+    textToShow.append(
+        if (shouldShowRationale) {
+            " important. Please grant all of them for the app to function properly."
+        } else {
+            " denied. The app cannot function without them."
+        }
+    )
+    return textToShow.toString()
 }

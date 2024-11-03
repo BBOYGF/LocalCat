@@ -1,5 +1,6 @@
 package com.felinetech.localcat.enums
 
+
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.img
 import org.jetbrains.compose.resources.DrawableResource

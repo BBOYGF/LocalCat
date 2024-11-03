@@ -67,6 +67,7 @@ fun App() {
                 Menu(navController)
             }
         }
+        PermissionRequest()
     }
 }
 
@@ -166,3 +167,5 @@ fun Menu(navController: NavHostController) {
         }
     }
 }
+@Composable
+expect  fun PermissionRequest()

@@ -1,4 +1,4 @@
-package com.felinetech.localcat.views
+package com.felinetech.localcat
 
 import androidx.compose.runtime.Composable
 

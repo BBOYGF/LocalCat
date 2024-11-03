@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -189,8 +189,14 @@ fun RuleItem() {
                 contentDescription = "文件规则"
             )
             Text(text = "", modifier = Modifier.weight(1f))
-            Text(text = getNames(Locale.getDefault().language).edit, color = MaterialTheme.colorScheme.tertiary)
-            Text(text = getNames(Locale.getDefault().language).delete, color = MaterialTheme.colorScheme.tertiary)
+            Text(
+                text = getNames(Locale.getDefault().language).edit,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+            Text(
+                text = getNames(Locale.getDefault().language).delete,
+                color = MaterialTheme.colorScheme.tertiary
+            )
         }
     }
 }
