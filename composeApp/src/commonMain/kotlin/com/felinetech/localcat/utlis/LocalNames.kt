@@ -104,6 +104,5 @@ data class LocalNames(
     val deleteItemMsg: String = ""
 )
 
-//expect class LocalizationLoader {
+
 expect fun getNames(language: String): LocalNames
-//}

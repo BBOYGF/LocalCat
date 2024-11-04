@@ -29,6 +29,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.HomeViewModel.ipAddress
+import com.felinetech.localcat.view_model.HomeViewModel.updateIpAddress
 import com.felinetech.localcat.view_model.MainViewModel
 import java.util.Locale
 
@@ -36,6 +38,7 @@ import java.util.Locale
 @Composable
 fun HomePage() {
     val turnState by MainViewModel.turnState.collectAsState()
+    val ip by ipAddress.collectAsState()
     ColorBackground()
     Column(
         modifier = Modifier
@@ -71,7 +74,7 @@ fun HomePage() {
                 }, colors = SwitchDefaults.colors(uncheckedBorderColor = Color(0x00ffffff)))
                 Text(getNames(Locale.getDefault().language).sender)
                 Text(text = getNames(Locale.getDefault().language).network)
-                Text(text = "404_5")
+                Text(text = ip)
             }
         }
         if (turnState) {
@@ -87,7 +90,9 @@ fun HomePage() {
         // for sending analytics events
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
+                updateIpAddress()
                 println("生命周期开始")
+
             } else if (event == Lifecycle.Event.ON_STOP) {
                 println("生命周期结束")
             }

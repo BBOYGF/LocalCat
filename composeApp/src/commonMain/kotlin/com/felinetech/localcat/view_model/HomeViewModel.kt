@@ -8,6 +8,7 @@ import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
+import com.felinetech.localcat.utlis.getLocalIp
 import com.felinetech.localcat.utlis.getNames
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +38,10 @@ object HomeViewModel {
      */
     val serviceList = MutableStateFlow<MutableList<ServicePo>>(mutableListOf())
 
+    /**
+     * 本机IP地址
+     */
+    val ipAddress = MutableStateFlow("127.0.0.1")
 
     private var list =
         mutableListOf(FileItemVo("点击", FileType.doc文档, "文件", UploadState.待上传, 50, 1024))
@@ -146,8 +151,6 @@ object HomeViewModel {
         val list = serviceList.value.toMutableList()
         list.add(ServicePo(1, "192.168.1.1", ConnectStatus.未连接, ConnectButtonState.连接))
         serviceList.value = list
-
-
     }
 
     /**
@@ -162,4 +165,11 @@ object HomeViewModel {
             scanFile.emit(false)
         }
     }
+
+    fun updateIpAddress() {
+        defaultScope.launch {
+            ipAddress.value = getLocalIp()
+        }
+    }
+
 }
