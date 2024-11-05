@@ -2,7 +2,10 @@ package com.felinetech.localcat.utlis
 
 import android.content.Context
 import android.net.wifi.WifiManager
+import androidx.room.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.localcat.MainActivity
+import com.felinetech.localcat.database.Database
 
 actual fun getLocalIp(): String {
     val wifiManager: WifiManager =
@@ -22,4 +25,16 @@ actual fun getLocalIp(): String {
         }
     }
     return substring
+}
+
+actual fun getDatabase(): Database {
+    val dbFile = MainActivity.instance.getDatabasePath("local_cat_database.db")
+    return Room.databaseBuilder(
+        MainActivity.instance,
+        Database::class.java,
+        dbFile.absolutePath
+    ).setDriver(BundledSQLiteDriver())
+        .allowMainThreadQueries()
+        .fallbackToDestructiveMigration()
+        .build()
 }

@@ -8,6 +8,7 @@ import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
+import com.felinetech.localcat.utlis.getDatabase
 import com.felinetech.localcat.utlis.getLocalIp
 import com.felinetech.localcat.utlis.getNames
 import kotlinx.coroutines.CoroutineScope
@@ -163,6 +164,9 @@ object HomeViewModel {
                 delay(1000)
             }
             scanFile.emit(false)
+            var databas = getDatabase()
+            var fileEntityDao = databas.getFileEntityDao()
+            var list = fileEntityDao.getAllFiles()
         }
     }
 

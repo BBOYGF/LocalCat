@@ -1,5 +1,10 @@
 package com.felinetech.localcat.utlis
 
+import androidx.room.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.felinetech.localcat.database.Database
+import kotlinx.coroutines.Dispatchers
+import java.io.File
 import java.net.InetAddress
 import java.net.NetworkInterface
 
@@ -22,4 +27,13 @@ actual fun getLocalIp(): String {
         println("产生异常 ${e.message}")
         return "异常"
     }
+}
+
+actual fun getDatabase(): Database {
+    val dbFile = File(System.getProperty("java.io.tmpdir"), "local_cat_database.db")
+    return Room.databaseBuilder<Database>(
+        name = dbFile.absolutePath
+    ).setDriver(BundledSQLiteDriver())
+        .setQueryCoroutineContext(Dispatchers.IO)
+        .build()
 }

@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 kotlin {
@@ -51,6 +54,8 @@ kotlin {
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
+            implementation(libs.room.runtime)
+            implementation(libs.sqlite.bundled)
 
         }
         desktopMain.dependencies {
@@ -103,7 +108,6 @@ android {
 dependencies {
 
 
-//    implementation(libs.androidx.foundation.desktop)
     debugImplementation(compose.uiTooling)
 
 }
@@ -121,3 +125,10 @@ compose.desktop {
 
 }
 
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+dependencies {
+    ksp(libs.room.compiler)
+}
