@@ -30,6 +30,7 @@ actual fun getLocalIp(): String {
 }
 
 actual fun getDatabase(): Database {
+    // C:\Users\Administrator\AppData\Local\Temp 数据库保存路径
     val dbFile = File(System.getProperty("java.io.tmpdir"), "local_cat_database.db")
     return Room.databaseBuilder<Database>(
         name = dbFile.absolutePath
