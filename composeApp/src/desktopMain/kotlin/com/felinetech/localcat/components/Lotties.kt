@@ -27,7 +27,7 @@ actual fun ReceiverAnimation() {
             Res.readBytes("files/animation_search.json").decodeToString()
         )
     }
-    val progress by animateLottieCompositionAsState(composition)
+    val progress by animateLottieCompositionAsState(composition, iterations = Compottie.IterateForever)
 
     Image(
         painter = rememberLottiePainter(

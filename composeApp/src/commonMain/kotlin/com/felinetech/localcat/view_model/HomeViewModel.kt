@@ -164,8 +164,8 @@ object HomeViewModel {
                 delay(1000)
             }
             scanFile.emit(false)
-            var databas = getDatabase()
-            var fileEntityDao = databas.getFileEntityDao()
+            val database = getDatabase()
+            val fileEntityDao = database.getFileEntityDao()
             var list = fileEntityDao.getAllFiles()
         }
     }
@@ -173,6 +173,17 @@ object HomeViewModel {
     fun updateIpAddress() {
         defaultScope.launch {
             ipAddress.value = getLocalIp()
+        }
+    }
+
+    /**
+     * 开始扫描服务器
+     */
+    fun startScanService() {
+        println("开始扫描数据源...")
+        defaultScope.launch {
+
+
         }
     }
 

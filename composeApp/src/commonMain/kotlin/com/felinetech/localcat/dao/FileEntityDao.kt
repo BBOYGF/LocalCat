@@ -1,13 +1,21 @@
 package com.felinetech.localcat.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileEntity
 
 @Dao
 public interface FileEntityDao {
 
+
+    @Insert
+    suspend fun insert(file: FileEntity): Long
+
+    @Update
+    suspend fun update(file: FileEntity)
 
     @Query("delete  FROM files_entity WHERE file_id = :fileId")
     suspend fun deleteFileById(fileId: String?)

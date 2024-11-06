@@ -45,6 +45,7 @@ import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
 import com.felinetech.localcat.view_model.HomeViewModel.serviceList
+import com.felinetech.localcat.view_model.HomeViewModel.startScanService
 import com.felinetech.localcat.view_model.MainViewModel
 import java.util.Locale
 
@@ -151,6 +152,7 @@ fun Sender(turnState: Boolean) {
                 Text(text = getNames(Locale.getDefault().language).searchForRecipient)
                 IconButton(onClick = {
                     isRotating2 = !isRotating2
+                    startScanService()
                 }) {
                     Icon(
                         imageVector = Icons.Outlined.Refresh, contentDescription = getNames(Locale.getDefault().language).searchForRecipient,

@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.felinetech.localcat.enums.UploadState
+import java.util.Date
 
 @Entity(tableName = "files_entity")
 data class FileEntity(
@@ -34,10 +35,10 @@ data class FileEntity(
     val chunkSize: Long = 0,
 
 
-//    @ColumnInfo(name = "created_at")
-//    var createdAt: Date? = null,
-//
-//    @ColumnInfo(name = "updated_at")
-//    var updatedAt: Date? = null
+    @ColumnInfo(name = "created_at")
+    var createdAt: Date? = null,
+
+    @ColumnInfo(name = "updated_at")
+    var updatedAt: Date? = null
 
 )
