@@ -31,7 +31,7 @@ actual fun getLocalIp(): String {
 
 actual fun getDatabase(): Database {
     // C:\Users\Administrator\AppData\Local\Temp 数据库保存路径
-    val dbFile = File(System.getProperty("java.io.tmpdir"), "local_cat_database.db")
+    val dbFile = File(System.getProperty("user.home"), "local_cat/data/local_cat_database.db")
     return Room.databaseBuilder<Database>(
         name = dbFile.absolutePath
     ).setDriver(BundledSQLiteDriver())
