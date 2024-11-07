@@ -1,7 +1,11 @@
 package com.felinetech.localcat
 
 import android.Manifest
+import android.content.ContentValues.TAG
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -29,11 +34,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.felinetech.localcat.Constants.PRIVACY_URL
+import com.felinetech.localcat.Constants.desktopDownload
 import com.felinetech.localcat.utlis.getNames
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
@@ -44,7 +54,8 @@ import java.util.Locale
 @Composable
 actual fun PermissionRequest() {
     val context = LocalContext.current
-    val sharedPreferences =remember { context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE) }
+    val sharedPreferences =
+        remember { context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE) }
     // 读取存储的值
     var showPrivate by remember {
         mutableStateOf(
@@ -99,7 +110,7 @@ actual fun PermissionRequest() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "隐私政策及权限",
+                        text = getNames(Locale.getDefault().language).privacyPolicyPermissions,
                         color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(5.dp),
                         fontSize = TextUnit(20F, TextUnitType.Sp),
@@ -110,10 +121,41 @@ actual fun PermissionRequest() {
                             .background(Color.White, shape = RoundedCornerShape(10.dp))
                             .verticalScroll(ScrollState(0), enabled = true)
                     ) {
-                        Text(
-                            getNames(Locale.getDefault().language).privacyPolicy,
-                            modifier = Modifier.fillMaxSize()
+                        val start = getNames(Locale.getDefault().language).policyContent1
+                        val userAgreement = getNames(Locale.getDefault().language).userAgreement
+                        val privacyPolicyTitle =
+                            getNames(Locale.getDefault().language).privacyPolicyTitle
+                        val end = getNames(Locale.getDefault().language).policyContent2
+                        val annotatedText = buildAnnotatedString {
+                            append(start)
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Color(0xFF0E9FF2),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) {
+                                append(userAgreement)
+                            }
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Color(0xFF0E9FF2),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) {
+                                append(privacyPolicyTitle)
+                            }
+
+                            append(end)
+                        }
+                        ClickableText(
+                            text = annotatedText,
+                            onClick = { _ ->
+                                Log.d(TAG, getNames(Locale.getDefault().language).privacyPolicyPermissions)
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL))
+                                MainActivity.instance.startActivity(intent)
+                            }
                         )
+
                     }
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -130,7 +172,7 @@ actual fun PermissionRequest() {
                             ), shape = RoundedCornerShape(5.dp)
                         ) {
                             Text(
-                                text = "不同意",
+                                text = getNames(Locale.getDefault().language).doNot,
                             )
                         }
 
@@ -150,7 +192,7 @@ actual fun PermissionRequest() {
                             ), shape = RoundedCornerShape(5.dp)
                         ) {
                             Text(
-                                text = "同意",
+                                text = getNames(Locale.getDefault().language).agree,
                             )
                         }
                     }
