@@ -37,7 +37,7 @@ import com.felinetech.localcat.theme.LocalCatTheme
 import com.felinetech.localcat.views.About
 import com.felinetech.localcat.views.History
 import com.felinetech.localcat.views.HomePage
-import com.felinetech.localcat.views.Setting
+import com.felinetech.localcat.views.SettingView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -84,7 +84,7 @@ fun Content(navController: NavHostController) {
             HomePage()
         }
         composable(route = "/setting") {
-            Setting()
+            SettingView()
         }
         composable(route = "/history") {
             History()

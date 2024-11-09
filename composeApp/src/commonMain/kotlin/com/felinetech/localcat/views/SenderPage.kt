@@ -4,33 +4,19 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,10 +30,11 @@ import com.felinetech.localcat.components.ServerItem
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
-import com.felinetech.localcat.view_model.HomeViewModel.serviceList
+import com.felinetech.localcat.view_model.HomeViewModel.scanFileList
+import com.felinetech.localcat.view_model.HomeViewModel.scanService
 import com.felinetech.localcat.view_model.HomeViewModel.startScanService
 import com.felinetech.localcat.view_model.MainViewModel
-import java.util.Locale
+import java.util.*
 
 
 /**
@@ -58,9 +45,7 @@ fun Sender(turnState: Boolean) {
     val turn = remember { Animatable(if (turnState) -180f else 0f) }
     val deepStart = remember { Animatable(if (turnState) 0.6f else 1f) }
     val viewModel = HomeViewModel
-    val scanFileList by viewModel.scanFileList.collectAsState()
-    val serverList by serviceList.collectAsState()
-    val scanFileState by scanFile.collectAsState()
+
     if (turnState) {
         LaunchedEffect(false) {
             deepStart.animateTo(
@@ -85,8 +70,8 @@ fun Sender(turnState: Boolean) {
     val rotationDegrees = remember { Animatable(0f) }
 
     // 启动一个协程来处理旋转动画
-    LaunchedEffect(scanFileState) {
-        if (scanFileState) {
+    LaunchedEffect(scanFile.value) {
+        if (scanFile.value) {
             while (true) {
                 rotationDegrees.animateTo(
                     targetValue = rotationDegrees.value + 360f,
@@ -106,10 +91,10 @@ fun Sender(turnState: Boolean) {
 
     // 创建一个 Animatable 对象用于控制旋转角度
     val rotationDegrees2 = remember { Animatable(0f) }
-    var isRotating2 by remember { mutableStateOf(false) }
+
     // 启动一个协程来处理旋转动画
-    LaunchedEffect(isRotating2) {
-        if (isRotating2) {
+    LaunchedEffect(scanService) {
+        if (scanService) {
             while (true) {
                 rotationDegrees2.animateTo(
                     targetValue = rotationDegrees.value + 360f,
@@ -151,11 +136,11 @@ fun Sender(turnState: Boolean) {
             ) {
                 Text(text = getNames(Locale.getDefault().language).searchForRecipient)
                 IconButton(onClick = {
-                    isRotating2 = !isRotating2
                     startScanService()
                 }) {
                     Icon(
-                        imageVector = Icons.Outlined.Refresh, contentDescription = getNames(Locale.getDefault().language).searchForRecipient,
+                        imageVector = Icons.Outlined.Refresh,
+                        contentDescription = getNames(Locale.getDefault().language).searchForRecipient,
                         modifier = Modifier.graphicsLayer(
                             rotationZ = rotationDegrees2.value
                         )
@@ -170,12 +155,17 @@ fun Sender(turnState: Boolean) {
                         rotationY = turn.value,
                         scaleX = deepStart.value,
                         scaleY = deepStart.value
-                    ),
+                    )
+                    .scrollable(state = rememberScrollState(10), orientation = Orientation.Vertical),
                 color = Color(0x99ffffff),
                 shape = RoundedCornerShape(5.dp)
             ) {
-                LazyColumn() {
-                    items(serverList) { item ->
+                // 记住我们自己的 LazyListState
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // 接收者列表
+                    items(viewModel.serviceList) { item ->
                         ServerItem(item)
                     }
                 }
@@ -230,7 +220,7 @@ fun Sender(turnState: Boolean) {
         }
 
     }
-    if (scanFileState) {
+    if (scanFile.value) {
         Dialog(
             onDismissRequest = { },
         ) {

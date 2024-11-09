@@ -1,15 +1,9 @@
 package com.felinetech.localcat.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
@@ -22,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.felinetech.localcat.po.UploadConfigItem
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
@@ -29,7 +24,7 @@ import com.felinetech.localcat.utlis.getNames
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_black
 import org.jetbrains.compose.resources.painterResource
-import java.util.Locale
+import java.util.*
 
 /**
  * 文件列表 Item
@@ -101,6 +96,7 @@ fun FileItem(item: FileItemVo) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ServerItem(servicePo: ServicePo) {
     Surface(
@@ -127,7 +123,10 @@ fun ServerItem(servicePo: ServicePo) {
             Text(text = servicePo.ip, modifier = Modifier.weight(1f))
             Text(
                 text = servicePo.buttonState.name,
-                modifier = Modifier.padding(end = 5.dp),
+                modifier = Modifier.padding(end = 5.dp)
+                    .onClick {
+                        println("被点击")
+                    },
                 color = MaterialTheme.colorScheme.tertiary
             )
             Text(
@@ -170,7 +169,7 @@ fun ClientItem(clientVo: ClientVo) {
 
 
 @Composable
-fun RuleItem() {
+fun RuleItem(item: UploadConfigItem) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()

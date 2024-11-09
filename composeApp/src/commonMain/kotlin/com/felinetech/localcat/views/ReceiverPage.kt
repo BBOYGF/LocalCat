@@ -4,24 +4,14 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,7 +28,7 @@ import com.felinetech.localcat.view_model.HomeViewModel.receiverAnimation
 import com.felinetech.localcat.view_model.HomeViewModel.receiverButtonTitle
 import com.felinetech.localcat.view_model.HomeViewModel.scanFileList
 import com.felinetech.localcat.view_model.MainViewModel
-import java.util.Locale
+import java.util.*
 
 
 /**
@@ -50,8 +40,7 @@ fun Receiver(turnState: Boolean) {
     val deepStart = remember { Animatable(if (turnState) 0.6f else 1f) }
     val receiverBT by receiverButtonTitle.collectAsState()
     val receiverAnima by receiverAnimation.collectAsState()
-    val fileItemList by scanFileList.collectAsState()
-    val clickItemList by clineList.collectAsState()
+
     if (turnState) {
         LaunchedEffect(false) {
             deepStart.animateTo(
@@ -103,14 +92,14 @@ fun Receiver(turnState: Boolean) {
                 shape = RoundedCornerShape(5.dp)
             ) {
                 LazyColumn {
-                    items(clickItemList) { item ->
+                    items(clineList) { item ->
                         ClientItem(item)
                     }
                 }
             }
             Text(text =  getNames(Locale.getDefault().language).currentlyReceivingFiles)
             LazyColumn {
-                items(fileItemList) { item ->
+                items(scanFileList) { item ->
                     FileItem(item = item)
                 }
             }

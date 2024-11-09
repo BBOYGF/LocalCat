@@ -1,12 +1,6 @@
 package com.felinetech.localcat.views
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -32,7 +26,10 @@ import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel.ipAddress
 import com.felinetech.localcat.view_model.HomeViewModel.updateIpAddress
 import com.felinetech.localcat.view_model.MainViewModel
-import java.util.Locale
+import com.felinetech.localcat.view_model.MainViewModel.receiveState
+import com.felinetech.localcat.view_model.MainViewModel.sendState
+import com.felinetech.localcat.view_model.MainViewModel.turnFun
+import java.util.*
 
 
 @Composable
@@ -70,7 +67,7 @@ fun HomePage() {
                 Text(getNames(Locale.getDefault().language).recipient)
                 Switch(checked = turnState, onCheckedChange = {
                     //当进行切换操作时，更改状态
-                    MainViewModel.turnFun(it)
+                    turnFun(it)
                 }, colors = SwitchDefaults.colors(uncheckedBorderColor = Color(0x00ffffff)))
                 Text(getNames(Locale.getDefault().language).sender)
                 Text(text = getNames(Locale.getDefault().language).network)
@@ -78,9 +75,9 @@ fun HomePage() {
             }
         }
         if (turnState) {
-            Sender(!MainViewModel.sendState)
+            Sender(!sendState)
         } else {
-            Receiver(!MainViewModel.receiveState)
+            Receiver(!receiveState)
         }
     }
 

@@ -57,4 +57,9 @@ object Constants {
      * 问题反馈
      */
     var feedback = "https://felinetech.cn/#/"
+
+    /**
+     * 客户端扫描服务器时用的端口
+     */
+     val BROADCAST_PORT = 8200
 }

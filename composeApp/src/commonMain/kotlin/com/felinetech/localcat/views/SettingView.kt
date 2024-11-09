@@ -4,41 +4,15 @@ package com.felinetech.localcat.views
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -53,15 +27,19 @@ import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.RuleItem
 import com.felinetech.localcat.enums.FileType
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.SettingViewModel.currDate
+import com.felinetech.localcat.view_model.SettingViewModel.currTime
+import com.felinetech.localcat.view_model.SettingViewModel.ruleList
+import com.felinetech.localcat.view_model.SettingViewModel.selectedDirectory
+import com.felinetech.localcat.view_model.SettingViewModel.selectedOption
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_gray
 import org.jetbrains.compose.resources.painterResource
-import java.util.Calendar
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Setting() {
+fun SettingView() {
     var showReluDialog by remember { mutableStateOf(false) }
 
     ColorBackground()
@@ -99,18 +77,21 @@ fun Setting() {
             ) {
                 Box {
                     Button(onClick = { showReluDialog = true }) {
-                        Text(text =  getNames(Locale.getDefault().language).addRules)
+                        Text(text = getNames(Locale.getDefault().language).addRules)
                     }
                 }
             }
 
-            Column(
+            LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
-                RuleItem()
+                items(ruleList) { item ->
+                    RuleItem(item)
+                }
+
             }
 
         }
@@ -231,14 +212,14 @@ fun Setting() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text(text =  getNames(Locale.getDefault().language).ruleSetting)
+                    Text(text = getNames(Locale.getDefault().language).ruleSetting)
                     Row(
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = getNames(Locale.getDefault().language).filterDirectory)
                         Text(
-                            text = "文件名", modifier = Modifier
+                            text = selectedDirectory, modifier = Modifier
                                 .width(100.dp)
                                 .border(1.dp, Color.Black, shape = RoundedCornerShape(2.dp))
                         )
@@ -255,21 +236,21 @@ fun Setting() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = getNames(Locale.getDefault().language).fileExtension)
-                        val selectedOption = remember { mutableStateOf("") } // 默认选项
+
                         val suffixList = remember {
                             mutableStateOf(
                                 FileType.entries.map { "*." + it.suffix }.toList()
                             )
                         }
-                        ComboBox(selectedOption, suffixList)
+                        ComboBox(suffixList)
                     }
                     Row(
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text =getNames(Locale.getDefault().language).afterWhatTime)
+                        Text(text = getNames(Locale.getDefault().language).afterWhatTime)
                         Text(
-                            text =getNames(Locale.getDefault().language).date,
+                            text = currDate,
                             modifier = Modifier
                                 .width(80.dp)
                                 .clickable {
@@ -277,7 +258,7 @@ fun Setting() {
                                 }, textAlign = TextAlign.Center
                         )
                         Text(
-                            text = getNames(Locale.getDefault().language).time,
+                            text = currTime,
                             modifier = Modifier
                                 .width(80.dp)
                                 .clickable {
@@ -304,7 +285,7 @@ fun Setting() {
 
         }
     }
-//    // 显示时间
+    // 显示时间
     if (showTimePicker) {
         Dialog(
             onDismissRequest = { showTimePicker = false },
@@ -327,7 +308,10 @@ fun Setting() {
                             .fillMaxWidth()
                             .height(200.dp), horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Button(onClick = { showTimePicker = false }) {
+                        Button(onClick = {
+                            showTimePicker = false
+                            currTime = "${timePickerState.hour}:${timePickerState.minute}"
+                        }) {
                             Text(text = getNames(Locale.getDefault().language).okText)
                         }
                         Button(onClick = { showTimePicker = false }) {
@@ -361,7 +345,10 @@ fun Setting() {
                             .fillMaxWidth()
                             .height(200.dp), horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Button(onClick = { showDatePicker = false }) {
+                        Button(onClick = {
+                            showDatePicker = false
+                            currDate = "${dataPickerState.selectedDateMillis}:"
+                        }) {
                             Text(text = getNames(Locale.getDefault().language).okText)
                         }
                         Button(onClick = { showDatePicker = false }) {
@@ -378,7 +365,7 @@ fun Setting() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ComboBox(selectedOption: MutableState<String>, items: MutableState<List<String>>) {
+fun ComboBox(items: MutableState<List<String>>) {
     var expanded by remember { mutableStateOf(false) }
 
     //  用于实现下拉菜单
@@ -389,7 +376,7 @@ fun ComboBox(selectedOption: MutableState<String>, items: MutableState<List<Stri
         // 显示当前选择的选项
         TextField(
             readOnly = true,
-            value = selectedOption.value,
+            value = selectedOption,
             onValueChange = {},
             label = { Text("选择选项") },
             trailingIcon = {
@@ -417,7 +404,7 @@ fun ComboBox(selectedOption: MutableState<String>, items: MutableState<List<Stri
                 DropdownMenuItem(
                     text = { Text(text) },
                     onClick = {
-                        selectedOption.value = text// 更新选中的选项
+                        selectedOption = text// 更新选中的选项
                         expanded = false // 关闭菜单
                     }
                 )

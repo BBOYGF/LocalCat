@@ -1,14 +1,14 @@
 package com.felinetech.localcat.view_model
 
-import com.felinetech.localcat.enums.ConnectButtonState
-import com.felinetech.localcat.enums.ConnectStatus
-import com.felinetech.localcat.enums.FileType
-import com.felinetech.localcat.enums.ServiceButtonState
-import com.felinetech.localcat.enums.UploadState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.felinetech.localcat.Constants.BROADCAST_PORT
+import com.felinetech.localcat.enums.*
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
-import com.felinetech.localcat.utlis.getDatabase
 import com.felinetech.localcat.utlis.getLocalIp
 import com.felinetech.localcat.utlis.getNames
 import kotlinx.coroutines.CoroutineScope
@@ -16,42 +16,43 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
+import java.net.InetAddress
 import java.net.SocketTimeoutException
-import java.util.Locale
+import java.util.*
 
 object HomeViewModel {
     /**
      * 待上传文件
      */
-    val scanFileList = MutableStateFlow<List<FileItemVo>>(emptyList())
+    val scanFileList = mutableStateListOf<FileItemVo>()
 
-    var scanFile = MutableStateFlow(false)
+    var scanFile = mutableStateOf(false)
 
     /**
      * 客户端列表
      */
-    val clineList = MutableStateFlow<MutableList<ClientVo>>(mutableListOf())
+    val clineList = mutableStateListOf<ClientVo>()
+
 
     /**
      * 服务端列表
      */
-    val serviceList = MutableStateFlow<MutableList<ServicePo>>(mutableListOf())
+    var serviceList = mutableStateListOf<ServicePo>()
 
     /**
      * 本机IP地址
      */
     val ipAddress = MutableStateFlow("127.0.0.1")
 
-    private var list =
-        mutableListOf(FileItemVo("点击", FileType.doc文档, "文件", UploadState.待上传, 50, 1024))
+    private var list = mutableListOf(FileItemVo("点击", FileType.doc文档, "文件", UploadState.待上传, 50, 1024))
 
     /**
      * 接收按钮状态
      */
-    val receiverButtonTitle =
-        MutableStateFlow(getNames(Locale.getDefault().language).startReceiving)
+    val receiverButtonTitle = MutableStateFlow(getNames(Locale.getDefault().language).startReceiving)
     val receiverAnimation = MutableStateFlow(false)
 
     /**
@@ -60,9 +61,10 @@ object HomeViewModel {
     private val defaultScope = CoroutineScope(Dispatchers.Default)
 
     /**
-     * 开始接收服务器
+     * 开始接收客户端链接
      */
     private var accept: Boolean = true
+
 
     /**
      * UDP 服务接口
@@ -70,9 +72,9 @@ object HomeViewModel {
     private const val ACCEPT_SERVER_POST = 8200
 
     /**
-     * 显示隐私权限
+     * 搜索服务器
      */
-
+    var scanService by mutableStateOf(false)
 
     /**
      * 开始接收按钮被点击
@@ -85,12 +87,13 @@ object HomeViewModel {
             // 开启接收客户端
             serverAccept()
             // 添加接受者
-            receiverFileList()
+//            receiverFileList()
         } else {
             // 关闭接收
             receiverButtonTitle.value = ServiceButtonState.开始接收.name
             receiverAnimation.value = false
             accept = false
+            clineList.clear()
         }
     }
 
@@ -101,57 +104,41 @@ object HomeViewModel {
         accept = true
         defaultScope.launch {
             var socket: DatagramSocket? = null
-            try {
-                while (accept) {
+
+            while (accept) {
+                try {
                     socket = DatagramSocket(ACCEPT_SERVER_POST)
                     socket!!
-                    socket.setSoTimeout(10000)
+                    socket.soTimeout = 10000
                     val buffer = ByteArray(1024)
                     val packet = DatagramPacket(buffer, buffer.size)
                     socket.receive(packet)
                     println("监听客户接收到数据来自: " + packet.address)
                     val response = "OK".toByteArray()
-                    val responsePacket =
-                        DatagramPacket(response, response.size, packet.address, packet.port)
+                    val responsePacket = DatagramPacket(response, response.size, packet.address, packet.port)
                     socket.send(responsePacket)
-                    val clientList = clineList.value.toMutableList()
-                    clientList.add(
+                    clineList.add(
                         ClientVo(
-                            clientList.size + 1,
-                            packet.address.toString().replace("/", ""),
-                            ConnectStatus.被发现
+                            clineList.size + 1, packet.address.toString().replace("/", ""), ConnectStatus.被发现
                         )
                     )
-                    clineList.value = clientList
+                    socket.close()
+                } catch (e: Exception) {
+                    if (e is SocketTimeoutException) {
+                        println("监听客户超时...")
+                    } else {
+                        println("监听客户产生了异常...${e.message}")
+                    }
+                    socket?.close()
                 }
-            } catch (e: Exception) {
-                if (e is SocketTimeoutException) {
-                    println("监听客户超时...")
-                } else {
-                    println("监听客户产生了异常...${e.message}")
-                }
-                socket?.close()
             }
         }
     }
 
 
-    private fun receiverFileList() {
-        val item = list[0]
-        item.percent = (item.percent + 1)
-        list[0] = item.copy()
-        val newList = mutableListOf<FileItemVo>()
-        list.forEach {
-            newList.add(it)
-        }
-        scanFileList.value = newList
-    }
-
 
     fun senderClick() {
-        val list = serviceList.value.toMutableList()
-        list.add(ServicePo(1, "192.168.1.1", ConnectStatus.未连接, ConnectButtonState.连接))
-        serviceList.value = list
+        serviceList.add(ServicePo(1, "192.168.1.1", ConnectStatus.未连接, ConnectButtonState.连接))
     }
 
     /**
@@ -161,13 +148,15 @@ object HomeViewModel {
         scanFile.value = !scanFile.value
         defaultScope.launch {
             for (i in 1..5) {
+                scanFileList.add(FileItemVo("$i",FileType.doc文档,"测试$i",UploadState.待上传,50,1024))
                 delay(1000)
             }
-            scanFile.emit(false)
-            val database = getDatabase()
-            val fileEntityDao = database.getFileEntityDao()
-            var list = fileEntityDao.getAllFiles()
+            scanFile.value = false
+//            val database = getDatabase()
+//            val fileEntityDao = database.getFileEntityDao()
+//            var list = fileEntityDao.getAllFiles()
         }
+
     }
 
     fun updateIpAddress() {
@@ -180,11 +169,58 @@ object HomeViewModel {
      * 开始扫描服务器
      */
     fun startScanService() {
-        println("开始扫描数据源...")
-        defaultScope.launch {
-
-
+        scanService = !scanService
+        if (scanService) {
+            serviceList.clear()
+            println("开始扫描数据源...")
+            defaultScope.launch {
+                for (i in 0..25) {
+                    if (!scanService) {
+                        println("停止扫描服务器！")
+                        return@launch
+                    }
+                    val ip = "192.168.$i.255"
+                    try {
+                        val socket = DatagramSocket()
+                        socket.broadcast = true
+                        socket.soTimeout = 500
+                        val request = "HELLO".toByteArray()
+                        println("测试广播:$ip")
+                        val requestPacket =
+                            DatagramPacket(request, request.size, InetAddress.getByName(ip), BROADCAST_PORT)
+                        socket.send(requestPacket)
+                        println("链接成功:$ip")
+                        val buffer = ByteArray(1024)
+                        val responsePacket = DatagramPacket(buffer, buffer.size)
+                        socket.receive(responsePacket)
+                        val address = responsePacket.address
+                        val localAddress = socket.localAddress
+                        val socketAddress = responsePacket.socketAddress
+                        val string = socketAddress.toString()
+                        val split = string.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                        val ipStr = split[0]
+                        val myIp = ipStr.replace("/", "")
+                        val ipString = address.hostAddress
+                        serviceList.add(
+                            ServicePo(
+                                serviceList.size + 1,
+                                ipString,
+                                ConnectStatus.未连接,
+                                buttonState = ConnectButtonState.连接
+                            )
+                        )
+                        println("接收到响应来自: $ipString")
+                        scanService = false
+                        return@launch
+                    } catch (e: IOException) {
+                        println("产生异常：${e.message}")
+                    }
+                }
+            }
+        } else {
+            println("停止扫描")
         }
+
     }
 
 }

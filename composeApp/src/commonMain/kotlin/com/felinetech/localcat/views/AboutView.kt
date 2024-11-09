@@ -86,7 +86,7 @@ fun About() {
 
         }) {
             Text(
-                text = "下载Android版本",
+                text = getNames(Locale.getDefault().language).downDesktop,
                 modifier = Modifier.width(150.dp),
                 textAlign = TextAlign.Center,
 
