@@ -75,24 +75,27 @@ fun SettingView() {
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(ruleList) { item ->
+                        RuleItem(item)
+                    }
+
+                }
                 Box {
-                    Button(onClick = { showReluDialog = true }) {
+                    // 添加规则按钮
+                    Button(onClick = {
+                        showReluDialog = true
+                    }) {
                         Text(text = getNames(Locale.getDefault().language).addRules)
                     }
                 }
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
 
-            ) {
-                items(ruleList) { item ->
-                    RuleItem(item)
-                }
-
-            }
 
         }
         Text(
