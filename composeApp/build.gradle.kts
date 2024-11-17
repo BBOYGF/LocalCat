@@ -20,12 +20,12 @@ kotlin {
         }
     }
 
-    
+
     jvm("desktop")
-    
+
     sourceSets {
         val desktopMain by getting
-        
+
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -33,6 +33,7 @@ kotlin {
             implementation("com.airbnb.android:lottie-compose:4.2.0")
             implementation("com.google.code.gson:gson:2.11.0")
             implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+            implementation("org.jetbrains.compose.material3:material3:1.7.0")
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -44,10 +45,10 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
 
-            implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")
+
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
 
-            implementation ("com.github.YarikSOffice:lingver:1.3.0")
+            implementation("com.github.YarikSOffice:lingver:1.3.0")
 
             implementation("com.google.code.gson:gson:2.11.0")
 
@@ -62,6 +63,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(compose.components.resources)
+            implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")
             // tollie Desktop 用
             implementation("io.github.alexzhirkevich:compottie:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
@@ -69,7 +71,6 @@ kotlin {
             implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
 
             implementation("com.google.code.gson:gson:2.11.0")
-
 
 
         }

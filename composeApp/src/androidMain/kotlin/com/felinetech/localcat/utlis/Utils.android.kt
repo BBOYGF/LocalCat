@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.localcat.MainActivity
 import com.felinetech.localcat.database.Database
+import java.io.File
 
 actual fun getLocalIp(): String {
     val wifiManager: WifiManager =
@@ -37,4 +38,8 @@ actual fun getDatabase(): Database {
         .allowMainThreadQueries()
         .fallbackToDestructiveMigration()
         .build()
+}
+
+actual fun getFileByDialog(): File? {
+    return null
 }

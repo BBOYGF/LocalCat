@@ -2,8 +2,15 @@ package com.felinetech.localcat.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.onClick
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
@@ -24,7 +31,7 @@ import com.felinetech.localcat.utlis.getNames
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_black
 import org.jetbrains.compose.resources.painterResource
-import java.util.*
+import java.util.Locale
 
 /**
  * 文件列表 Item
@@ -124,9 +131,10 @@ fun ServerItem(servicePo: ServicePo) {
             Text(
                 text = servicePo.buttonState.name,
                 modifier = Modifier.padding(end = 5.dp)
-                    .onClick {
-                        println("被点击")
-                    },
+//                    .onClick {
+//                        println("被点击")
+//                    }
+                    ,
                 color = MaterialTheme.colorScheme.tertiary
             )
             Text(

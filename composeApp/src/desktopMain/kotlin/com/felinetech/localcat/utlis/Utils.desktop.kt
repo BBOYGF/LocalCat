@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import java.io.File
 import java.net.InetAddress
 import java.net.NetworkInterface
+import javax.swing.JFileChooser
+import javax.swing.JFrame
 
 actual fun getLocalIp(): String {
     return try {
@@ -37,4 +39,21 @@ actual fun getDatabase(): Database {
     ).setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()
+}
+
+actual fun getFileByDialog(): File? {
+    val frame = JFrame()
+    val dialog = JFileChooser()
+    dialog.dialogTitle = "选择目录"
+    dialog.dialogType = JFileChooser.DIRECTORIES_ONLY
+    dialog.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+    val returnValue = dialog.showOpenDialog(frame)
+    if (returnValue == JFileChooser.APPROVE_OPTION) {
+        // 获取所选文件夹
+        val selectedDirectory = dialog.selectedFile
+        return selectedDirectory
+    } else {
+        return null
+    }
+
 }

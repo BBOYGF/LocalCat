@@ -26,6 +26,7 @@ import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.RuleItem
 import com.felinetech.localcat.enums.FileType
+import com.felinetech.localcat.utlis.getFileByDialog
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.SettingViewModel.currDate
 import com.felinetech.localcat.view_model.SettingViewModel.currTime
@@ -94,7 +95,6 @@ fun SettingView() {
                     }
                 }
             }
-
 
 
         }
@@ -226,13 +226,19 @@ fun SettingView() {
                                 .width(100.dp)
                                 .border(1.dp, Color.Black, shape = RoundedCornerShape(2.dp))
                         )
-                        Icon(
-                            painter = painterResource(Res.drawable.folder_gray),
-                            contentDescription = "",
-                            modifier = Modifier
-                                .width(30.dp)
-                                .height(30.dp)
-                        )
+                        IconButton(onClick = {
+                            val file = getFileByDialog()
+                            println("选择的文件是:${file?.absolutePath}")
+                        }) {
+                            Icon(
+                                painter = painterResource(Res.drawable.folder_gray),
+                                contentDescription = "",
+                                modifier = Modifier
+                                    .width(30.dp)
+                                    .height(30.dp)
+                            )
+                        }
+
                     }
                     Row(
                         horizontalArrangement = Arrangement.SpaceAround,
