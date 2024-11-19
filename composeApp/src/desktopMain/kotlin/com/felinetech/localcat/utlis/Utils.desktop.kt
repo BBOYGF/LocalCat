@@ -1,5 +1,6 @@
 package com.felinetech.localcat.utlis
 
+import androidx.compose.runtime.Composable
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.localcat.database.Database
@@ -40,7 +41,6 @@ actual fun getDatabase(): Database {
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()
 }
-
 actual fun getFileByDialog(): File? {
     val frame = JFrame()
     val dialog = JFileChooser()

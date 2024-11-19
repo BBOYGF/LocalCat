@@ -3,13 +3,14 @@ package com.felinetech.localcat.po
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
+import java.util.*
 
 /**
  * 上传列表配置
  */
 @Entity
 data class UploadConfigItem(
+
     @PrimaryKey(autoGenerate = true)
      var id: Int = 0,
     /**

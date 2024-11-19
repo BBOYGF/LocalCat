@@ -22,17 +22,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.RuleItem
 import com.felinetech.localcat.enums.FileType
 import com.felinetech.localcat.utlis.getFileByDialog
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.SettingViewModel.addRule
 import com.felinetech.localcat.view_model.SettingViewModel.currDate
 import com.felinetech.localcat.view_model.SettingViewModel.currTime
+import com.felinetech.localcat.view_model.SettingViewModel.msgErr
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import com.felinetech.localcat.view_model.SettingViewModel.selectedDirectory
 import com.felinetech.localcat.view_model.SettingViewModel.selectedOption
+import com.felinetech.localcat.view_model.SettingViewModel.setDate
+import com.felinetech.localcat.view_model.SettingViewModel.showMsg
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_gray
 import org.jetbrains.compose.resources.painterResource
@@ -42,7 +47,10 @@ import java.util.*
 @Composable
 fun SettingView() {
     var showReluDialog by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
+
+    val dataPickerState = rememberDatePickerState()
     ColorBackground()
     Column(
         modifier = Modifier
@@ -73,13 +81,11 @@ fun SettingView() {
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Bottom,
+                verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier.fillMaxWidth().weight(1f)
                 ) {
                     items(ruleList) { item ->
                         RuleItem(item)
@@ -195,8 +201,6 @@ fun SettingView() {
         is24Hour = true,
     )
 
-    var showDatePicker by remember { mutableStateOf(false) }
-    val dataPickerState = rememberDatePickerState()
 
     // 添加规则弹窗
     if (showReluDialog) {
@@ -215,7 +219,12 @@ fun SettingView() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text(text = getNames(Locale.getDefault().language).ruleSetting)
+                    Text(
+                        text = getNames(Locale.getDefault().language).ruleSetting,
+                        style = TextStyle(
+                            color = MaterialTheme.colorScheme.tertiary, fontSize = 20.sp, fontWeight = FontWeight.Bold
+                        )
+                    )
                     Row(
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
@@ -226,8 +235,12 @@ fun SettingView() {
                                 .width(100.dp)
                                 .border(1.dp, Color.Black, shape = RoundedCornerShape(2.dp))
                         )
+                        // 选择目录被点击
                         IconButton(onClick = {
                             val file = getFileByDialog()
+                            file?.let {
+                                selectedDirectory = file.name
+                            }
                             println("选择的文件是:${file?.absolutePath}")
                         }) {
                             Icon(
@@ -238,7 +251,6 @@ fun SettingView() {
                                     .height(30.dp)
                             )
                         }
-
                     }
                     Row(
                         horizontalArrangement = Arrangement.SpaceAround,
@@ -258,14 +270,16 @@ fun SettingView() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = getNames(Locale.getDefault().language).afterWhatTime)
+                        // 什么日期后
                         Text(
                             text = currDate,
                             modifier = Modifier
-                                .width(80.dp)
+                                .width(90.dp)
                                 .clickable {
                                     showDatePicker = true
                                 }, textAlign = TextAlign.Center
                         )
+                        // 什么时间后
                         Text(
                             text = currTime,
                             modifier = Modifier
@@ -280,7 +294,13 @@ fun SettingView() {
                             .fillMaxWidth()
                             .height(50.dp), horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Button(onClick = { showReluDialog = false }) {
+                        Button(
+                            onClick = {
+                                // 如果有一个没选就提醒
+                                showReluDialog = !addRule()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                        ) {
                             Text(text = getNames(Locale.getDefault().language).okText)
                         }
                         Button(onClick = { showReluDialog = false }) {
@@ -299,7 +319,6 @@ fun SettingView() {
         Dialog(
             onDismissRequest = { showTimePicker = false },
         ) {
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -356,7 +375,7 @@ fun SettingView() {
                     ) {
                         Button(onClick = {
                             showDatePicker = false
-                            currDate = "${dataPickerState.selectedDateMillis}:"
+                            setDate(dataPickerState.selectedDateMillis)
                         }) {
                             Text(text = getNames(Locale.getDefault().language).okText)
                         }
@@ -369,6 +388,47 @@ fun SettingView() {
             }
         }
     }
+
+    if (showMsg) {
+        Dialog(
+            onDismissRequest = { showMsg = false },
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(520.dp)
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        Text(text = msgErr)
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp), horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Button(onClick = {
+                            showMsg = false
+                        }) {
+                            Text(text = getNames(Locale.getDefault().language).okText)
+                        }
+                        Button(onClick = {
+                            showMsg = false
+                        }) {
+                            Text(text = getNames(Locale.getDefault().language).cancelButton)
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
 }
 
 
@@ -387,7 +447,7 @@ fun ComboBox(items: MutableState<List<String>>) {
             readOnly = true,
             value = selectedOption,
             onValueChange = {},
-            label = { Text("选择选项") },
+            label = { Text("选择类型") },
             trailingIcon = {
                 Icon(
                     imageVector = if (expanded) Icons.Filled.Done else Icons.Filled.ArrowDropDown,
@@ -395,7 +455,7 @@ fun ComboBox(items: MutableState<List<String>>) {
                 )
             },
             modifier = Modifier
-                .width(130.dp)
+                .width(140.dp)
                 .menuAnchor() // 使菜单与文本框对齐
             ,
             colors = TextFieldDefaults.colors(

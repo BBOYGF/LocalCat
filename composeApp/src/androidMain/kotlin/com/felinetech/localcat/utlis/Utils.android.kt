@@ -1,7 +1,17 @@
 package com.felinetech.localcat.utlis
 
 import android.content.Context
+import android.net.Uri
 import android.net.wifi.WifiManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.localcat.MainActivity
@@ -40,6 +50,20 @@ actual fun getDatabase(): Database {
         .build()
 }
 
+@Composable
 actual fun getFileByDialog(): File? {
+    var selectedDirectory by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
+    val getContent =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
+            if (uri != null) {
+                selectedDirectory = uri
+                // 这里可以存储或处理所选目录的 URI
+            }
+        }
+    getContent.launch(null)
+    selectedDirectory?.let {
+        Text("选定的目录: $it")
+    } ?: Text("未选择目录")
     return null
 }
