@@ -8,7 +8,7 @@ import java.util.*
 /**
  * 上传列表配置
  */
-@Entity
+@Entity(tableName = "UploadConfigItem")
 data class UploadConfigItem(
 
     @PrimaryKey(autoGenerate = true)
@@ -17,7 +17,7 @@ data class UploadConfigItem(
      * 监听的目录
      */
     @ColumnInfo(name = "t_listening_dir")
-     val listeningDir: String? = null,
+     var listeningDir: String,
 
     /**
      * 匹配规则 列表用，隔开

@@ -32,6 +32,7 @@ import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.SettingViewModel.addRule
 import com.felinetech.localcat.view_model.SettingViewModel.currDate
 import com.felinetech.localcat.view_model.SettingViewModel.currTime
+import com.felinetech.localcat.view_model.SettingViewModel.getFileName
 import com.felinetech.localcat.view_model.SettingViewModel.msgErr
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import com.felinetech.localcat.view_model.SettingViewModel.selectedDirectory
@@ -205,7 +206,13 @@ fun SettingView() {
     // 添加规则弹窗
     if (showReluDialog) {
         Dialog(
-            onDismissRequest = { showReluDialog = false },
+            onDismissRequest = {
+                showReluDialog = false
+                selectedOption = ""
+                selectedDirectory = ""
+                currDate = getNames(Locale.getDefault().language).date
+                currTime = getNames(Locale.getDefault().language).time
+            },
         ) {
             Card(
                 modifier = Modifier
@@ -231,7 +238,7 @@ fun SettingView() {
                     ) {
                         Text(text = getNames(Locale.getDefault().language).filterDirectory)
                         Text(
-                            text = selectedDirectory, modifier = Modifier
+                            text = getFileName(selectedDirectory), modifier = Modifier
                                 .width(100.dp)
                                 .border(1.dp, Color.Black, shape = RoundedCornerShape(2.dp))
                         )
@@ -239,7 +246,7 @@ fun SettingView() {
                         IconButton(onClick = {
                             val file = getFileByDialog()
                             file?.let {
-                                selectedDirectory = file.name
+                                selectedDirectory = file.absolutePath
                             }
                             println("选择的文件是:${file?.absolutePath}")
                         }) {
@@ -395,22 +402,33 @@ fun SettingView() {
         ) {
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(520.dp)
+                    .width(300.dp)
+                    .height(300.dp)
+
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .width(350.dp)
+                        .height(350.dp)
+                        .background(Color.White),
+                ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .weight(1f)
+                            , verticalAlignment = Alignment.CenterVertically
+
                     ) {
-                        Text(text = msgErr)
+                        Text(
+                            text = msgErr, modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontSize = TextUnit(20f,TextUnitType.Sp)
+                        )
                     }
 
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp), horizontalArrangement = Arrangement.SpaceEvenly
+                            .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Button(onClick = {
                             showMsg = false

@@ -1,26 +1,22 @@
 package com.felinetech.localcat.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileChunkEntity
 
 @Dao
 public interface FileChunkDao {
     @Insert
-    suspend  fun insert(fileChunk: FileChunkEntity?): Long
+    suspend  fun insert(fileChunk: FileChunkEntity): Long
 
     @Update
-    suspend  fun update(fileChunk: FileChunkEntity?)
+    suspend  fun update(fileChunk: FileChunkEntity)
 
     @Delete
-    suspend  fun delete(fileChunk: FileChunkEntity?)
+    suspend  fun delete(fileChunk: FileChunkEntity)
 
     @Query("SELECT * FROM file_chunks")
-    suspend fun getAllFileChunks(): List<FileChunkEntity?>?
+    suspend fun getAllFileChunks(): List<FileChunkEntity>?
 
     @Query("SELECT * FROM file_chunks WHERE id = :fileChunkId")
     suspend  fun getFileChunkById(fileChunkId: Int): FileChunkEntity?

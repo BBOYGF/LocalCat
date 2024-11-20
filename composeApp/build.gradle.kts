@@ -59,7 +59,8 @@ kotlin {
             implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
-
+            // 工具类
+            implementation("org.apache.commons:commons-lang3:3.12.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

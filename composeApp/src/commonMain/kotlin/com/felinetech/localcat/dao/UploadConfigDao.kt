@@ -1,22 +1,18 @@
 package com.felinetech.localcat.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import com.felinetech.localcat.po.UploadConfigItem
 
 @Dao
 interface UploadConfigDao {
     @Insert
-    suspend fun insertUploadCon(vararg items: UploadConfigItem?)
+    suspend fun insertUploadCon(vararg items: UploadConfigItem)
 
     @Update
-    suspend fun updateUploadCon(vararg myUsers: UploadConfigItem?)
+    suspend fun updateUploadCon(vararg myUsers: UploadConfigItem)
 
     @Delete
-    suspend fun deleteUploadCon(vararg myUsers: UploadConfigItem?)
+    suspend fun deleteUploadCon(vararg myUsers: UploadConfigItem)
 
     @Query("delete from UploadConfigItem")
     suspend fun deleteAllUploadCon()

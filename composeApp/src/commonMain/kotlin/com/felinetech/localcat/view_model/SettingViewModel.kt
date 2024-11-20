@@ -4,8 +4,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.felinetech.localcat.dao.UploadConfigDao
+import com.felinetech.localcat.database.Database
 import com.felinetech.localcat.po.UploadConfigItem
+import com.felinetech.localcat.utlis.getDatabase
 import com.felinetech.localcat.utlis.getNames
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,11 +41,24 @@ object SettingViewModel {
     /**
      * 日期格式化
      */
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+    private val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd|hh:mm")
 
     // 提示信息
     var showMsg by mutableStateOf(false)
     var msgErr by mutableStateOf("")
+
+    lateinit var uploadConfigDao: UploadConfigDao
+    val defaultScope = CoroutineScope(Dispatchers.Default)
+
+    init {
+        val database: Database = getDatabase()
+        uploadConfigDao = database.getUploadConfigItemDao()
+        defaultScope.launch {
+            val uploadList = uploadConfigDao.getAllUploadCon()
+            ruleList.addAll(uploadList)
+        }
+    }
 
     /**
      * 添加规则
@@ -54,12 +74,30 @@ object SettingViewModel {
             msgErr = "选择的类型为空请先选择！"
             return false
         }
-        if (currDate.isEmpty()) {
+        if (currDate.isEmpty() || currDate == getNames(Locale.getDefault().language).date) {
             showMsg = true
             msgErr = "选择的日期为空请先选择！"
             return false
         }
-        ruleList.add(UploadConfigItem(ruleList.size + 1, selectedDirectory, selectedOption, dateFormat.parse(currDate)))
+        if (currTime.isEmpty() || currTime == getNames(Locale.getDefault().language).time) {
+            showMsg = true
+            msgErr = "选择的时间为空请先选择！"
+            return false
+        }
+        val date = dateTimeFormat.parse("${currDate}|${currTime}")
+        val uploadConfig = UploadConfigItem(
+            ruleList.size + 1,
+            selectedDirectory,
+            selectedOption,
+            date
+        )
+
+
+
+        ruleList.add(uploadConfig)
+        defaultScope.launch {
+            uploadConfigDao.insertUploadCon(uploadConfig)
+        }
         return true
     }
 
@@ -71,5 +109,15 @@ object SettingViewModel {
             return
         }
         currDate = dateFormat.format(Date(long))
+    }
+
+    /**
+     * 获取文件名
+     */
+    fun getFileName(filePath: String): String {
+        if (org.apache.commons.lang3.StringUtils.isEmpty(filePath)) {
+            return ""
+        }
+        return File(filePath).name
     }
 }

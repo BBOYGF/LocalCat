@@ -20,6 +20,7 @@ import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.SettingViewModel.getFileName
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_black
 import org.jetbrains.compose.resources.painterResource
@@ -187,7 +188,7 @@ fun RuleItem(item: UploadConfigItem) {
                 painter = painterResource(Res.drawable.folder_black),
                 contentDescription = "文件规则"
             )
-            Text(text = "${item.listeningDir}", modifier = Modifier.weight(1f))
+            Text(text = getFileName(item.listeningDir), modifier = Modifier.weight(1f))
             Text(
                 text = getNames(Locale.getDefault().language).edit,
                 color = MaterialTheme.colorScheme.tertiary
