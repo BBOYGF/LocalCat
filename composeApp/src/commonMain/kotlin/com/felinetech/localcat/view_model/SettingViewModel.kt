@@ -18,6 +18,11 @@ import java.util.*
 
 object SettingViewModel {
     /**
+     * 当前id
+     */
+    var rId: Int? = null
+
+    /**
      * 当前打开日期
      */
     var currDate by mutableStateOf(getNames(Locale.getDefault().language).date)
@@ -38,23 +43,38 @@ object SettingViewModel {
      */
     var ruleList = mutableStateListOf<UploadConfigItem>()
 
+    var showReluDialog by mutableStateOf(false)
+
     /**
      * 日期格式化
      */
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd")
     private val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd|hh:mm")
 
-    // 提示信息
+    /**
+     * 提示信息
+     */
     var showMsg by mutableStateOf(false)
     var msgErr by mutableStateOf("")
 
-    lateinit var uploadConfigDao: UploadConfigDao
-    val defaultScope = CoroutineScope(Dispatchers.Default)
+    private var uploadConfigDao: UploadConfigDao
+    private val ioScope = CoroutineScope(Dispatchers.IO)
+
+    /**
+     * 保存位置
+     */
+     var savedPosition by mutableStateOf("./file")
+
+
+    /**
+     * 缓存位置
+     */
+     var cachePosition by mutableStateOf("./cache")
 
     init {
         val database: Database = getDatabase()
         uploadConfigDao = database.getUploadConfigItemDao()
-        defaultScope.launch {
+        ioScope.launch {
             val uploadList = uploadConfigDao.getAllUploadCon()
             ruleList.addAll(uploadList)
         }
@@ -64,39 +84,44 @@ object SettingViewModel {
      * 添加规则
      */
     fun addRule(): Boolean {
+        val uploadConfig = UploadConfigItem(null, "", "", Date())
+        if (!setupConfig(uploadConfig)) {
+            return false
+        }
+        ruleList.add(uploadConfig)
+        ioScope.launch {
+            uploadConfigDao.insertUploadCon(uploadConfig)
+            rId = uploadConfig.id
+        }
+        return true
+    }
+
+    private fun setupConfig(uploadConfig: UploadConfigItem): Boolean {
         if (selectedDirectory.isEmpty()) {
             showMsg = true
-            msgErr = "选择的目录为空！"
+            msgErr = "目录不能为空！"
             return false
         }
         if (selectedOption.isEmpty()) {
             showMsg = true
-            msgErr = "选择的类型为空请先选择！"
+            msgErr = "类型不能为空！"
             return false
         }
         if (currDate.isEmpty() || currDate == getNames(Locale.getDefault().language).date) {
             showMsg = true
-            msgErr = "选择的日期为空请先选择！"
+            msgErr = "日期不能为空！"
             return false
         }
         if (currTime.isEmpty() || currTime == getNames(Locale.getDefault().language).time) {
             showMsg = true
-            msgErr = "选择的时间为空请先选择！"
+            msgErr = "时间不能为空！"
             return false
         }
         val date = dateTimeFormat.parse("${currDate}|${currTime}")
-        val uploadConfig = UploadConfigItem(
-            ruleList.size + 1,
-            selectedDirectory,
-            selectedOption,
-            date
-        )
-
-
-
-        ruleList.add(uploadConfig)
-        defaultScope.launch {
-            uploadConfigDao.insertUploadCon(uploadConfig)
+        uploadConfig.apply {
+            listeningDir = selectedDirectory
+            matchingRule = selectedOption
+            startDate = date
         }
         return true
     }
@@ -119,5 +144,54 @@ object SettingViewModel {
             return ""
         }
         return File(filePath).name
+    }
+
+    /**
+     * 编辑规则
+     */
+    fun editConfig(item: UploadConfigItem) {
+        val dataStr = dateTimeFormat.format(item.startDate)
+        val split = dataStr.split("|")
+        currDate = split[0]
+        currTime = split[1]
+        selectedOption = item.matchingRule
+        selectedDirectory = item.listeningDir
+        showReluDialog = true
+        rId = item.id
+    }
+
+    /**
+     * 保存item
+     */
+    fun saveConfig(): Boolean {
+        val uploadConfig = ruleList.first { it.id == rId }
+        if (!setupConfig(uploadConfig)) {
+            return false
+        }
+        ioScope.launch {
+            uploadConfigDao.updateUploadCon(uploadConfig)
+        }
+        return true
+    }
+
+    /**
+     * 删除规则
+     */
+    fun deleteConfig(item: UploadConfigItem) {
+        ioScope.launch {
+            uploadConfigDao.deleteUploadCon(item)
+        }
+        ruleList.remove(item)
+    }
+
+    /**
+     * 默认值
+     */
+    fun defaultValue() {
+        rId = null
+        selectedOption = ""
+        selectedDirectory = ""
+        currDate = getNames(Locale.getDefault().language).date
+        currTime = getNames(Locale.getDefault().language).time
     }
 }

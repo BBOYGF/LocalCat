@@ -12,19 +12,19 @@ import java.util.*
 data class UploadConfigItem(
 
     @PrimaryKey(autoGenerate = true)
-     var id: Int = 0,
+    var id: Int? = 0,
     /**
      * 监听的目录
      */
     @ColumnInfo(name = "t_listening_dir")
-     var listeningDir: String,
+    var listeningDir: String,
 
     /**
      * 匹配规则 列表用，隔开
      */
     @ColumnInfo(name = "t_matching_rule")
-     val matchingRule: String? = null,
+    var matchingRule: String,
 
     @ColumnInfo(name = "t_start_date")
-     val startDate: Date? = null,
+    var startDate: Date,
 )

@@ -3,6 +3,7 @@ package com.felinetech.localcat.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
@@ -169,8 +170,9 @@ fun ClientItem(clientVo: ClientVo) {
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun RuleItem(item: UploadConfigItem) {
+fun RuleItem(item: UploadConfigItem, edit: (item: UploadConfigItem) -> Unit, delete: (item: UploadConfigItem) -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -191,11 +193,17 @@ fun RuleItem(item: UploadConfigItem) {
             Text(text = getFileName(item.listeningDir), modifier = Modifier.weight(1f))
             Text(
                 text = getNames(Locale.getDefault().language).edit,
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.onClick {
+                    edit(item)
+                }
             )
             Text(
                 text = getNames(Locale.getDefault().language).delete,
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.onClick {
+                    delete(item)
+                }
             )
         }
     }

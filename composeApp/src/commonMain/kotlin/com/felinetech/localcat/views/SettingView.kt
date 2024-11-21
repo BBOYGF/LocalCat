@@ -30,15 +30,22 @@ import com.felinetech.localcat.enums.FileType
 import com.felinetech.localcat.utlis.getFileByDialog
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.SettingViewModel.addRule
+import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.currDate
 import com.felinetech.localcat.view_model.SettingViewModel.currTime
+import com.felinetech.localcat.view_model.SettingViewModel.defaultValue
+import com.felinetech.localcat.view_model.SettingViewModel.deleteConfig
+import com.felinetech.localcat.view_model.SettingViewModel.editConfig
 import com.felinetech.localcat.view_model.SettingViewModel.getFileName
 import com.felinetech.localcat.view_model.SettingViewModel.msgErr
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
+import com.felinetech.localcat.view_model.SettingViewModel.saveConfig
+import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
 import com.felinetech.localcat.view_model.SettingViewModel.selectedDirectory
 import com.felinetech.localcat.view_model.SettingViewModel.selectedOption
 import com.felinetech.localcat.view_model.SettingViewModel.setDate
 import com.felinetech.localcat.view_model.SettingViewModel.showMsg
+import com.felinetech.localcat.view_model.SettingViewModel.showReluDialog
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_gray
 import org.jetbrains.compose.resources.painterResource
@@ -47,9 +54,9 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingView() {
-    var showReluDialog by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
 
+    var showDatePicker by remember { mutableStateOf(false) }
+    var eidt by remember { mutableStateOf(false) }
 
     val dataPickerState = rememberDatePickerState()
     ColorBackground()
@@ -89,13 +96,20 @@ fun SettingView() {
                     modifier = Modifier.fillMaxWidth().weight(1f)
                 ) {
                     items(ruleList) { item ->
-                        RuleItem(item)
+                        RuleItem(item, {
+                            eidt = true
+                            editConfig(it)
+                        }, {
+                            deleteConfig(it)
+                        })
                     }
 
                 }
                 Box {
                     // 添加规则按钮
                     Button(onClick = {
+                        eidt = false
+                        defaultValue()
                         showReluDialog = true
                     }) {
                         Text(text = getNames(Locale.getDefault().language).addRules)
@@ -131,7 +145,7 @@ fun SettingView() {
                             .padding(3.dp)
                     )
                     Text(
-                        text = "/", modifier = Modifier
+                        text = savedPosition, modifier = Modifier
                             .weight(1f)
                             .height(40.dp)
                             .padding(top = 3.dp, bottom = 3.dp)
@@ -143,7 +157,12 @@ fun SettingView() {
                             .background(color = Color(0x99ffffff))
                     )
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            val file = getFileByDialog()
+                            file?.let {
+                                savedPosition = file.absolutePath
+                            }
+                        },
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
                             contentColor = Color.Black,
@@ -164,7 +183,7 @@ fun SettingView() {
                             .padding(3.dp)
                     )
                     Text(
-                        text = "/", modifier = Modifier
+                        text = cachePosition, modifier = Modifier
                             .weight(1f)
                             .height(40.dp)
                             .padding(top = 3.dp, bottom = 3.dp)
@@ -176,7 +195,12 @@ fun SettingView() {
                             .background(color = Color(0x99ffffff))
                     )
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            val file = getFileByDialog()
+                            file?.let {
+                                cachePosition = file.absolutePath
+                            }
+                        },
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
                             contentColor = Color.Black,
@@ -205,13 +229,10 @@ fun SettingView() {
 
     // 添加规则弹窗
     if (showReluDialog) {
+
         Dialog(
             onDismissRequest = {
                 showReluDialog = false
-                selectedOption = ""
-                selectedDirectory = ""
-                currDate = getNames(Locale.getDefault().language).date
-                currTime = getNames(Locale.getDefault().language).time
             },
         ) {
             Card(
@@ -304,13 +325,18 @@ fun SettingView() {
                         Button(
                             onClick = {
                                 // 如果有一个没选就提醒
-                                showReluDialog = !addRule()
+                                if (eidt) {
+                                    showReluDialog = !saveConfig()
+                                } else {
+                                    showReluDialog = !addRule()
+                                }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(text = getNames(Locale.getDefault().language).okText)
                         }
-                        Button(onClick = { showReluDialog = false }) {
+                        Button(onClick = { showReluDialog = false }, shape = RoundedCornerShape(12.dp)) {
                             Text(text = getNames(Locale.getDefault().language).cancelButton)
                         }
                     }
@@ -415,30 +441,39 @@ fun SettingView() {
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .weight(1f)
-                            , verticalAlignment = Alignment.CenterVertically
+                            .weight(0.2f), verticalAlignment = Alignment.CenterVertically
+
+                    ) {
+                        Text(
+                            text = "提示", modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontSize = TextUnit(25f, TextUnitType.Sp),
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(0.6f), verticalAlignment = Alignment.CenterVertically
 
                     ) {
                         Text(
                             text = msgErr, modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
-                            fontSize = TextUnit(20f,TextUnitType.Sp)
+                            fontSize = TextUnit(20f, TextUnitType.Sp)
                         )
                     }
 
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
+                            .fillMaxWidth()
                     ) {
-                        Button(onClick = {
-                            showMsg = false
-                        }) {
+                        Button(modifier = Modifier.fillMaxWidth().padding(5.dp), shape = RoundedCornerShape(2.dp),
+                            onClick = {
+                                showMsg = false
+                            }) {
                             Text(text = getNames(Locale.getDefault().language).okText)
-                        }
-                        Button(onClick = {
-                            showMsg = false
-                        }) {
-                            Text(text = getNames(Locale.getDefault().language).cancelButton)
                         }
                     }
                 }
