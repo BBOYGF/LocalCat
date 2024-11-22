@@ -46,6 +46,8 @@ import com.felinetech.localcat.view_model.SettingViewModel.selectedOption
 import com.felinetech.localcat.view_model.SettingViewModel.setDate
 import com.felinetech.localcat.view_model.SettingViewModel.showMsg
 import com.felinetech.localcat.view_model.SettingViewModel.showReluDialog
+import com.felinetech.localcat.view_model.SettingViewModel.updateCacheFile
+import com.felinetech.localcat.view_model.SettingViewModel.updateSaveFile
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_gray
 import org.jetbrains.compose.resources.painterResource
@@ -160,7 +162,7 @@ fun SettingView() {
                         onClick = {
                             val file = getFileByDialog()
                             file?.let {
-                                savedPosition = file.absolutePath
+                                updateSaveFile(file.absolutePath)
                             }
                         },
                         shape = RoundedCornerShape(5.dp),
@@ -198,7 +200,7 @@ fun SettingView() {
                         onClick = {
                             val file = getFileByDialog()
                             file?.let {
-                                cachePosition = file.absolutePath
+                                updateCacheFile(file.absolutePath)
                             }
                         },
                         shape = RoundedCornerShape(5.dp),

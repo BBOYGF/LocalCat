@@ -61,5 +61,12 @@ object Constants {
     /**
      * 客户端扫描服务器时用的端口
      */
-     val BROADCAST_PORT = 8200
+    val BROADCAST_PORT = 8200
+
+    /**
+     * 文件保存路径
+     */
+    val SAVE_FILE = "save_file"
+
+    val CACHE_FILE = "cache_file"
 }

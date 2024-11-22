@@ -4,9 +4,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.felinetech.localcat.Constants.CACHE_FILE
+import com.felinetech.localcat.Constants.SAVE_FILE
 import com.felinetech.localcat.dao.UploadConfigDao
 import com.felinetech.localcat.database.Database
 import com.felinetech.localcat.po.UploadConfigItem
+import com.felinetech.localcat.utlis.PropertiesConfigUtils
 import com.felinetech.localcat.utlis.getDatabase
 import com.felinetech.localcat.utlis.getNames
 import kotlinx.coroutines.CoroutineScope
@@ -63,13 +66,15 @@ object SettingViewModel {
     /**
      * 保存位置
      */
-     var savedPosition by mutableStateOf("./file")
+    var savedPosition by mutableStateOf("./file")
 
 
     /**
      * 缓存位置
      */
-     var cachePosition by mutableStateOf("./cache")
+    var cachePosition by mutableStateOf("./cache")
+
+    val propertiesConfigUtils: PropertiesConfigUtils
 
     init {
         val database: Database = getDatabase()
@@ -78,6 +83,44 @@ object SettingViewModel {
             val uploadList = uploadConfigDao.getAllUploadCon()
             ruleList.addAll(uploadList)
         }
+        // 设置默认文件保存目录
+        val localCatFile = File(System.getProperty("user.home"), "local_cat")
+        if (!localCatFile.exists()) {
+            localCatFile.mkdir()
+        }
+        val configFile = File(localCatFile, "config")
+        if (!configFile.exists()) {
+            configFile.mkdir()
+        }
+
+        val propertiesFile = File(configFile, "config.properties")
+        if (!propertiesFile.exists()) {
+            propertiesFile.createNewFile()
+        }
+        propertiesConfigUtils = PropertiesConfigUtils(propertiesFile)
+        var savePath = propertiesConfigUtils.getValue(SAVE_FILE)
+        if (savePath == null) {
+            val saveFile = File(localCatFile, "save")
+            if (!saveFile.exists()) {
+                saveFile.mkdirs()
+            }
+            savePath = saveFile.absolutePath
+            propertiesConfigUtils.setValue(SAVE_FILE, savePath)
+        }
+        savedPosition = savePath!!
+
+        // 设置缓存保存目录
+
+        var cachePath = propertiesConfigUtils.getValue(CACHE_FILE)
+        if (cachePath == null) {
+            val cacheFile = File(localCatFile, "cache")
+            if (!cacheFile.exists()) {
+                cacheFile.mkdirs()
+            }
+            cachePath = cacheFile.absolutePath
+            propertiesConfigUtils.setValue(CACHE_FILE, cachePath)
+        }
+        cachePosition = cachePath!!
     }
 
     /**
@@ -194,4 +237,20 @@ object SettingViewModel {
         currDate = getNames(Locale.getDefault().language).date
         currTime = getNames(Locale.getDefault().language).time
     }
+
+    /**
+     * 更新文件保存路径
+     */
+    fun updateSaveFile(path: String) {
+        propertiesConfigUtils.setValue(SAVE_FILE, path)
+        savedPosition = path
+    }
+    /**
+     * 更新缓存文件保存路径
+     */
+    fun updateCacheFile(path: String) {
+        propertiesConfigUtils.setValue(CACHE_FILE, path)
+        cachePosition = path
+    }
+
 }
