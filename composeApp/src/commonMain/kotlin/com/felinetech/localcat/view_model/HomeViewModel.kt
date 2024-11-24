@@ -5,17 +5,20 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.felinetech.localcat.Constants.BROADCAST_PORT
+import com.felinetech.localcat.dao.FileEntityDao
 import com.felinetech.localcat.enums.*
+import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
-import com.felinetech.localcat.utlis.getLocalIp
-import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.utlis.*
+import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import org.apache.commons.lang3.StringUtils
+import java.io.File
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -75,6 +78,36 @@ object HomeViewModel {
      * 搜索服务器
      */
     var scanService by mutableStateOf(false)
+
+    private val fileEntityDao: FileEntityDao
+
+    /**
+     * io协程
+     */
+    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val uiScope = CoroutineScope(Dispatchers.Main)
+
+    /**
+     * 初始化
+     */
+    init {
+        val database = getDatabase()
+        fileEntityDao = database.getFileEntityDao()
+
+    }
+
+    /**
+     * 默认数据
+     */
+    fun defaultData() {
+        ioScope.launch {
+            val allFile = fileEntityDao.getAllFiles()
+            val fileList = allFile.filter { it.uploadState == UploadState.待上传 }.map {
+                filePoToFileVo(it)
+            }.toList()
+            scanFileList.addAll(fileList)
+        }
+    }
 
     /**
      * 开始接收按钮被点击
@@ -136,7 +169,6 @@ object HomeViewModel {
     }
 
 
-
     fun senderClick() {
         serviceList.add(ServicePo(1, "192.168.1.1", ConnectStatus.未连接, ConnectButtonState.连接))
     }
@@ -147,16 +179,40 @@ object HomeViewModel {
     fun scanFile() {
         scanFile.value = !scanFile.value
         defaultScope.launch {
-            for (i in 1..5) {
-                scanFileList.add(FileItemVo("$i",FileType.doc文档,"测试$i",UploadState.待上传,50,1024))
-                delay(1000)
+            scanFileList.clear()
+            // 遍历每个规则
+            for (uploadConfigItem in ruleList) {
+                val paramFile = File(uploadConfigItem.listeningDir)
+                if (!paramFile.exists()) {
+                    continue
+                }
+                val fileList = paramFile.listFiles { _, name ->
+                    name.lowercase().endsWith(uploadConfigItem.matchingRule.split(".")[1])
+                }
+                for (file in fileList!!) {
+                    val lastModified = file.lastModified()
+                    // 将时间戳转换为可读的日期格式
+                    val lastModifiedDate = Date(lastModified)
+                    if (lastModifiedDate.after(uploadConfigItem.startDate)) {
+                        continue
+                    }
+
+                    val filePo = FileEntity(
+                        null,
+                        "1",
+                        UUID.randomUUID().toString(),
+                        file.name,
+                        file.absolutePath,
+                        file.length(),
+                        UploadState.待上传
+                    )
+                    val fileVo = filePoToFileVo(filePo)
+                    scanFileList.add(fileVo)
+                    fileEntityDao.insert(filePo)
+                }
             }
             scanFile.value = false
-//            val database = getDatabase()
-//            val fileEntityDao = database.getFileEntityDao()
-//            var list = fileEntityDao.getAllFiles()
         }
-
     }
 
     fun updateIpAddress() {
@@ -174,6 +230,25 @@ object HomeViewModel {
             serviceList.clear()
             println("开始扫描数据源...")
             defaultScope.launch {
+                // 方案1 根据子网掩码 获取广播网位
+                if (StringUtils.isEmpty(ipAddress.value)) {
+                    ipAddress.value = getLocalIp()
+                }
+                val subnetMask = getSubnetMask()
+                val broadcastIp = getBroadcastAddress(ipAddress.value, subnetMask)
+                try {
+                    val ipString = testConnectByIp(broadcastIp)
+                    serviceList.add(
+                        ServicePo(
+                            serviceList.size + 1, ipString, ConnectStatus.未连接, buttonState = ConnectButtonState.连接
+                        )
+                    )
+                    scanService = false
+                    return@launch
+                } catch (e: Exception) {
+                    println("产生异常：${e.message}")
+                }
+                // 方案2 扫描默认广播位
                 for (i in 0..25) {
                     if (!scanService) {
                         println("停止扫描服务器！")
@@ -181,26 +256,7 @@ object HomeViewModel {
                     }
                     val ip = "192.168.$i.255"
                     try {
-                        val socket = DatagramSocket()
-                        socket.broadcast = true
-                        socket.soTimeout = 500
-                        val request = "HELLO".toByteArray()
-                        println("测试广播:$ip")
-                        val requestPacket =
-                            DatagramPacket(request, request.size, InetAddress.getByName(ip), BROADCAST_PORT)
-                        socket.send(requestPacket)
-                        println("链接成功:$ip")
-                        val buffer = ByteArray(1024)
-                        val responsePacket = DatagramPacket(buffer, buffer.size)
-                        socket.receive(responsePacket)
-                        val address = responsePacket.address
-                        val localAddress = socket.localAddress
-                        val socketAddress = responsePacket.socketAddress
-                        val string = socketAddress.toString()
-                        val split = string.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        val ipStr = split[0]
-                        val myIp = ipStr.replace("/", "")
-                        val ipString = address.hostAddress
+                        val ipString = testConnectByIp(ip)
                         serviceList.add(
                             ServicePo(
                                 serviceList.size + 1,
@@ -222,5 +278,32 @@ object HomeViewModel {
         }
 
     }
+
+    private fun testConnectByIp(ip: String): String {
+        val socket = DatagramSocket()
+        socket.broadcast = true
+        socket.soTimeout = 500
+        val request = "HELLO".toByteArray()
+        println("测试广播:$ip")
+        val requestPacket = DatagramPacket(request, request.size, InetAddress.getByName(ip), BROADCAST_PORT)
+        socket.send(requestPacket)
+        println("链接成功:$ip")
+        val buffer = ByteArray(1024)
+        val responsePacket = DatagramPacket(buffer, buffer.size)
+        socket.receive(responsePacket)
+        val address = responsePacket.address
+        val ipString = address.hostAddress
+        return ipString
+    }
+
+    /**
+     * 获取文件类型
+     */
+    private fun getFileType(fileName: String): FileType {
+        return FileType.entries.first { fileName.uppercase().endsWith(it.suffix) }
+    }
+
+    private fun filePoToFileVo(it: FileEntity) =
+        FileItemVo(it.fileId, getFileType(it.fileName), it.fileName, it.uploadState, 0, it.fileSize)
 
 }

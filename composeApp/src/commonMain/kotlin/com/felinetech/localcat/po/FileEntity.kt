@@ -4,20 +4,20 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.felinetech.localcat.enums.UploadState
-import java.util.Date
+import java.util.*
 
 @Entity(tableName = "files_entity")
 data class FileEntity(
     @PrimaryKey(autoGenerate = true)
-    var id: Int,
+    var id: Int?,
     @ColumnInfo(name = "user_id")
     var userId: String? = null,
 
     @ColumnInfo(name = "file_id")
-    var fileId: String? = null,
+    var fileId: String ,
 
     @ColumnInfo(name = "file_name")
-    var fileName: String? = null,
+    var fileName: String,
 
     @ColumnInfo(name = "file_full_name")
     var fileFullName: String? = null,
@@ -26,7 +26,7 @@ data class FileEntity(
     var fileSize: Long = 0,
 
     @ColumnInfo(name = "upload_state")
-    var uploadState: UploadState? = null,
+    var uploadState: UploadState ,
 
     /**
      * 文件块大小

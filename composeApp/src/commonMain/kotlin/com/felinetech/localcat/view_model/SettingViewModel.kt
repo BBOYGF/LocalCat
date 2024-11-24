@@ -62,6 +62,7 @@ object SettingViewModel {
 
     private var uploadConfigDao: UploadConfigDao
     private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val uiScope = CoroutineScope(Dispatchers.Main)
 
     /**
      * 保存位置
@@ -79,10 +80,7 @@ object SettingViewModel {
     init {
         val database: Database = getDatabase()
         uploadConfigDao = database.getUploadConfigItemDao()
-        ioScope.launch {
-            val uploadList = uploadConfigDao.getAllUploadCon()
-            ruleList.addAll(uploadList)
-        }
+
         // 设置默认文件保存目录
         val localCatFile = File(System.getProperty("user.home"), "local_cat")
         if (!localCatFile.exists()) {
@@ -121,6 +119,13 @@ object SettingViewModel {
             propertiesConfigUtils.setValue(CACHE_FILE, cachePath)
         }
         cachePosition = cachePath!!
+    }
+
+    fun defaultData() {
+        ioScope.launch {
+            val uploadList = uploadConfigDao.getAllUploadCon()
+            ruleList.addAll(uploadList)
+        }
     }
 
     /**
@@ -245,6 +250,7 @@ object SettingViewModel {
         propertiesConfigUtils.setValue(SAVE_FILE, path)
         savedPosition = path
     }
+
     /**
      * 更新缓存文件保存路径
      */

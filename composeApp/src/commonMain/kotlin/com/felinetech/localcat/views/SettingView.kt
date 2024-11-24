@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.RuleItem
 import com.felinetech.localcat.enums.FileType
@@ -33,6 +36,7 @@ import com.felinetech.localcat.view_model.SettingViewModel.addRule
 import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.currDate
 import com.felinetech.localcat.view_model.SettingViewModel.currTime
+import com.felinetech.localcat.view_model.SettingViewModel.defaultData
 import com.felinetech.localcat.view_model.SettingViewModel.defaultValue
 import com.felinetech.localcat.view_model.SettingViewModel.deleteConfig
 import com.felinetech.localcat.view_model.SettingViewModel.editConfig
@@ -56,10 +60,8 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingView() {
-
     var showDatePicker by remember { mutableStateOf(false) }
     var eidt by remember { mutableStateOf(false) }
-
     val dataPickerState = rememberDatePickerState()
     ColorBackground()
     Column(
@@ -483,7 +485,32 @@ fun SettingView() {
             }
         }
     }
+    // 设置生命周期
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_CREATE) {
 
+                defaultData()
+
+                println("生命创建")
+            } else if (event == Lifecycle.Event.ON_START) {
+//                defaultData()
+                println("生命周期开始")
+            } else if (event == Lifecycle.Event.ON_STOP) {
+                println("生命周期结束")
+            }
+        }
+
+        // Add the observer to the lifecycle
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+
+        // When the effect leaves the Composition, remove the observer
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 }
 
 

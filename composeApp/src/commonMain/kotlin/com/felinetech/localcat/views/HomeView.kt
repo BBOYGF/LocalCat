@@ -23,6 +23,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.HomeViewModel.defaultData
 import com.felinetech.localcat.view_model.HomeViewModel.ipAddress
 import com.felinetech.localcat.view_model.HomeViewModel.updateIpAddress
 import com.felinetech.localcat.view_model.MainViewModel
@@ -88,6 +89,7 @@ fun HomePage() {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
                 updateIpAddress()
+                defaultData()
                 println("生命周期开始")
 
             } else if (event == Lifecycle.Event.ON_STOP) {

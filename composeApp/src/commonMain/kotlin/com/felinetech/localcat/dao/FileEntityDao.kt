@@ -21,7 +21,7 @@ public interface FileEntityDao {
     suspend fun deleteFileById(fileId: String?)
 
     @Query("SELECT * FROM files_entity")
-    suspend fun getAllFiles(): List<FileEntity?>?
+    suspend fun getAllFiles(): List<FileEntity>
 
     @Query("SELECT * FROM files_entity WHERE file_id = :fileId")
     suspend fun getFileById(fileId: String?): FileEntity?
