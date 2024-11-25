@@ -23,7 +23,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.utlis.getNames
-import com.felinetech.localcat.view_model.HomeViewModel.defaultData
 import com.felinetech.localcat.view_model.HomeViewModel.ipAddress
 import com.felinetech.localcat.view_model.HomeViewModel.updateIpAddress
 import com.felinetech.localcat.view_model.MainViewModel
@@ -84,23 +83,16 @@ fun HomePage() {
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        // Create an observer that triggers our remembered callbacks
-        // for sending analytics events
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
                 updateIpAddress()
-                defaultData()
                 println("生命周期开始")
 
             } else if (event == Lifecycle.Event.ON_STOP) {
                 println("生命周期结束")
             }
         }
-
-        // Add the observer to the lifecycle
         lifecycleOwner.lifecycle.addObserver(observer)
-
-        // When the effect leaves the Composition, remove the observer
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }

@@ -72,8 +72,9 @@ fun Receiver(turnState: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(600.dp)
+                .height(800.dp)
                 .padding(5.dp),
+
         ) {
             Surface(
                 modifier = Modifier

@@ -119,12 +119,15 @@ object SettingViewModel {
             propertiesConfigUtils.setValue(CACHE_FILE, cachePath)
         }
         cachePosition = cachePath!!
+        defaultData()
     }
 
     fun defaultData() {
         ioScope.launch {
             val uploadList = uploadConfigDao.getAllUploadCon()
-            ruleList.addAll(uploadList)
+            uiScope.launch {
+                ruleList.addAll(uploadList)
+            }
         }
     }
 

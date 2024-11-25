@@ -36,7 +36,6 @@ import com.felinetech.localcat.view_model.SettingViewModel.addRule
 import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.currDate
 import com.felinetech.localcat.view_model.SettingViewModel.currTime
-import com.felinetech.localcat.view_model.SettingViewModel.defaultData
 import com.felinetech.localcat.view_model.SettingViewModel.defaultValue
 import com.felinetech.localcat.view_model.SettingViewModel.deleteConfig
 import com.felinetech.localcat.view_model.SettingViewModel.editConfig
@@ -481,21 +480,17 @@ fun SettingView() {
                         }
                     }
                 }
-
             }
         }
     }
+
     // 设置生命周期
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_CREATE) {
-
-                defaultData()
-
                 println("生命创建")
             } else if (event == Lifecycle.Event.ON_START) {
-//                defaultData()
                 println("生命周期开始")
             } else if (event == Lifecycle.Event.ON_STOP) {
                 println("生命周期结束")
@@ -511,6 +506,7 @@ fun SettingView() {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
+
 }
 
 

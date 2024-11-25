@@ -35,6 +35,8 @@ kotlin {
             implementation("com.google.accompanist:accompanist-permissions:0.36.0")
             // material3
 //            implementation("org.jetbrains.compose.material3:material3:1.7.0")
+            runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+            runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -54,8 +56,7 @@ kotlin {
 
             implementation("com.google.code.gson:gson:2.11.0")
 
-            runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-            runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
             implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
@@ -66,6 +67,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(compose.components.resources)
+            runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0")
 
 //            implementation("org.jetbrains.compose.material3:material3:1.7.0")
 

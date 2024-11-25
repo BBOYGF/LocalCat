@@ -32,7 +32,7 @@ object HomeViewModel {
      */
     val scanFileList = mutableStateListOf<FileItemVo>()
 
-    var scanFile = mutableStateOf(false)
+    var scanFile by mutableStateOf(false)
 
     /**
      * 客户端列表
@@ -93,19 +93,21 @@ object HomeViewModel {
     init {
         val database = getDatabase()
         fileEntityDao = database.getFileEntityDao()
-
+        defaultData()
     }
 
     /**
      * 默认数据
      */
-    fun defaultData() {
+    private fun defaultData() {
         ioScope.launch {
             val allFile = fileEntityDao.getAllFiles()
             val fileList = allFile.filter { it.uploadState == UploadState.待上传 }.map {
                 filePoToFileVo(it)
             }.toList()
-            scanFileList.addAll(fileList)
+            uiScope.launch {
+                scanFileList.addAll(fileList)
+            }
         }
     }
 
@@ -177,8 +179,10 @@ object HomeViewModel {
      * 扫描文件
      */
     fun scanFile() {
-        scanFile.value = !scanFile.value
         defaultScope.launch {
+            uiScope.launch {
+                scanFile = !scanFile
+            }
             scanFileList.clear()
             // 遍历每个规则
             for (uploadConfigItem in ruleList) {
@@ -207,11 +211,15 @@ object HomeViewModel {
                         UploadState.待上传
                     )
                     val fileVo = filePoToFileVo(filePo)
-                    scanFileList.add(fileVo)
                     fileEntityDao.insert(filePo)
+                    uiScope.launch {
+                        scanFileList.add(fileVo)
+                    }
                 }
             }
-            scanFile.value = false
+            uiScope.launch {
+                scanFile = false
+            }
         }
     }
 
@@ -300,7 +308,7 @@ object HomeViewModel {
      * 获取文件类型
      */
     private fun getFileType(fileName: String): FileType {
-        return FileType.entries.first { fileName.uppercase().endsWith(it.suffix) }
+        return FileType.entries.first { fileName.lowercase().endsWith(it.suffix) }
     }
 
     private fun filePoToFileVo(it: FileEntity) =

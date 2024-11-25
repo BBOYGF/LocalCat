@@ -6,27 +6,14 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -47,9 +34,7 @@ import com.felinetech.localcat.view_model.HomeViewModel.scanFileList
 import com.felinetech.localcat.view_model.HomeViewModel.scanService
 import com.felinetech.localcat.view_model.HomeViewModel.startScanService
 import com.felinetech.localcat.view_model.MainViewModel
-import java.util.Locale
-
-
+import java.util.*
 /**
  * 发送者
  */
@@ -58,7 +43,6 @@ fun Sender(turnState: Boolean) {
     val turn = remember { Animatable(if (turnState) -180f else 0f) }
     val deepStart = remember { Animatable(if (turnState) 0.6f else 1f) }
     val viewModel = HomeViewModel
-
     if (turnState) {
         LaunchedEffect(false) {
             deepStart.animateTo(
@@ -83,8 +67,8 @@ fun Sender(turnState: Boolean) {
     val rotationDegrees = remember { Animatable(0f) }
 
     // 启动一个协程来处理旋转动画
-    LaunchedEffect(scanFile.value) {
-        if (scanFile.value) {
+    LaunchedEffect(scanFile) {
+        if (scanFile) {
             while (true) {
                 rotationDegrees.animateTo(
                     targetValue = rotationDegrees.value + 360f,
@@ -137,7 +121,7 @@ fun Sender(turnState: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .height(600.dp)
+                .height(800.dp)
                 .padding(5.dp),
         ) {
             Row(
@@ -203,7 +187,6 @@ fun Sender(turnState: Boolean) {
                     )
                 }
             }
-
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -213,7 +196,6 @@ fun Sender(turnState: Boolean) {
                 }
             }
         }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -231,9 +213,8 @@ fun Sender(turnState: Boolean) {
                 )
             }
         }
-
     }
-    if (scanFile.value) {
+    if (scanFile) {
         Dialog(
             onDismissRequest = { },
         ) {
