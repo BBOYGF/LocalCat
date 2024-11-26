@@ -314,4 +314,20 @@ object HomeViewModel {
     private fun filePoToFileVo(it: FileEntity) =
         FileItemVo(it.fileId, getFileType(it.fileName), it.fileName, it.uploadState, 0, it.fileSize)
 
+    /**
+     * 清除历史记录
+     */
+    fun cleanHistory() {
+        scanFileList.clear()
+        ioScope.launch {
+            fileEntityDao.deleteAll()
+        }
+    }
+
+    /**
+     * 链接数据源
+     */
+    fun connectDataSources(servicePo: ServicePo) {
+        println("链接服务器$servicePo")
+    }
 }

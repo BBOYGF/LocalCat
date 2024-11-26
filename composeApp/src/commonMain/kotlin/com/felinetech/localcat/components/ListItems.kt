@@ -99,7 +99,7 @@ fun FileItem(item: FileItemVo) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ServerItem(servicePo: ServicePo) {
+fun ServerItem(servicePo: ServicePo, connectFun: (service: ServicePo) -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,10 +125,10 @@ fun ServerItem(servicePo: ServicePo) {
             Text(
                 text = servicePo.buttonState.name,
                 modifier = Modifier.padding(end = 5.dp)
-//                    .onClick {
-//                        println("被点击")
-//                    }
-                ,
+                    .onClick {
+                        println("$servicePo 被点击")
+                        connectFun(servicePo)
+                    },
                 color = MaterialTheme.colorScheme.tertiary
             )
             Text(

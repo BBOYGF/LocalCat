@@ -29,12 +29,14 @@ import com.felinetech.localcat.components.ScanFile
 import com.felinetech.localcat.components.ServerItem
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel
+import com.felinetech.localcat.view_model.HomeViewModel.connectDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
 import com.felinetech.localcat.view_model.HomeViewModel.scanFileList
 import com.felinetech.localcat.view_model.HomeViewModel.scanService
 import com.felinetech.localcat.view_model.HomeViewModel.startScanService
 import com.felinetech.localcat.view_model.MainViewModel
 import java.util.*
+
 /**
  * 发送者
  */
@@ -163,7 +165,9 @@ fun Sender(turnState: Boolean) {
                 ) {
                     // 接收者列表
                     items(viewModel.serviceList) { item ->
-                        ServerItem(item)
+                        ServerItem(item) {
+                            connectDataSources(it)
+                        }
                     }
                 }
             }
