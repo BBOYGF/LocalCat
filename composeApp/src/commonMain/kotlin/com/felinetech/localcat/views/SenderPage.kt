@@ -28,13 +28,16 @@ import com.felinetech.localcat.components.FileItem
 import com.felinetech.localcat.components.ScanFile
 import com.felinetech.localcat.components.ServerItem
 import com.felinetech.localcat.utlis.getNames
-import com.felinetech.localcat.view_model.HomeViewModel
 import com.felinetech.localcat.view_model.HomeViewModel.connectDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
 import com.felinetech.localcat.view_model.HomeViewModel.scanFileList
 import com.felinetech.localcat.view_model.HomeViewModel.scanService
+import com.felinetech.localcat.view_model.HomeViewModel.senderClick
+import com.felinetech.localcat.view_model.HomeViewModel.serviceList
 import com.felinetech.localcat.view_model.HomeViewModel.startScanService
 import com.felinetech.localcat.view_model.MainViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.util.*
 
 /**
@@ -44,7 +47,7 @@ import java.util.*
 fun Sender(turnState: Boolean) {
     val turn = remember { Animatable(if (turnState) -180f else 0f) }
     val deepStart = remember { Animatable(if (turnState) 0.6f else 1f) }
-    val viewModel = HomeViewModel
+    val uiScope = CoroutineScope(Dispatchers.Main)
     if (turnState) {
         LaunchedEffect(false) {
             deepStart.animateTo(
@@ -159,12 +162,13 @@ fun Sender(turnState: Boolean) {
                 color = Color(0x99ffffff),
                 shape = RoundedCornerShape(5.dp)
             ) {
+
                 // 记住我们自己的 LazyListState
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     // 接收者列表
-                    items(viewModel.serviceList) { item ->
+                    items(serviceList) { item ->
                         ServerItem(item) {
                             connectDataSources(it)
                         }
@@ -208,7 +212,7 @@ fun Sender(turnState: Boolean) {
             verticalArrangement = Arrangement.Bottom
         ) {
             Button(
-                onClick = { viewModel.senderClick() }
+                onClick = { senderClick() }
             ) {
                 Text(
                     text = getNames(Locale.getDefault().language).startUploading,

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.felinetech.localcat.Constants.BROADCAST_PORT
+import com.felinetech.localcat.Constants.HEART_BEAT_SERVER_POST
 import com.felinetech.localcat.dao.FileEntityDao
 import com.felinetech.localcat.enums.*
 import com.felinetech.localcat.po.FileEntity
@@ -20,11 +21,9 @@ import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
 import java.io.File
 import java.io.IOException
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
-import java.net.SocketTimeoutException
+import java.net.*
 import java.util.*
+
 
 object HomeViewModel {
     /**
@@ -33,6 +32,8 @@ object HomeViewModel {
     val scanFileList = mutableStateListOf<FileItemVo>()
 
     var scanFile by mutableStateOf(false)
+
+    val refresh = MutableStateFlow(false)
 
     /**
      * 客户端列表
@@ -329,5 +330,28 @@ object HomeViewModel {
      */
     fun connectDataSources(servicePo: ServicePo) {
         println("链接服务器$servicePo")
+        servicePo.buttonState = ConnectButtonState.断开
+        serviceList.remove(servicePo)
+
+        serviceList.add(servicePo.copy())
+
+
+        // 与接收者链接发送心跳信息
+        // 启动心跳协程
+        ioScope.launch {
+//            refresh.emit(true)
+            while (true) {
+                val socket = Socket(servicePo.ip, HEART_BEAT_SERVER_POST)
+                socket.setSoTimeout(10000)
+                val inputStream = socket.getInputStream()
+                val outputStream = socket.getOutputStream()
+
+
+                // 发送心跳
+                sendHead(outputStream, MsgType.心跳, 0);
+            }
+        }
+
+
     }
 }

@@ -69,4 +69,9 @@ object Constants {
     val SAVE_FILE = "save_file"
 
     val CACHE_FILE = "cache_file"
+
+    /**
+     * 心跳端口号
+     */
+    const val HEART_BEAT_SERVER_POST: Int = 8201
 }
