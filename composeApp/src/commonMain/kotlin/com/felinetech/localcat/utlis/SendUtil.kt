@@ -41,7 +41,7 @@ private fun msgHeadToBytes(msgType: MsgType, bodyLength: Long): ByteArray {
  * @throws IOException 异常
  */
 @Throws(IOException::class)
-fun readHead(inputStream: InputStream): MsgHead? {
+fun readHead(inputStream: InputStream): MsgHead {
     var msgHead: MsgHead? = null
     var headMsgStr: String? = null
     try {

@@ -27,7 +27,9 @@ import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.FileItem
 import com.felinetech.localcat.components.ScanFile
 import com.felinetech.localcat.components.ServerItem
+import com.felinetech.localcat.enums.ConnectButtonState
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.HomeViewModel.closeDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.connectDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
 import com.felinetech.localcat.view_model.HomeViewModel.scanFileList
@@ -170,7 +172,13 @@ fun Sender(turnState: Boolean) {
                     // 接收者列表
                     items(serviceList) { item ->
                         ServerItem(item) {
-                            connectDataSources(it)
+                            if (it.buttonState == ConnectButtonState.连接) {
+                                // 链接数据源
+                                connectDataSources(it)
+                            } else {
+                                // 断开数据源
+                                closeDataSources(it)
+                            }
                         }
                     }
                 }

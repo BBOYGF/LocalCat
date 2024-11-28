@@ -9,20 +9,18 @@ import com.felinetech.localcat.Constants.HEART_BEAT_SERVER_POST
 import com.felinetech.localcat.dao.FileEntityDao
 import com.felinetech.localcat.enums.*
 import com.felinetech.localcat.po.FileEntity
-import com.felinetech.localcat.pojo.ClientVo
-import com.felinetech.localcat.pojo.FileItemVo
-import com.felinetech.localcat.pojo.ServicePo
+import com.felinetech.localcat.pojo.*
 import com.felinetech.localcat.utlis.*
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import javafx.scene.web.HTMLEditorSkin.Command
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
 import java.io.File
 import java.io.IOException
 import java.net.*
 import java.util.*
+import kotlin.math.floor
 
 
 object HomeViewModel {
@@ -87,6 +85,17 @@ object HomeViewModel {
      */
     private val ioScope = CoroutineScope(Dispatchers.IO)
     private val uiScope = CoroutineScope(Dispatchers.Main)
+
+    /**
+     * &
+     * 任务队列
+     */
+    private val commandQueue: Queue<Command> = LinkedList()
+
+    /**
+     * 保持链接
+     */
+    private var keepConnect = true
 
     /**
      * 初始化
@@ -330,28 +339,119 @@ object HomeViewModel {
      */
     fun connectDataSources(servicePo: ServicePo) {
         println("链接服务器$servicePo")
-        servicePo.buttonState = ConnectButtonState.断开
-        serviceList.remove(servicePo)
-
-        serviceList.add(servicePo.copy())
-
-
+        keepConnect = true
         // 与接收者链接发送心跳信息
         // 启动心跳协程
         ioScope.launch {
-//            refresh.emit(true)
-            while (true) {
-                val socket = Socket(servicePo.ip, HEART_BEAT_SERVER_POST)
-                socket.setSoTimeout(10000)
-                val inputStream = socket.getInputStream()
-                val outputStream = socket.getOutputStream()
+            var socket: Socket? = null
+            while (keepConnect) {
+                try {
+                    socket = Socket(servicePo.ip, HEART_BEAT_SERVER_POST)
+                    socket.setSoTimeout(10000)
+                    updateServiceState(servicePo, ConnectButtonState.断开)
+                    val inputStream = socket.getInputStream()
+                    val outputStream = socket.getOutputStream()
+                    // 发送心跳
+                    sendHead(outputStream, MsgType.心跳, 0);
+                    while (keepConnect) {
+                        // 接收心跳
+                        val msgHead: MsgHead = readHead(inputStream)
+                        if (MsgType.心跳 == msgHead.getMsgType()) {
+                            // 收到确认消息，连接正常
+                            println("接收心跳")
+                        } else if (MsgType.传输数据 == msgHead.getMsgType()) {
+                            println("传输数据...")
+                            val portTask: PortAndTask =
+                                readBody(msgHead.getDataLength().toInt(), PortAndTask::class.java, inputStream)
+                            uploadData(portTask, servicePo)
+                        }
 
-
-                // 发送心跳
-                sendHead(outputStream, MsgType.心跳, 0);
+                        // 如果有命令 那么就执行命令
+                        if (!commandQueue.isEmpty()) {
+                            val command: Command = commandQueue.poll()
+                            println("run: 当前命令为:$command")
+                            // 响应结果
+                            sendHeadBody(outputStream, MsgType.更新列表, command)
+                        } else {
+                            // 每秒发送心跳
+                            delay(1000)
+                            sendHead(outputStream, MsgType.心跳, 0)
+                        }
+                    }
+                } catch (e: Exception) {
+                    println("链接失败${e.message}")
+                    updateServiceState(servicePo, ConnectButtonState.连接)
+                }
             }
+            // 退出循环后关闭链接
+            socket?.let { it.close() }
+        }
+    }
+
+    /**
+     * 断开链接
+     */
+    fun closeDataSources(servicePo: ServicePo) {
+        keepConnect = false
+        updateServiceState(servicePo, ConnectButtonState.连接)
+    }
+
+    /**
+     * 上传数据
+     */
+    private fun uploadData(portTask: PortAndTask, servicePo: ServicePo) {
+        val portList: List<Int> = portTask.portList
+        val taskPo: TaskPo = portTask.taskPo
+        // 根据端口号的数量分配线程去发送数据
+        val fileChunkEntityList = taskPo.fileChunkEntityList
+        val eachGroupCount = floor(fileChunkEntityList.size.toDouble() / portList.size).toInt()
+        val serviceTaskMap = HashMap<ServiceInfo, TaskPo>()
+        for (i in portList.indices) {
+            val integer = portList[i]
+            val fromIndex = i * eachGroupCount
+            var toIndex = (i + 1) * eachGroupCount
+            if (i == portList.size - 1) {
+                toIndex = fileChunkEntityList.size
+            }
+            val fileChunkEntities = fileChunkEntityList.subList(fromIndex, toIndex)
+            val currTaskPo = TaskPo(taskPo.fileEntity, fileChunkEntities, taskPo.chunkSize)
+            val serviceInfo: ServiceInfo = ServiceInfo(servicePo.ip, integer)
+            serviceTaskMap[serviceInfo] = currTaskPo
+        }
+        val results = mutableListOf<Deferred<Boolean>>()
+        // 异步执行
+        ioScope.launch {
+            for (mutableEntry in serviceTaskMap) {
+                val result = syncUploadFile(mutableEntry.key, mutableEntry.value)
+                results.add(result)
+            }
+            results.awaitAll()
         }
 
+    }
 
+    /**
+     * 异步发送数据
+     */
+    private fun syncUploadFile(serviceInfo: ServiceInfo, currTaskPo: TaskPo): Deferred<Boolean> = ioScope.async {
+        // 执行异步上传逻辑成功返回true
+
+        // 发送每个数据包然后等待成功后返回
+
+        // 每个数据表成功后跟新数据库
+
+        return@async true
+    }
+
+    /**
+     * 更新Button状态
+     */
+    private fun updateServiceState(servicePo: ServicePo, buttonState: ConnectButtonState) {
+        serviceList.find { it == servicePo }.let {
+            val index = serviceList.indexOf(servicePo)
+            serviceList.removeAt(index)
+            servicePo.buttonState = buttonState
+            serviceList.add(index, servicePo.copy())
+        }
     }
 }
