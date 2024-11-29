@@ -24,13 +24,13 @@ public interface FileEntityDao {
     suspend fun getAllFiles(): List<FileEntity>
 
     @Query("SELECT * FROM files_entity WHERE file_id = :fileId")
-    suspend fun getFileById(fileId: String?): FileEntity?
+    suspend fun getFileById(fileId: String?): FileEntity
 
     @Query("SELECT * FROM files_entity WHERE user_id = :userId")
-    suspend fun getFilesByUserId(userId: Int): List<FileEntity?>?
+    suspend fun getFilesByUserId(userId: Int): List<FileEntity>
 
     @Query("SELECT  * FROM files_entity WHERE  file_full_name= :uri LIMIT 1")
-    suspend fun getFileByUri(uri: String?): FileEntity?
+    suspend fun getFileByUri(uri: String?): FileEntity
 
     @Query("update files_entity set upload_state=:uploadState where file_id=:fileId")
     suspend fun updateStateByFileId(fileId: String?, uploadState: UploadState?)

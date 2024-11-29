@@ -12,7 +12,6 @@ import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.*
 import com.felinetech.localcat.utlis.*
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
-import javafx.scene.web.HTMLEditorSkin.Command
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.apache.commons.lang3.StringUtils
