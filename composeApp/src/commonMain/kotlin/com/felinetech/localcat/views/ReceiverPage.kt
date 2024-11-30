@@ -26,7 +26,7 @@ import com.felinetech.localcat.view_model.HomeViewModel.clickReceiverButton
 import com.felinetech.localcat.view_model.HomeViewModel.clineList
 import com.felinetech.localcat.view_model.HomeViewModel.receiverAnimation
 import com.felinetech.localcat.view_model.HomeViewModel.receiverButtonTitle
-import com.felinetech.localcat.view_model.HomeViewModel.scanFileList
+import com.felinetech.localcat.view_model.HomeViewModel.toBeUploadFileList
 import com.felinetech.localcat.view_model.MainViewModel
 import java.util.*
 
@@ -100,7 +100,7 @@ fun Receiver(turnState: Boolean) {
             }
             Text(text =  getNames(Locale.getDefault().language).currentlyReceivingFiles)
             LazyColumn {
-                items(scanFileList) { item ->
+                items(toBeUploadFileList) { item ->
                     FileItem(item = item)
                 }
             }

@@ -32,7 +32,7 @@ import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel.closeDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.connectDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
-import com.felinetech.localcat.view_model.HomeViewModel.scanFileList
+import com.felinetech.localcat.view_model.HomeViewModel.toBeUploadFileList
 import com.felinetech.localcat.view_model.HomeViewModel.scanService
 import com.felinetech.localcat.view_model.HomeViewModel.senderClick
 import com.felinetech.localcat.view_model.HomeViewModel.serviceList
@@ -207,7 +207,7 @@ fun Sender(turnState: Boolean) {
                 modifier = Modifier
                     .weight(1f)
             ) {
-                items(scanFileList) { item ->
+                items(toBeUploadFileList) { item ->
                     FileItem(item)
                 }
             }

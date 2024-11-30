@@ -6,8 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.felinetech.localcat.Constants.BROADCAST_PORT
 import com.felinetech.localcat.Constants.HEART_BEAT_SERVER_POST
+import com.felinetech.localcat.dao.FileChunkDao
 import com.felinetech.localcat.dao.FileEntityDao
 import com.felinetech.localcat.enums.*
+import com.felinetech.localcat.po.FileChunkEntity
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.*
 import com.felinetech.localcat.utlis.*
@@ -15,10 +17,10 @@ import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.apache.commons.lang3.StringUtils
-import java.io.File
-import java.io.IOException
+import java.io.*
 import java.net.*
 import java.util.*
+import java.util.stream.Collectors
 import kotlin.math.floor
 
 
@@ -26,7 +28,7 @@ object HomeViewModel {
     /**
      * 待上传文件
      */
-    val scanFileList = mutableStateListOf<FileItemVo>()
+    val toBeUploadFileList = mutableStateListOf<FileItemVo>()
 
     var scanFile by mutableStateOf(false)
 
@@ -78,6 +80,7 @@ object HomeViewModel {
     var scanService by mutableStateOf(false)
 
     private val fileEntityDao: FileEntityDao
+    private var fileChunkDao: FileChunkDao
 
     /**
      * io协程
@@ -102,6 +105,7 @@ object HomeViewModel {
     init {
         val database = getDatabase()
         fileEntityDao = database.getFileEntityDao()
+        fileChunkDao = database.getFileChunkEntityDao()
         defaultData()
     }
 
@@ -115,7 +119,7 @@ object HomeViewModel {
                 filePoToFileVo(it)
             }.toList()
             uiScope.launch {
-                scanFileList.addAll(fileList)
+                toBeUploadFileList.addAll(fileList)
             }
         }
     }
@@ -181,7 +185,7 @@ object HomeViewModel {
 
 
     fun senderClick() {
-        serviceList.add(ServicePo(1, "192.168.1.1", ConnectStatus.未连接, ConnectButtonState.连接))
+
     }
 
     /**
@@ -192,7 +196,7 @@ object HomeViewModel {
             uiScope.launch {
                 scanFile = !scanFile
             }
-            scanFileList.clear()
+            toBeUploadFileList.clear()
             // 遍历每个规则
             for (uploadConfigItem in ruleList) {
                 val paramFile = File(uploadConfigItem.listeningDir)
@@ -206,7 +210,7 @@ object HomeViewModel {
                     val lastModified = file.lastModified()
                     // 将时间戳转换为可读的日期格式
                     val lastModifiedDate = Date(lastModified)
-                    if (lastModifiedDate.after(uploadConfigItem.startDate)) {
+                    if (lastModifiedDate.before(uploadConfigItem.startDate)) {
                         continue
                     }
 
@@ -222,7 +226,7 @@ object HomeViewModel {
                     val fileVo = filePoToFileVo(filePo)
                     fileEntityDao.insert(filePo)
                     uiScope.launch {
-                        scanFileList.add(fileVo)
+                        toBeUploadFileList.add(fileVo)
                     }
                 }
             }
@@ -314,20 +318,10 @@ object HomeViewModel {
     }
 
     /**
-     * 获取文件类型
-     */
-    private fun getFileType(fileName: String): FileType {
-        return FileType.entries.first { fileName.lowercase().endsWith(it.suffix) }
-    }
-
-    private fun filePoToFileVo(it: FileEntity) =
-        FileItemVo(it.fileId, getFileType(it.fileName), it.fileName, it.uploadState, 0, it.fileSize)
-
-    /**
      * 清除历史记录
      */
     fun cleanHistory() {
-        scanFileList.clear()
+        toBeUploadFileList.clear()
         ioScope.launch {
             fileEntityDao.deleteAll()
         }
@@ -343,8 +337,8 @@ object HomeViewModel {
         // 启动心跳协程
         ioScope.launch {
             var socket: Socket? = null
-            while (keepConnect) {
-                try {
+            try {
+                while (keepConnect) {
                     socket = Socket(servicePo.ip, HEART_BEAT_SERVER_POST)
                     socket.setSoTimeout(10000)
                     updateServiceState(servicePo, ConnectButtonState.断开)
@@ -355,13 +349,13 @@ object HomeViewModel {
                     while (keepConnect) {
                         // 接收心跳
                         val msgHead: MsgHead = readHead(inputStream)
-                        if (MsgType.心跳 == msgHead.getMsgType()) {
+                        if (MsgType.心跳 == msgHead.msgType) {
                             // 收到确认消息，连接正常
                             println("接收心跳")
-                        } else if (MsgType.传输数据 == msgHead.getMsgType()) {
+                        } else if (MsgType.传输数据 == msgHead.msgType) {
                             println("传输数据...")
                             val portTask: PortAndTask =
-                                readBody(msgHead.getDataLength().toInt(), PortAndTask::class.java, inputStream)
+                                readBody(msgHead.dataLength.toInt(), PortAndTask::class.java, inputStream)
                             uploadData(portTask, servicePo)
                         }
 
@@ -377,10 +371,10 @@ object HomeViewModel {
                             sendHead(outputStream, MsgType.心跳, 0)
                         }
                     }
-                } catch (e: Exception) {
-                    println("链接失败${e.message}")
-                    updateServiceState(servicePo, ConnectButtonState.连接)
                 }
+            } catch (e: Exception) {
+                println("链接失败${e.message}")
+                updateServiceState(servicePo, ConnectButtonState.连接)
             }
             // 退出循环后关闭链接
             socket?.let { it.close() }
@@ -414,7 +408,7 @@ object HomeViewModel {
             }
             val fileChunkEntities = fileChunkEntityList.subList(fromIndex, toIndex)
             val currTaskPo = TaskPo(taskPo.fileEntity, fileChunkEntities, taskPo.chunkSize)
-            val serviceInfo: ServiceInfo = ServiceInfo(servicePo.ip, integer)
+            val serviceInfo = ServiceInfo(servicePo.ip, integer)
             serviceTaskMap[serviceInfo] = currTaskPo
         }
         val results = mutableListOf<Deferred<Boolean>>()
@@ -432,13 +426,81 @@ object HomeViewModel {
     /**
      * 异步发送数据
      */
-    private fun syncUploadFile(serviceInfo: ServiceInfo, currTaskPo: TaskPo): Deferred<Boolean> = ioScope.async {
-        // 执行异步上传逻辑成功返回true
+    private fun syncUploadFile(serviceInfo: ServiceInfo, taskPo: TaskPo): Deferred<Boolean> = ioScope.async {
+        try {
+            // 执行异步上传逻辑成功返回true
+            val dataSocket: Socket = Socket(serviceInfo.ip, serviceInfo.port)
+            val outputStream: OutputStream = dataSocket.getOutputStream()
+            val inputStream: InputStream = dataSocket.getInputStream()
+            val fileChunkEntities: List<FileChunkEntity> =
+                taskPo.fileChunkEntityList.stream().filter { fileChunkEntity ->
+                    UploadState.已上传 != fileChunkEntity.uploadStatus
+                }.collect(Collectors.toList())
+            val file = File(taskPo.fileEntity.fileFullName)
+            val fileInputStream = FileInputStream(file)
 
-        // 发送每个数据包然后等待成功后返回
+            for ((i, fileChunkEntity) in fileChunkEntities.withIndex()) {
+                if (!keepConnect) {
+                    return@async false
+                }
+                sendHeadBody(outputStream, MsgType.传输数据, fileChunkEntity);
+                val jump: Long = fileChunkEntity.chunkIndex.toLong() * taskPo.fileEntity.chunkSize
 
-        // 每个数据表成功后跟新数据库
+                val skip = fileInputStream.skip(jump)
+                if (skip != jump) {
+                    println("跳转失败!文件块" + fileChunkEntity.chunkIndex)
+                    return@async false
+                }
 
+                val chunkSize = fileChunkEntity.chunkSize.toInt()
+                val bodyData = ByteArray(chunkSize)
+                val o = fileInputStream.read(bodyData)
+                if (o != chunkSize) {
+                    println("文件读取失败!文件块" + fileChunkEntity.chunkIndex.toString() + "要读取的文件大小是:" + chunkSize + "实际读取的文件块是:" + o)
+                    return@async false
+                }
+                sendHead(outputStream, MsgType.传输数据, bodyData.size.toLong())
+                outputStream.write(bodyData)
+                outputStream.flush()
+                // 发送完毕 接收
+                val msgHead1: MsgHead = readHead(inputStream)
+                if (msgHead1.msgType == MsgType.传输成功) {
+                    fileChunkEntity.uploadStatus = UploadState.已上传
+                    fileChunkDao.updateFileChunkByFileId(
+                        fileChunkEntity.fileId,
+                        fileChunkEntity.chunkIndex,
+                        UploadState.已上传
+                    )
+                    // 更新进度
+                    toBeUploadFileList.find { it.fileId == fileChunkEntity.fileId }?.let {
+                        val index = toBeUploadFileList.indexOf(it)
+                        val chunkEntities: List<FileChunkEntity> =
+                            fileChunkDao.getFileChunksByFileId(taskPo.fileEntity.fileId)
+                        val count = chunkEntities.stream().filter { fileChunk: FileChunkEntity ->
+                            UploadState.已上传 == fileChunk.uploadStatus
+                        }.count()
+                        val percent = floor(count.toDouble() / chunkEntities.size.toDouble() * 100).toInt()
+                        it.percent = percent
+                        toBeUploadFileList.removeAt(index)
+                        toBeUploadFileList.add(index, it.copy())
+                        fileChunkDao.delete(fileChunkEntity);
+                    }
+                } else {
+                    println("run: 文件块上传失败!" + fileChunkEntity.fileId + "|" + fileChunkEntity.chunkIndex)
+                    return@async false
+                }
+                if (i == fileChunkEntities.size - 1) {
+                    sendHead(outputStream, MsgType.OK, 0)
+                    println("run: 数据已上传结束")
+                } else {
+                    sendHead(outputStream, MsgType.继续上传, 0)
+                }
+            }
+
+
+        } catch (e: Exception) {
+            println("产生异常！")
+        }
         return@async true
     }
 

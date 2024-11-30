@@ -20,9 +20,7 @@ private val gson = Gson()
  * @return 二进制
  */
 private fun msgHeadToBytes(msgType: MsgType, bodyLength: Long): ByteArray {
-    val msgSession: MsgHead = MsgHead()
-    msgSession.setMsgType(msgType)
-    msgSession.setDataLength(bodyLength)
+    val msgSession = MsgHead(msgType,bodyLength)
     val msgSessionStr: String = gson.toJson(msgSession)
 
     val msgSessionStrBytes: ByteArray = msgSessionStr.toByteArray(StandardCharsets.UTF_8)

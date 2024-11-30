@@ -20,10 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.FileItem
-import com.felinetech.localcat.enums.FileType
-import com.felinetech.localcat.enums.UploadState
-import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.HistoryViewModel.downloadedFileList
+import com.felinetech.localcat.view_model.HistoryViewModel.uploadedFileList
 import com.felinetech.localcat.view_model.HomeViewModel.cleanHistory
 import java.util.*
 
@@ -60,23 +59,16 @@ fun History() {
                 Text(text = getNames(Locale.getDefault().language).uploadListCompleted)
             }
         }
-        val scanFileList = mutableListOf<FileItemVo>()
-        val scanFileList2 = mutableListOf<FileItemVo>()
-        for (i in 1..10) {
-            scanFileList.add(FileItemVo("$i", FileType.doc文档, "$i", UploadState.待上传, 10, i.toLong()))
-        }
-        for (i in 1..5) {
-            scanFileList2.add(FileItemVo("$i", FileType.doc文档, "$i", UploadState.待上传, 10, i.toLong()))
-        }
+
         if (index == 0) {
             LazyColumn {
-                items(scanFileList) { item ->
+                items(uploadedFileList) { item ->
                     FileItem(item)
                 }
             }
         } else {
             LazyColumn {
-                items(scanFileList2) { item ->
+                items(downloadedFileList) { item ->
                     FileItem(item)
                 }
             }

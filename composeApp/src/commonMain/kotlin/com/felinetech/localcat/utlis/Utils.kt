@@ -1,6 +1,9 @@
 package com.felinetech.localcat.utlis
 
 import com.felinetech.localcat.database.Database
+import com.felinetech.localcat.enums.FileType
+import com.felinetech.localcat.po.FileEntity
+import com.felinetech.localcat.pojo.FileItemVo
 import java.io.File
 import java.net.InetAddress
 import kotlin.experimental.and
@@ -40,3 +43,14 @@ fun getBroadcastAddress(ipAddress: String, subnetMask: String): String {
     // 返回广播地址的字符串表示
     return InetAddress.getByAddress(broadcastBytes).hostAddress
 }
+
+
+/**
+ * 获取文件类型
+ */
+fun getFileType(fileName: String): FileType {
+    return FileType.entries.first { fileName.lowercase().endsWith(it.suffix) }
+}
+
+fun filePoToFileVo(it: FileEntity) =
+    FileItemVo(it.fileId, getFileType(it.fileName), it.fileName, it.uploadState, 0, it.fileSize)

@@ -22,7 +22,7 @@ public interface FileChunkDao {
     suspend  fun getFileChunkById(fileChunkId: Int): FileChunkEntity?
 
     @Query("SELECT * FROM file_chunks WHERE file_id = :fileId")
-    suspend  fun getFileChunksByFileId(fileId: String?): List<FileChunkEntity?>?
+    suspend  fun getFileChunksByFileId(fileId: String?): List<FileChunkEntity>
 
     @Query("update file_chunks set upload_status=:uploadState where file_id=:fileId and chunk_index=:chunkIndex")
     suspend  fun updateFileChunkByFileId(fileId: String?, chunkIndex: Int, uploadState: UploadState?)

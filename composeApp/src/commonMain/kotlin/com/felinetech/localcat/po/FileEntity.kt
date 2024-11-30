@@ -20,7 +20,7 @@ data class FileEntity(
     var fileName: String,
 
     @ColumnInfo(name = "file_full_name")
-    var fileFullName: String? = null,
+    var fileFullName: String,
 
     @ColumnInfo(name = "file_size")
     var fileSize: Long = 0,
