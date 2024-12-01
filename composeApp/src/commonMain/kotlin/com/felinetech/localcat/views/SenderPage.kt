@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
@@ -21,7 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.components.FileItem
@@ -30,13 +34,17 @@ import com.felinetech.localcat.components.ServerItem
 import com.felinetech.localcat.enums.ConnectButtonState
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel.closeDataSources
+import com.felinetech.localcat.view_model.HomeViewModel.closeUploadFile
 import com.felinetech.localcat.view_model.HomeViewModel.connectDataSources
+import com.felinetech.localcat.view_model.HomeViewModel.msg
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
-import com.felinetech.localcat.view_model.HomeViewModel.toBeUploadFileList
 import com.felinetech.localcat.view_model.HomeViewModel.scanService
-import com.felinetech.localcat.view_model.HomeViewModel.senderClick
 import com.felinetech.localcat.view_model.HomeViewModel.serviceList
+import com.felinetech.localcat.view_model.HomeViewModel.showMsg
 import com.felinetech.localcat.view_model.HomeViewModel.startScanService
+import com.felinetech.localcat.view_model.HomeViewModel.startUpload
+import com.felinetech.localcat.view_model.HomeViewModel.startUploadClick
+import com.felinetech.localcat.view_model.HomeViewModel.toBeUploadFileList
 import com.felinetech.localcat.view_model.MainViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -219,11 +227,22 @@ fun Sender(turnState: Boolean) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {
+            // 开始上传按钮被单击
             Button(
-                onClick = { senderClick() }
+                onClick = {
+                    if (startUpload) {
+                        closeUploadFile()
+                    } else {
+                        startUploadClick()
+                    }
+                }
             ) {
                 Text(
-                    text = getNames(Locale.getDefault().language).startUploading,
+                    text = if (startUpload) {
+                        getNames(Locale.getDefault().language).cancelTheUpload
+                    } else {
+                        getNames(Locale.getDefault().language).startUploading
+                    },
                     modifier = Modifier.width(100.dp),
                     textAlign = TextAlign.Center
                 )
@@ -240,6 +259,64 @@ fun Sender(turnState: Boolean) {
 
             ) {
                 ScanFile()
+            }
+        }
+    }
+    if(showMsg){
+        Dialog(
+            onDismissRequest = { showMsg = false },
+        ) {
+            Card(
+                modifier = Modifier
+                    .width(300.dp)
+                    .height(300.dp)
+
+            ) {
+                Column(
+                    modifier = Modifier
+                        .width(350.dp)
+                        .height(350.dp)
+                        .background(Color.White),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(0.2f), verticalAlignment = Alignment.CenterVertically
+
+                    ) {
+                        Text(
+                            text = "提示", modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontSize = TextUnit(25f, TextUnitType.Sp),
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(0.6f), verticalAlignment = Alignment.CenterVertically
+
+                    ) {
+                        Text(
+                            text = msg, modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontSize = TextUnit(20f, TextUnitType.Sp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Button(modifier = Modifier.fillMaxWidth().padding(5.dp), shape = RoundedCornerShape(2.dp),
+                            onClick = {
+                                showMsg = false
+                            }) {
+                            Text(text = getNames(Locale.getDefault().language).okText)
+                        }
+                    }
+                }
             }
         }
     }

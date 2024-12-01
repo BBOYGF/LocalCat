@@ -35,6 +35,17 @@ object HomeViewModel {
     val refresh = MutableStateFlow(false)
 
     /**
+     * 开始上传文件
+     */
+    var startUpload by mutableStateOf(false)
+
+    /**
+     * 显示异常信息
+     */
+    var showMsg by mutableStateOf(false)
+    var msg by mutableStateOf("")
+
+    /**
      * 客户端列表
      */
     val clineList = mutableStateListOf<ClientVo>()
@@ -97,7 +108,7 @@ object HomeViewModel {
     /**
      * 保持链接
      */
-    private var keepConnect = true
+    private var keepConnect = false
 
     /**
      * 初始化
@@ -134,8 +145,6 @@ object HomeViewModel {
             receiverAnimation.value = true
             // 开启接收客户端
             serverAccept()
-            // 添加接受者
-//            receiverFileList()
         } else {
             // 关闭接收
             receiverButtonTitle.value = ServiceButtonState.开始接收.name
@@ -183,9 +192,36 @@ object HomeViewModel {
         }
     }
 
+    /**
+     * 开始文件文件
+     */
+    fun startUploadClick() {
+        // 如果没链接请先链接数据源
+        if (keepConnect) {
+            startUpload = true
+        } else {
+            // 请先链接数据源
+            startUpload = false
+            showMsg = true
+            msg = "请先链接数据源！"
+            return
+        }
+        defaultScope.launch {
+            // 找到之前没上传完的数据
 
-    fun senderClick() {
 
+            // 添加到任务列表中
+
+
+        }
+    }
+
+    /**
+     * 结束上传文件
+     */
+    fun closeUploadFile() {
+
+        startUpload = false
     }
 
     /**
@@ -193,10 +229,8 @@ object HomeViewModel {
      */
     fun scanFile() {
         defaultScope.launch {
-            uiScope.launch {
-                scanFile = !scanFile
-            }
-            toBeUploadFileList.clear()
+            scanFile = !scanFile
+            delay(500)
             // 遍历每个规则
             for (uploadConfigItem in ruleList) {
                 val paramFile = File(uploadConfigItem.listeningDir)
@@ -213,7 +247,6 @@ object HomeViewModel {
                     if (lastModifiedDate.before(uploadConfigItem.startDate)) {
                         continue
                     }
-
                     val filePo = FileEntity(
                         null,
                         "1",
@@ -223,16 +256,17 @@ object HomeViewModel {
                         file.length(),
                         UploadState.待上传
                     )
+
                     val fileVo = filePoToFileVo(filePo)
-                    fileEntityDao.insert(filePo)
-                    uiScope.launch {
-                        toBeUploadFileList.add(fileVo)
+                    val any = toBeUploadFileList.any { fileItemVo -> fileItemVo.fileName == file.name }
+                    if (any) {
+                        continue
                     }
+                    fileEntityDao.insert(filePo)
+                    toBeUploadFileList.add(fileVo)
                 }
             }
-            uiScope.launch {
-                scanFile = false
-            }
+            scanFile = false
         }
     }
 
@@ -375,9 +409,10 @@ object HomeViewModel {
             } catch (e: Exception) {
                 println("链接失败${e.message}")
                 updateServiceState(servicePo, ConnectButtonState.连接)
+                keepConnect = false
             }
             // 退出循环后关闭链接
-            socket?.let { it.close() }
+            socket?.close()
         }
     }
 
@@ -429,7 +464,7 @@ object HomeViewModel {
     private fun syncUploadFile(serviceInfo: ServiceInfo, taskPo: TaskPo): Deferred<Boolean> = ioScope.async {
         try {
             // 执行异步上传逻辑成功返回true
-            val dataSocket: Socket = Socket(serviceInfo.ip, serviceInfo.port)
+            val dataSocket = Socket(serviceInfo.ip, serviceInfo.port)
             val outputStream: OutputStream = dataSocket.getOutputStream()
             val inputStream: InputStream = dataSocket.getInputStream()
             val fileChunkEntities: List<FileChunkEntity> =
