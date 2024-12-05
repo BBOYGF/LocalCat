@@ -74,4 +74,11 @@ object Constants {
      * 心跳端口号
      */
     const val HEART_BEAT_SERVER_POST: Int = 8201
+
+    /**
+     * 每个文件块大小
+     */
+    val FILE_CHUNK_SIZE = 1024L
+
+    val THREAD_COUNT = 1
 }

@@ -61,7 +61,8 @@ kotlin {
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
             // 工具类
-            implementation("org.apache.commons:commons-lang3:3.12.0")
+            implementation("org.apache.commons:commons-lang3:3.15.0")
+            implementation ("com.blankj:utilcodex:1.31.1")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

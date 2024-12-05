@@ -5,7 +5,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.felinetech.localcat.Constants.BROADCAST_PORT
+import com.felinetech.localcat.Constants.FILE_CHUNK_SIZE
 import com.felinetech.localcat.Constants.HEART_BEAT_SERVER_POST
+import com.felinetech.localcat.Constants.THREAD_COUNT
 import com.felinetech.localcat.dao.FileChunkDao
 import com.felinetech.localcat.dao.FileEntityDao
 import com.felinetech.localcat.enums.*
@@ -145,6 +147,8 @@ object HomeViewModel {
             receiverAnimation.value = true
             // 开启接收客户端
             serverAccept()
+            // 开启心跳线程
+            serviceHeartbeat()
         } else {
             // 关闭接收
             receiverButtonTitle.value = ServiceButtonState.开始接收.name
@@ -152,6 +156,14 @@ object HomeViewModel {
             accept = false
             clineList.clear()
         }
+    }
+
+    /**
+     * 心跳线程
+     */
+    private fun serviceHeartbeat() {
+
+
     }
 
     /**
@@ -208,13 +220,103 @@ object HomeViewModel {
         }
         defaultScope.launch {
             // 找到之前没上传完的数据
-
-
-            // 添加到任务列表中
-
-
+            while (startUpload){
+                val taskPo = getTaskPo()
+                taskPo?.let {
+                    // 添加到任务列表中
+                    val command = Command(THREAD_COUNT, FILE_CHUNK_SIZE, it)
+                    commandQueue.offer(command)
+                }
+                startUpload = false
+            }
+            showMsg = true
+            msg = "上传结束！"
         }
     }
+
+    /**
+     * 查看当前未上传或者待上传的数据
+     *
+     * @return 任务
+     */
+    private suspend fun getTaskPo(): TaskPo? {
+        var taskPo: TaskPo? = null
+        val uploadInFile: Optional<FileEntity> = fileEntityDao.getAllFiles().stream()
+            .filter { fileEntity ->
+                UploadState.上传中 == fileEntity.uploadState
+            }.findFirst()
+        if (uploadInFile.isPresent) {
+            val fileEntity = uploadInFile.get()
+            val fileChunks = fileChunkDao.getFileChunksByFileId(fileEntity.fileId)
+            if (fileChunks.isEmpty()) {
+                // 如果没有上传中的文件那么修改文件状态为已上传
+                fileEntity.uploadState = UploadState.已上传
+                fileEntityDao.updateStateByFileId(fileEntity.fileId, UploadState.已上传)
+            } else {
+                // 如果有就将内容分布发到服务器确认 同步上传状态
+                taskPo = TaskPo(fileEntity, fileChunks, FILE_CHUNK_SIZE)
+            }
+        } else {
+            // 如果没有上传中的数据 就创建数据
+            val noUploadFile: Optional<FileEntity> = fileEntityDao.getAllFiles().stream()
+                .filter { fileEntity -> UploadState.待上传 == fileEntity.uploadState }.findFirst()
+            if (noUploadFile.isPresent) {
+                val fileEntity = noUploadFile.get()
+                // 根据配置生成文件块
+                // 生成待上传的块
+                val fileChunkEntities: List<FileChunkEntity> = generateFileChunkEntity(fileEntity, FILE_CHUNK_SIZE)
+                // 保存到数据库
+                for (fileChunk in fileChunkEntities) {
+                    fileChunkDao.insert(fileChunk)
+                }
+                // 修改状态为上传中
+                fileEntity.uploadState = UploadState.上传中
+                fileEntityDao.updateStateByFileId(fileEntity.fileId, fileEntity.uploadState)
+                taskPo = TaskPo(fileEntity, fileChunkEntities, FILE_CHUNK_SIZE)
+            } else {
+                // 没有待上传的数据
+                return null
+            }
+        }
+        return taskPo
+    }
+
+    /**
+     * 将一个文件生成数据快并插入数据库
+     *
+     * @param file 文件对象
+     * @return 数据快集合
+     */
+    private fun generateFileChunkEntity(file: FileEntity, blockSize: Long): List<FileChunkEntity> {
+        val fileSize = file.fileSize
+        val fileChunkEntities = ArrayList<FileChunkEntity>()
+        val count = fileSize / (blockSize)
+        val lastBlockSize = fileSize % blockSize
+        // 拆分文件块1M一个文件块
+        for (i in 0 until count) {
+            val fileChunkEntity = FileChunkEntity()
+            fileChunkEntity.fileId = file.fileId
+            fileChunkEntity.chunkIndex = i.toInt()
+            fileChunkEntity.chunkSize = blockSize
+            fileChunkEntity.uploadStatus = UploadState.未上传
+            fileChunkEntity.createdAt = Date()
+            fileChunkEntity.updatedAt = Date()
+            fileChunkEntities.add(fileChunkEntity)
+        }
+
+        if (lastBlockSize != 0L) {
+            val fileChunkEntity = FileChunkEntity()
+            fileChunkEntity.fileId = file.fileId
+            fileChunkEntity.chunkIndex = count.toInt()
+            fileChunkEntity.chunkSize = lastBlockSize
+            fileChunkEntity.uploadStatus = UploadState.未上传
+            fileChunkEntity.createdAt = Date()
+            fileChunkEntity.updatedAt = Date()
+            fileChunkEntities.add(fileChunkEntity)
+        }
+        return fileChunkEntities
+    }
+
 
     /**
      * 结束上传文件
@@ -394,7 +496,7 @@ object HomeViewModel {
                         }
 
                         // 如果有命令 那么就执行命令
-                        if (!commandQueue.isEmpty()) {
+                        if (commandQueue.isNotEmpty()) {
                             val command: Command = commandQueue.poll()
                             println("run: 当前命令为:$command")
                             // 响应结果
