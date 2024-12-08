@@ -18,7 +18,7 @@ data class FileItemVo(
      * 状态
      */
 
-    val state: UploadState,
+    var state: UploadState,
 
     /**
      * 当前进度

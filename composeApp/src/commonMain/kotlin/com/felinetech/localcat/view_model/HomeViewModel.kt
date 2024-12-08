@@ -4,7 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.felinetech.localcat.Constants.ACCEPT_SERVER_POST
 import com.felinetech.localcat.Constants.BROADCAST_PORT
+import com.felinetech.localcat.Constants.DATA_UPLOAD_SERVER_POST
 import com.felinetech.localcat.Constants.FILE_CHUNK_SIZE
 import com.felinetech.localcat.Constants.HEART_BEAT_SERVER_POST
 import com.felinetech.localcat.Constants.THREAD_COUNT
@@ -15,13 +17,18 @@ import com.felinetech.localcat.po.FileChunkEntity
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.*
 import com.felinetech.localcat.utlis.*
+import com.felinetech.localcat.view_model.HistoryViewModel.downloadedFileList
+import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
+import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.apache.commons.lang3.StringUtils
 import java.io.*
 import java.net.*
+import java.nio.channels.FileChannel
 import java.util.*
+import java.util.function.Consumer
 import java.util.stream.Collectors
 import kotlin.math.floor
 
@@ -31,6 +38,11 @@ object HomeViewModel {
      * 待上传文件
      */
     val toBeUploadFileList = mutableStateListOf<FileItemVo>()
+
+    /**
+     * 下载中的文件
+     */
+    val toBeDownloadFileList = mutableStateListOf<FileItemVo>()
 
     var scanFile by mutableStateOf(false)
 
@@ -83,11 +95,6 @@ object HomeViewModel {
 
 
     /**
-     * UDP 服务接口
-     */
-    private const val ACCEPT_SERVER_POST = 8200
-
-    /**
      * 搜索服务器
      */
     var scanService by mutableStateOf(false)
@@ -111,6 +118,16 @@ object HomeViewModel {
      * 保持链接
      */
     private var keepConnect = false
+
+    /**
+     * 心跳ServiceSocket
+     */
+    private var heartServerSocket: ServerSocket? = null
+
+    /**
+     * 链接服务器
+     */
+    private var acceptSocket: DatagramSocket? = null
 
     /**
      * 初始化
@@ -155,6 +172,14 @@ object HomeViewModel {
             receiverAnimation.value = false
             accept = false
             clineList.clear()
+            heartServerSocket?.let {
+                it.close()
+                println("关闭心跳服务！")
+            }
+            acceptSocket?.apply {
+                close()
+                println("关闭接收服务！")
+            }
         }
     }
 
@@ -162,9 +187,299 @@ object HomeViewModel {
      * 心跳线程
      */
     private fun serviceHeartbeat() {
+        ioScope.launch {
+            while (receiverAnimation.value) {
+                var connectedIpAdd: String? = null
+                try {
+                    heartServerSocket = ServerSocket(HEART_BEAT_SERVER_POST)
+                    heartServerSocket!!.reuseAddress = true
+                    heartServerSocket!!.setSoTimeout(2000)
+                    val socket: Socket = heartServerSocket!!.accept()
+                    connectedIpAdd = socket.inetAddress.toString().replace("/", "")
+                    println("被连接的ip地址是:$connectedIpAdd")
+                    clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
+                        val index = clineList.indexOf(it)
+                        clineList.removeAt(index)
+                        it.connectStatus = ConnectStatus.已连接
+                        clineList.add(index, it.copy())
+                    }
+                    val inputStream = socket.getInputStream()
+                    val outputStream = socket.getOutputStream()
 
+                    // 连接成功后就可以开始心跳
+                    while (receiverAnimation.value) {
+                        val pingMsgHead: MsgHead = readHead(inputStream)
+                        if (MsgType.心跳 == pingMsgHead.msgType) {
+                            // 向客户端发送确认消息
+                            sendHead(outputStream, MsgType.心跳, 0)
+                            println("接收到客户端:$connectedIpAdd 的心跳！")
+                        } else if (MsgType.更新列表 == pingMsgHead.msgType) {
+                            val command: Command =
+                                readBody(pingMsgHead.dataLength.toInt(), Command::class.java, inputStream)
+                            println("收到客户端需要${command.threadCount} 个线程上传数据,每个数据大小为${command.fileChunkSize} byte")
+                            // 比对列表
+                            val syncedData: TaskPo = syncData(command.taskPo)
+                            command.taskPo = syncedData
+                            // 异步执行文件上传
+                            val portTask: PortAndTask = asyncStartDownloadFile(command)
+                            // 同步数据
+                            sendHeadBody(outputStream, MsgType.传输数据, portTask)
+                        }
+                    }
+                    inputStream.close()
+                    outputStream.close()
+                    heartServerSocket!!.close()
+                } catch (e: Exception) {
+                    if (e is SocketTimeoutException) {
+                        println("监听客户超时...")
+                    } else if (e is BindException) {
+                        println("心跳服务端口$ACCEPT_SERVER_POST 被占用")
+                    } else {
+                        println("监听客户产生了异常...${e.message} ")
+                    }
+                    heartServerSocket?.close()
+                    println("服务端心跳异常：${e.message}")
+                    connectedIpAdd?.let {
+                        clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
+                            val index = clineList.indexOf(it)
+                            clineList.removeAt(index)
+                            it.connectStatus = ConnectStatus.未连接
+                            clineList.add(index, it.copy())
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+    private fun asyncStartDownloadFile(command: Command): PortAndTask {
+        val portList = mutableListOf<Int>()
+        for (i in 1..command.threadCount) {
+            val port: Int = DATA_UPLOAD_SERVER_POST + i
+            portList.add(port)
+        }
+        val portTask = PortAndTask(portList, command.taskPo)
+        // 开启异步下载数据线程，等等客户端链接并下载
+        asyncDownloadFile(portList, command)
+
+        return portTask
+    }
+
+    /**
+     * 异步下载数据
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun asyncDownloadFile(portList: MutableList<Int>, command: Command) {
+        defaultScope.launch {
+            val downloadResult = mutableListOf<Deferred<Boolean>>()
+            for (port in portList) {
+                downloadResult.add(downFile(port, command))
+            }
+            downloadResult.awaitAll()
+            // 合并文件
+            val unfinished = downloadResult.any { deferred -> !deferred.getCompleted() }
+            // 有未完成的就直接退出
+            if (unfinished) {
+                println("部分线程执行失败！不合并文件！")
+                return@launch
+            }
+            // 开始合并文件
+            val mergeSuccessful = mergeFile(command.taskPo.fileEntity)
+            // 合并文件成功后更新状态
+            if (mergeSuccessful) {
+                val fileId = command.taskPo.fileEntity.fileId
+                toBeDownloadFileList.find { fileItemVo -> fileItemVo.fileId == fileId }?.let {
+                    val index = toBeDownloadFileList.indexOf(it)
+                    toBeDownloadFileList.removeAt(index)
+                    it.state = UploadState.已下载
+                    downloadedFileList.add(it)
+                    fileEntityDao.updateStateByFileId(fileId, UploadState.已下载);
+                }
+            } else {
+                println("合并文件失败！")
+            }
+        }
+    }
+
+    /**
+     * 合并文件
+     */
+    private suspend fun mergeFile(fileEntity: FileEntity): Boolean {
+        val chunkList = fileChunkDao.getFileChunksByFileId(fileEntity.fileId)
+        if (chunkList.isEmpty()) {
+            println("没有找到文件块，合并失败！")
+            return false
+        }
+        chunkList.sortedBy { fileChunkEntity -> fileChunkEntity.chunkIndex }
+        // 目标地址
+        val targetFile = File(savedPosition, fileEntity.fileName)
+        val outputStream = FileOutputStream(targetFile)
+        val targetChannel: FileChannel = outputStream.getChannel()
+        for ((_, fileId, chunkIndex) in chunkList) {
+            val chunkName: String = fileEntity.fileName + fileId + chunkIndex + ".cache"
+            try {
+                // 打开源文件的通道
+                val sourceChannel = FileInputStream(File(cachePosition, chunkName)).channel
+                targetChannel.transferFrom(sourceChannel, targetChannel.size(), sourceChannel.size())
+                // 关闭源文件的通道
+                sourceChannel.close()
+            } catch (e: java.lang.Exception) {
+                println("合并文件产生异常!${e.message}")
+                return false
+            }
+        }
+        return true
+    }
+
+    /**
+     * 下载文件
+     */
+    private fun downFile(port: Int, command: Command): Deferred<Boolean> = ioScope.async {
+        var serverSocket: ServerSocket? = null
+        var socket: Socket? = null
+        try {
+            serverSocket = ServerSocket(port);
+            socket = serverSocket.accept();
+            val dataInputStream = socket.getInputStream();
+            val dataOutputStream = socket.getOutputStream();
+            while (receiverAnimation.value) {
+                // 开始接受数据
+                val msgHead: MsgHead = readHead(dataInputStream)
+                if (MsgType.传输数据 != msgHead.msgType) {
+                    println("传输数据不符合预期")
+                    return@async false
+                }
+                // 接收数据对象
+                val fileChunkEntity: FileChunkEntity =
+                    readBody(msgHead.dataLength.toInt(), FileChunkEntity::class.java, dataInputStream)
+                val msgHead1: MsgHead = readHead(dataInputStream)
+                if (MsgType.传输数据 != msgHead1.msgType) {
+                    println("传输数据不符合预期")
+                    return@async false
+                }
+                val bytes = ByteArray(msgHead1.dataLength.toInt())
+                var bytesRead: Int
+                var totalBytesRead = 0
+                while (totalBytesRead < bytes.size) {
+                    bytesRead = dataInputStream.read(bytes, totalBytesRead, bytes.size - totalBytesRead)
+                    totalBytesRead += bytesRead
+                }
+                val fileId = command.taskPo.fileEntity.fileId
+                // 保存文件
+                val chunkName =
+                    "${command.taskPo.fileEntity.fileName}${fileChunkEntity.fileId}${fileChunkEntity.chunkIndex}.cache"
+                val cacheFile = File(cachePosition, chunkName)
+                val fileOutputStream: OutputStream = FileOutputStream(File(cachePosition, chunkName))
+                fileOutputStream.write(bytes)
+                fileOutputStream.flush()
+                fileOutputStream.close()
+                if (cacheFile.exists()) {
+                    // 回复传输成功
+                    fileChunkEntity.uploadStatus = UploadState.已下载
+                    // 更新数据库
+                    fileChunkDao.updateFileChunkByFileId(
+                        fileChunkEntity.fileId,
+                        fileChunkEntity.chunkIndex,
+                        UploadState.已下载
+                    )
+                    sendHead(dataOutputStream, MsgType.传输成功, 0)
+                    // 更新待下载列表
+                    toBeDownloadFileList.find { fileItemVo -> fileItemVo.fileId == fileId }?.let {
+                        val index = toBeDownloadFileList.indexOf(it)
+                        val fileChunksByFileId = fileChunkDao.getFileChunksByFileId(fileId)
+                        val size = fileChunksByFileId.size
+                        val downloadSize = fileChunksByFileId.stream()
+                            .filter { fileChunkEntity1: FileChunkEntity -> UploadState.已下载 == fileChunkEntity1.uploadStatus }
+                            .count().toInt()
+                        val percent = Math.round(downloadSize.toDouble() / size.toDouble() * 100).toInt()
+                        it.percent = percent
+                        it.state = UploadState.下载中
+                        toBeDownloadFileList.removeAt(index)
+                        toBeDownloadFileList.add(index, it.copy())
+                    }
+                }
+
+
+                // 判断上传结束信息判断是否继续上传
+                val endMsgHead: MsgHead = readHead(dataInputStream)
+                if (MsgType.OK == endMsgHead.msgType) {
+                    receiverAnimation.value = false
+                } else if (MsgType.继续上传 == endMsgHead.msgType) {
+                    // 继续等待接收数据
+                    println("下载数据线程:{}继续接收到数据...")
+                    receiverAnimation.value = true
+                } else {
+                    println("下载数据线程:{}发送了不知道的异常:")
+                }
+            }
+            dataInputStream.close()
+            dataOutputStream.close()
+            socket?.close()
+            serverSocket?.close()
+        } catch (e: Exception) {
+            println("产生异常：${e.message}")
+            socket?.close()
+            serverSocket?.close()
+            return@async false
+        }
+        return@async true
 
     }
+
+    /**
+     * 同步数据
+     *
+     * @param taskPo 文件task
+     * @return 同步后
+     */
+    private suspend fun syncData(taskPo: TaskPo): TaskPo {
+        val fileEntity = taskPo.fileEntity
+        val clientFileChunkEntityList = taskPo.fileChunkEntityList
+        // 两种大类 1、是没有这个文件，2、是有这个文件 2.1，有这个文件但是部分上传了，2.2 有这个文件全未上传
+        val file: FileEntity? = fileEntityDao.getFileById(fileEntity.fileId)
+        // 1、类没有
+        if (file == null) {
+            fileEntity.id = null
+            fileEntityDao.insert(fileEntity)
+            for (i in clientFileChunkEntityList.indices) {
+                val fileChunkEntity = clientFileChunkEntityList[i]
+                val fileChunkById = fileChunkDao.getFileChunkById(fileChunkEntity.id)
+                if (fileChunkById == null) {
+                    fileChunkDao.insert(fileChunkEntity)
+                } else {
+                    fileChunkDao.update(fileChunkById)
+                }
+            }
+        } else {
+            // 2、是有这个文件 2.1，有这个文件但是部分上传了，2.2 有这个文件全未上传
+            val serviceFileChunkEntities = fileChunkDao.getFileChunksByFileId(fileEntity.fileId)
+            if (serviceFileChunkEntities.isEmpty()) {
+                for (i in clientFileChunkEntityList.indices) {
+                    val fileChunkEntity = clientFileChunkEntityList[i]
+                    val fileChunkById = fileChunkDao.getFileChunkById(fileChunkEntity.id)
+                    if (fileChunkById == null) {
+                        fileChunkDao.insert(fileChunkEntity)
+                    } else {
+                        fileChunkDao.update(fileChunkById)
+                    }
+                }
+            } else {
+                // 状态同步成服务器的
+                clientFileChunkEntityList.forEach(Consumer { clientFileChunkEntity: FileChunkEntity ->
+                    serviceFileChunkEntities.stream() // 将服务端文件块实体流转换为流
+                        .filter { serviceFileChunkEntity: FileChunkEntity -> serviceFileChunkEntity.fileId == clientFileChunkEntity.fileId } // 过滤出文件id相同的文件块实体
+                        .findAny() // 找到文件id相同的文件块实体
+                        .ifPresent { fileChunkEntity12: FileChunkEntity ->
+                            clientFileChunkEntity.uploadStatus = fileChunkEntity12.uploadStatus
+                        }
+                })
+            }
+        }
+        // 都不需要上传
+        return TaskPo(fileEntity, clientFileChunkEntityList, taskPo.chunkSize)
+    }
+
 
     /**
      * 开启服务器接收
@@ -172,12 +487,11 @@ object HomeViewModel {
     private fun serverAccept() {
         accept = true
         defaultScope.launch {
-            var socket: DatagramSocket? = null
-
             while (accept) {
                 try {
-                    socket = DatagramSocket(ACCEPT_SERVER_POST)
-                    socket!!
+                    acceptSocket = DatagramSocket(ACCEPT_SERVER_POST)
+                    val socket = acceptSocket!!
+                    socket.reuseAddress = true
                     socket.soTimeout = 10000
                     val buffer = ByteArray(1024)
                     val packet = DatagramPacket(buffer, buffer.size)
@@ -186,19 +500,27 @@ object HomeViewModel {
                     val response = "OK".toByteArray()
                     val responsePacket = DatagramPacket(response, response.size, packet.address, packet.port)
                     socket.send(responsePacket)
-                    clineList.add(
-                        ClientVo(
-                            clineList.size + 1, packet.address.toString().replace("/", ""), ConnectStatus.被发现
+                    val ip = packet.address.toString().replace("/", "")
+                    if (!clineList.any { clientVo -> clientVo.ip == ip }) {
+                        clineList.add(
+                            ClientVo(
+                                clineList.size + 1, packet.address.toString().replace("/", ""), ConnectStatus.被发现
+                            )
                         )
-                    )
+                    }
+                    socket.disconnect()
                     socket.close()
                 } catch (e: Exception) {
                     if (e is SocketTimeoutException) {
                         println("监听客户超时...")
+                    } else if (e is BindException) {
+                        println("接收服务端口$ACCEPT_SERVER_POST 被占用")
+                        acceptSocket?.reuseAddress = true;
+                        acceptSocket?.disconnect()
                     } else {
-                        println("监听客户产生了异常...${e.message}")
+                        println("监听客户产生了异常...${e.message} ")
                     }
-                    socket?.close()
+                    acceptSocket?.close()
                 }
             }
         }
@@ -220,17 +542,20 @@ object HomeViewModel {
         }
         defaultScope.launch {
             // 找到之前没上传完的数据
-            while (startUpload){
+            while (startUpload) {
                 val taskPo = getTaskPo()
-                taskPo?.let {
+                if (taskPo == null) {
+                    showMsg = true
+                    msg = "上传结束！"
+                } else {
                     // 添加到任务列表中
-                    val command = Command(THREAD_COUNT, FILE_CHUNK_SIZE, it)
+                    val command = Command(THREAD_COUNT, FILE_CHUNK_SIZE, taskPo)
                     commandQueue.offer(command)
                 }
+                // todo 上传完之后再发送
                 startUpload = false
             }
-            showMsg = true
-            msg = "上传结束！"
+
         }
     }
 
@@ -241,10 +566,9 @@ object HomeViewModel {
      */
     private suspend fun getTaskPo(): TaskPo? {
         var taskPo: TaskPo? = null
-        val uploadInFile: Optional<FileEntity> = fileEntityDao.getAllFiles().stream()
-            .filter { fileEntity ->
-                UploadState.上传中 == fileEntity.uploadState
-            }.findFirst()
+        val uploadInFile: Optional<FileEntity> = fileEntityDao.getAllFiles().stream().filter { fileEntity ->
+            UploadState.上传中 == fileEntity.uploadState
+        }.findFirst()
         if (uploadInFile.isPresent) {
             val fileEntity = uploadInFile.get()
             val fileChunks = fileChunkDao.getFileChunksByFileId(fileEntity.fileId)
@@ -498,7 +822,7 @@ object HomeViewModel {
                         // 如果有命令 那么就执行命令
                         if (commandQueue.isNotEmpty()) {
                             val command: Command = commandQueue.poll()
-                            println("run: 当前命令为:$command")
+                            println("run: 当前命令为")
                             // 响应结果
                             sendHeadBody(outputStream, MsgType.更新列表, command)
                         } else {
@@ -604,9 +928,7 @@ object HomeViewModel {
                 if (msgHead1.msgType == MsgType.传输成功) {
                     fileChunkEntity.uploadStatus = UploadState.已上传
                     fileChunkDao.updateFileChunkByFileId(
-                        fileChunkEntity.fileId,
-                        fileChunkEntity.chunkIndex,
-                        UploadState.已上传
+                        fileChunkEntity.fileId, fileChunkEntity.chunkIndex, UploadState.已上传
                     )
                     // 更新进度
                     toBeUploadFileList.find { it.fileId == fileChunkEntity.fileId }?.let {

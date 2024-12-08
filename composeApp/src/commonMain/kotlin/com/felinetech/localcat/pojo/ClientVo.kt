@@ -5,5 +5,5 @@ import com.felinetech.localcat.enums.ConnectStatus
 data class ClientVo(
     val number: Int,
     val ip: String,
-    val connectStatus: ConnectStatus
+    var connectStatus: ConnectStatus
 )

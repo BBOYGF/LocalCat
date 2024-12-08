@@ -24,7 +24,7 @@ public interface FileEntityDao {
     suspend fun getAllFiles(): List<FileEntity>
 
     @Query("SELECT * FROM files_entity WHERE file_id = :fileId")
-    suspend fun getFileById(fileId: String?): FileEntity
+    suspend fun getFileById(fileId: String?): FileEntity?
 
     @Query("SELECT * FROM files_entity WHERE user_id = :userId")
     suspend fun getFilesByUserId(userId: Int): List<FileEntity>

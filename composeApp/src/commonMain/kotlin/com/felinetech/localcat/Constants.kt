@@ -69,11 +69,19 @@ object Constants {
     val SAVE_FILE = "save_file"
 
     val CACHE_FILE = "cache_file"
-
+    /**
+     * UDP 服务接口
+     */
+    const val ACCEPT_SERVER_POST = 8200
     /**
      * 心跳端口号
      */
     const val HEART_BEAT_SERVER_POST: Int = 8201
+
+    /**
+     * 数据上传线程
+     */
+    const val DATA_UPLOAD_SERVER_POST: Int = 8012
 
     /**
      * 每个文件块大小
