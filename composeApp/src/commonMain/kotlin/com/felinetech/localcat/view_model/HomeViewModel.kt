@@ -195,7 +195,7 @@ object HomeViewModel {
 //                    heartServerSocket!!.reuseAddress = true
                     heartServerSocket!!.setSoTimeout(10000)
                     val socket: Socket = heartServerSocket!!.accept()
-                    socket.soTimeout=1000
+                    socket.soTimeout = 2000
                     connectedIpAdd = socket.inetAddress.toString().replace("/", "")
                     println("被连接的ip地址是:$connectedIpAdd")
                     clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
