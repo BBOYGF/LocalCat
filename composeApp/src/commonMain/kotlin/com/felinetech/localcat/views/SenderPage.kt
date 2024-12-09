@@ -35,12 +35,12 @@ import com.felinetech.localcat.enums.ConnectButtonState
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel.closeDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.closeUploadFile
-import com.felinetech.localcat.view_model.HomeViewModel.connectDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.msg
 import com.felinetech.localcat.view_model.HomeViewModel.scanFile
 import com.felinetech.localcat.view_model.HomeViewModel.scanService
 import com.felinetech.localcat.view_model.HomeViewModel.serviceList
 import com.felinetech.localcat.view_model.HomeViewModel.showMsg
+import com.felinetech.localcat.view_model.HomeViewModel.startClientHeartbeat
 import com.felinetech.localcat.view_model.HomeViewModel.startScanService
 import com.felinetech.localcat.view_model.HomeViewModel.startUpload
 import com.felinetech.localcat.view_model.HomeViewModel.startUploadClick
@@ -172,8 +172,6 @@ fun Sender(turnState: Boolean) {
                 color = Color(0x99ffffff),
                 shape = RoundedCornerShape(5.dp)
             ) {
-
-                // 记住我们自己的 LazyListState
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -182,7 +180,7 @@ fun Sender(turnState: Boolean) {
                         ServerItem(item) {
                             if (it.buttonState == ConnectButtonState.连接) {
                                 // 链接数据源
-                                connectDataSources(it)
+                                startClientHeartbeat(it)
                             } else {
                                 // 断开数据源
                                 closeDataSources(it)

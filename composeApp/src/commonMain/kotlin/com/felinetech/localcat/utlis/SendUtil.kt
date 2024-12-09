@@ -51,7 +51,7 @@ fun readHead(inputStream: InputStream): MsgHead {
         headMsgStr = String(headMsgBytes, StandardCharsets.UTF_8)
         msgHead = gson.fromJson(headMsgStr, MsgHead::class.java)
     } catch (e: Exception) {
-        println("解析Gson json: $headMsgStr")
+        println("解析Gson json: $headMsgStr $e")
         throw e
     }
     return msgHead

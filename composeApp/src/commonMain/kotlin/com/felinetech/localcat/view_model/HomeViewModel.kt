@@ -192,9 +192,10 @@ object HomeViewModel {
                 var connectedIpAdd: String? = null
                 try {
                     heartServerSocket = ServerSocket(HEART_BEAT_SERVER_POST)
-                    heartServerSocket!!.reuseAddress = true
-                    heartServerSocket!!.setSoTimeout(2000)
+//                    heartServerSocket!!.reuseAddress = true
+                    heartServerSocket!!.setSoTimeout(10000)
                     val socket: Socket = heartServerSocket!!.accept()
+                    socket.soTimeout=1000
                     connectedIpAdd = socket.inetAddress.toString().replace("/", "")
                     println("被连接的ip地址是:$connectedIpAdd")
                     clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
@@ -790,22 +791,22 @@ object HomeViewModel {
     /**
      * 链接数据源
      */
-    fun connectDataSources(servicePo: ServicePo) {
+    fun startClientHeartbeat(servicePo: ServicePo) {
         println("链接服务器$servicePo")
         keepConnect = true
         // 与接收者链接发送心跳信息
         // 启动心跳协程
         ioScope.launch {
             var socket: Socket? = null
-            try {
-                while (keepConnect) {
+            while (keepConnect) {
+                try {
                     socket = Socket(servicePo.ip, HEART_BEAT_SERVER_POST)
                     socket.setSoTimeout(10000)
                     updateServiceState(servicePo, ConnectButtonState.断开)
                     val inputStream = socket.getInputStream()
                     val outputStream = socket.getOutputStream()
                     // 发送心跳
-                    sendHead(outputStream, MsgType.心跳, 0);
+                    sendHead(outputStream, MsgType.心跳, 0)
                     while (keepConnect) {
                         // 接收心跳
                         val msgHead: MsgHead = readHead(inputStream)
@@ -831,11 +832,11 @@ object HomeViewModel {
                             sendHead(outputStream, MsgType.心跳, 0)
                         }
                     }
+                } catch (e: Exception) {
+                    println("链接失败${e.message}")
+                    updateServiceState(servicePo, ConnectButtonState.连接)
+                    keepConnect = false
                 }
-            } catch (e: Exception) {
-                println("链接失败${e.message}")
-                updateServiceState(servicePo, ConnectButtonState.连接)
-                keepConnect = false
             }
             // 退出循环后关闭链接
             socket?.close()
