@@ -345,7 +345,7 @@ object HomeViewModel {
             val dataInputStream = socket.getInputStream();
             val dataOutputStream = socket.getOutputStream();
             while (receiverAnimation.value) {
-                // 开始接受数据
+                // 2、开始接受数据
                 val msgHead: MsgHead = readHead(dataInputStream)
                 if (MsgType.传输数据 != msgHead.msgType) {
                     println("传输数据不符合预期")
@@ -354,6 +354,7 @@ object HomeViewModel {
                 // 接收数据对象
                 val fileChunkEntity: FileChunkEntity =
                     readBody(msgHead.dataLength.toInt(), FileChunkEntity::class.java, dataInputStream)
+                // 4、再次接收数据头
                 val msgHead1: MsgHead = readHead(dataInputStream)
                 if (MsgType.传输数据 != msgHead1.msgType) {
                     println("传输数据不符合预期")
@@ -833,7 +834,7 @@ object HomeViewModel {
                         }
                     }
                 } catch (e: Exception) {
-                    println("链接失败${e.message}")
+                    println("链接失败${e}")
                     updateServiceState(servicePo, ConnectButtonState.连接)
                     keepConnect = false
                 }
@@ -881,6 +882,7 @@ object HomeViewModel {
                 results.add(result)
             }
             results.awaitAll()
+            println("所有文件发送完毕！！！")
         }
 
     }
@@ -905,6 +907,7 @@ object HomeViewModel {
                 if (!keepConnect) {
                     return@async false
                 }
+                // 1、发送我要传输数据了
                 sendHeadBody(outputStream, MsgType.传输数据, fileChunkEntity);
                 val jump: Long = fileChunkEntity.chunkIndex.toLong() * taskPo.fileEntity.chunkSize
 
@@ -921,6 +924,7 @@ object HomeViewModel {
                     println("文件读取失败!文件块" + fileChunkEntity.chunkIndex.toString() + "要读取的文件大小是:" + chunkSize + "实际读取的文件块是:" + o)
                     return@async false
                 }
+                // 3、再次发送传输数据
                 sendHead(outputStream, MsgType.传输数据, bodyData.size.toLong())
                 outputStream.write(bodyData)
                 outputStream.flush()
