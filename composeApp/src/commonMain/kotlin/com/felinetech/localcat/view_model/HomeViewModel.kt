@@ -192,7 +192,6 @@ object HomeViewModel {
                 var connectedIpAdd: String? = null
                 try {
                     heartServerSocket = ServerSocket(HEART_BEAT_SERVER_POST)
-//                    heartServerSocket!!.reuseAddress = true
                     heartServerSocket!!.setSoTimeout(10000)
                     val socket: Socket = heartServerSocket!!.accept()
                     socket.soTimeout = 2000
@@ -336,7 +335,8 @@ object HomeViewModel {
     /**
      * 下载文件
      */
-    private fun downFile(port: Int, command: Command): Deferred<Boolean> = ioScope.async {
+    private fun
+            downFile(port: Int, command: Command): Deferred<Boolean> = ioScope.async {
         var serverSocket: ServerSocket? = null
         var socket: Socket? = null
         try {
@@ -959,7 +959,8 @@ object HomeViewModel {
 
 
         } catch (e: Exception) {
-            println("产生异常！")
+            println("产生异常！$e")
+            return@async false
         }
         return@async true
     }
