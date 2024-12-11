@@ -55,6 +55,7 @@ kotlin {
             implementation("com.github.YarikSOffice:lingver:1.3.0")
 
             implementation("com.google.code.gson:gson:2.11.0")
+            implementation("org.slf4j:slf4j-api:2.0.16")
 
 
             implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")

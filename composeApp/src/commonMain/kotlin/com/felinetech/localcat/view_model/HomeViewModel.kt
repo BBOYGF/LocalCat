@@ -24,6 +24,8 @@ import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.apache.commons.lang3.StringUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.*
 import java.net.*
 import java.nio.channels.FileChannel
@@ -129,6 +131,8 @@ object HomeViewModel {
      */
     private var acceptSocket: DatagramSocket? = null
 
+    var logger: Logger = LoggerFactory.getLogger(javaClass)
+
     /**
      * 初始化
      */
@@ -174,11 +178,12 @@ object HomeViewModel {
             clineList.clear()
             heartServerSocket?.let {
                 it.close()
-                println("关闭心跳服务！")
+                logger.info("关闭心跳服务！")
             }
             acceptSocket?.apply {
                 close()
-                println("关闭接收服务！")
+                logger.info("关闭接收服务！")
+
             }
         }
     }
@@ -231,14 +236,14 @@ object HomeViewModel {
                     heartServerSocket!!.close()
                 } catch (e: Exception) {
                     if (e is SocketTimeoutException) {
-                        println("服务端心跳超时...")
+                        logger.error("服务端心跳超时...", e)
                     } else if (e is BindException) {
-                        println("心跳服务端口$ACCEPT_SERVER_POST 被占用")
+                        logger.error("心跳服务端口$ACCEPT_SERVER_POST 被占用", e)
                     } else {
-                        println("监听客户产生了异常...${e.message} ")
+                        logger.error("服务端心跳异常...${e.message} ", e)
                     }
                     heartServerSocket?.close()
-                    println("服务端心跳异常：${e.message}")
+
                     connectedIpAdd?.let {
                         clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
                             val index = clineList.indexOf(it)
@@ -335,8 +340,7 @@ object HomeViewModel {
     /**
      * 下载文件
      */
-    private fun
-            downFile(port: Int, command: Command): Deferred<Boolean> = ioScope.async {
+    private fun downFile(port: Int, command: Command): Deferred<Boolean> = ioScope.async {
         var serverSocket: ServerSocket? = null
         var socket: Socket? = null
         try {
@@ -348,7 +352,7 @@ object HomeViewModel {
                 // 2、开始接受数据
                 val msgHead: MsgHead = readHead(dataInputStream)
                 if (MsgType.传输数据 != msgHead.msgType) {
-                    println("传输数据不符合预期")
+                    logger.info("传输数据不符合预期")
                     return@async false
                 }
                 // 接收数据对象
@@ -357,7 +361,7 @@ object HomeViewModel {
                 // 4、再次接收数据头
                 val msgHead1: MsgHead = readHead(dataInputStream)
                 if (MsgType.传输数据 != msgHead1.msgType) {
-                    println("传输数据不符合预期")
+                    logger.info("传输数据不符合预期")
                     return@async false
                 }
                 val bytes = ByteArray(msgHead1.dataLength.toInt())
@@ -381,9 +385,7 @@ object HomeViewModel {
                     fileChunkEntity.uploadStatus = UploadState.已下载
                     // 更新数据库
                     fileChunkDao.updateFileChunkByFileId(
-                        fileChunkEntity.fileId,
-                        fileChunkEntity.chunkIndex,
-                        UploadState.已下载
+                        fileChunkEntity.fileId, fileChunkEntity.chunkIndex, UploadState.已下载
                     )
                     sendHead(dataOutputStream, MsgType.传输成功, 0)
                     // 更新待下载列表
@@ -409,10 +411,10 @@ object HomeViewModel {
                     receiverAnimation.value = false
                 } else if (MsgType.继续上传 == endMsgHead.msgType) {
                     // 继续等待接收数据
-                    println("下载数据线程:{}继续接收到数据...")
+                    logger.info("下载数据线程继续接收到数据...")
                     receiverAnimation.value = true
                 } else {
-                    println("下载数据线程:{}发送了不知道的异常:")
+                    logger.info("下载数据线程发送了不知道的异常:")
                 }
             }
             dataInputStream.close()
@@ -420,7 +422,7 @@ object HomeViewModel {
             socket?.close()
             serverSocket?.close()
         } catch (e: Exception) {
-            println("服务端下载产生异常：${e}")
+            logger.info("服务端下载产生异常：", e)
             socket?.close()
             serverSocket?.close()
             return@async false
@@ -514,13 +516,13 @@ object HomeViewModel {
                     socket.close()
                 } catch (e: Exception) {
                     if (e is SocketTimeoutException) {
-                        println("等待下一个客户...")
+                        logger.error("等待下一个客户...",e)
                     } else if (e is BindException) {
-                        println("接收服务端口$ACCEPT_SERVER_POST 被占用")
+                        logger.error("接收服务端口$ACCEPT_SERVER_POST 被占用",e)
                         acceptSocket?.reuseAddress = true;
                         acceptSocket?.disconnect()
                     } else {
-                        println("监听客户产生了异常...${e.message} ")
+                        logger.error("监听客户产生了异常...${e.message} ",e)
                     }
                     acceptSocket?.close()
                 }
@@ -734,7 +736,7 @@ object HomeViewModel {
                 // 方案2 扫描默认广播位
                 for (i in 0..25) {
                     if (!scanService) {
-                        println("停止扫描服务器！")
+                        logger.info("停止扫描服务器！")
                         return@launch
                     }
                     val ip = "192.168.$i.255"
@@ -748,16 +750,16 @@ object HomeViewModel {
                                 buttonState = ConnectButtonState.连接
                             )
                         )
-                        println("接收到响应来自: $ipString")
+                        logger.info("接收到响应来自: $ipString")
                         scanService = false
                         return@launch
                     } catch (e: IOException) {
-                        println("产生异常：${e.message}")
+                        logger.error("产生异常：${e.message}",e)
                     }
                 }
             }
         } else {
-            println("停止扫描")
+            logger.info("停止扫描")
         }
 
     }
@@ -813,7 +815,7 @@ object HomeViewModel {
                         val msgHead: MsgHead = readHead(inputStream)
                         if (MsgType.心跳 == msgHead.msgType) {
                             // 收到确认消息，连接正常
-                            println("接收心跳")
+                            logger.info("接收心跳")
                         } else if (MsgType.传输数据 == msgHead.msgType) {
                             println("传输数据...")
                             val portTask: PortAndTask =
@@ -824,7 +826,7 @@ object HomeViewModel {
                         // 如果有命令 那么就执行命令
                         if (commandQueue.isNotEmpty()) {
                             val command: Command = commandQueue.poll()
-                            println("run: 当前命令为")
+                            logger.info("run: 当前命令为")
                             // 响应结果
                             sendHeadBody(outputStream, MsgType.更新列表, command)
                         } else {
@@ -834,7 +836,7 @@ object HomeViewModel {
                         }
                     }
                 } catch (e: Exception) {
-                    println("客户端心跳${e}")
+                    logger.error("客户端心跳", e)
                     updateServiceState(servicePo, ConnectButtonState.连接)
                     keepConnect = false
                 }
@@ -950,12 +952,12 @@ object HomeViewModel {
                         fileChunkDao.delete(fileChunkEntity);
                     }
                 } else {
-                    println("run: 文件块上传失败!" + fileChunkEntity.fileId + "|" + fileChunkEntity.chunkIndex)
+                    logger.info("run: 文件块上传失败!" + fileChunkEntity.fileId + "|" + fileChunkEntity.chunkIndex)
                     return@async false
                 }
                 if (i == fileChunkEntities.size - 1) {
                     sendHead(outputStream, MsgType.OK, 0)
-                    println("run: 数据已上传结束")
+                    logger.info("run: 数据已上传结束")
                 } else {
                     sendHead(outputStream, MsgType.继续上传, 0)
                 }
@@ -963,7 +965,7 @@ object HomeViewModel {
 
 
         } catch (e: Exception) {
-            println("产生异常！$e")
+            logger.error("产生异常！$e",e)
             return@async false
         }
         return@async true

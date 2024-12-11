@@ -3,6 +3,8 @@ package com.felinetech.localcat.utlis
 import com.felinetech.localcat.enums.MsgType
 import com.felinetech.localcat.pojo.MsgHead
 import com.google.gson.Gson
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -11,6 +13,7 @@ import java.nio.charset.StandardCharsets
 
 private val gson = Gson()
 
+val logger: Logger = LoggerFactory.getLogger({}.javaClass);
 
 /**
  * 将消息头转换为二进制
@@ -20,7 +23,7 @@ private val gson = Gson()
  * @return 二进制
  */
 private fun msgHeadToBytes(msgType: MsgType, bodyLength: Long): ByteArray {
-    val msgSession = MsgHead(msgType,bodyLength)
+    val msgSession = MsgHead(msgType, bodyLength)
     val msgSessionStr: String = gson.toJson(msgSession)
 
     val msgSessionStrBytes: ByteArray = msgSessionStr.toByteArray(StandardCharsets.UTF_8)
@@ -51,7 +54,7 @@ fun readHead(inputStream: InputStream): MsgHead {
         headMsgStr = String(headMsgBytes, StandardCharsets.UTF_8)
         msgHead = gson.fromJson(headMsgStr, MsgHead::class.java)
     } catch (e: Exception) {
-        println("解析Gson json: $headMsgStr $e")
+        logger.error("解析Gson json: $headMsgStr $e",e)
         throw e
     }
     return msgHead
