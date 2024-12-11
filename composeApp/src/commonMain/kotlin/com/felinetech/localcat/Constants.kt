@@ -83,7 +83,7 @@ object Constants {
     /**
      * 数据上传线程
      */
-    const val DATA_UPLOAD_SERVER_POST: Int = 8012
+    const val DATA_UPLOAD_SERVER_POST: Int = 8022
 
     /**
      * 每个文件块大小

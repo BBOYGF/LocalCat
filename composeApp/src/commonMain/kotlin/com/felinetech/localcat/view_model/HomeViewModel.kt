@@ -335,6 +335,88 @@ object HomeViewModel {
         }
         return true
     }
+    /**
+     * 异步发送数据
+     */
+    private fun syncUploadFile(serviceInfo: ServiceInfo, taskPo: TaskPo): Deferred<Boolean> = ioScope.async {
+        try {
+            // 执行异步上传逻辑成功返回true
+            val dataSocket = Socket(serviceInfo.ip, serviceInfo.port)
+            dataSocket.soTimeout = 20000
+            val outputStream: OutputStream = dataSocket.getOutputStream()
+            val inputStream: InputStream = dataSocket.getInputStream()
+            val fileChunkEntities: List<FileChunkEntity> =
+                taskPo.fileChunkEntityList.stream().filter { fileChunkEntity ->
+                    UploadState.已上传 != fileChunkEntity.uploadStatus
+                }.collect(Collectors.toList())
+            val file = File(taskPo.fileEntity.fileFullName)
+            val fileInputStream = FileInputStream(file)
+
+            for ((i, fileChunkEntity) in fileChunkEntities.withIndex()) {
+                if (!keepConnect) {
+                    return@async false
+                }
+                // 1、发送我要传输数据了
+                sendHeadBody(outputStream, MsgType.传输数据, fileChunkEntity);
+                val jump: Long = fileChunkEntity.chunkIndex.toLong() * taskPo.fileEntity.chunkSize
+
+                val skip = fileInputStream.skip(jump)
+                if (skip != jump) {
+                    println("跳转失败!文件块" + fileChunkEntity.chunkIndex)
+                    return@async false
+                }
+
+                val chunkSize = fileChunkEntity.chunkSize.toInt()
+                val bodyData = ByteArray(chunkSize)
+                val o = fileInputStream.read(bodyData)
+                if (o != chunkSize) {
+                    println("文件读取失败!文件块" + fileChunkEntity.chunkIndex.toString() + "要读取的文件大小是:" + chunkSize + "实际读取的文件块是:" + o)
+                    return@async false
+                }
+                // 3、再次发送传输数据
+                sendHead(outputStream, MsgType.传输数据, bodyData.size.toLong())
+                outputStream.write(bodyData)
+                outputStream.flush()
+                // 发送完毕 接收
+                val msgHead1: MsgHead = readHead(inputStream)
+                if (msgHead1.msgType == MsgType.传输成功) {
+                    fileChunkEntity.uploadStatus = UploadState.已上传
+                    fileChunkDao.updateFileChunkByFileId(
+                        fileChunkEntity.fileId, fileChunkEntity.chunkIndex, UploadState.已上传
+                    )
+                    // 更新进度
+                    toBeUploadFileList.find { it.fileId == fileChunkEntity.fileId }?.let {
+                        val index = toBeUploadFileList.indexOf(it)
+                        val chunkEntities: List<FileChunkEntity> =
+                            fileChunkDao.getFileChunksByFileId(taskPo.fileEntity.fileId)
+                        val count = chunkEntities.stream().filter { fileChunk: FileChunkEntity ->
+                            UploadState.已上传 == fileChunk.uploadStatus
+                        }.count()
+                        val percent = floor(count.toDouble() / chunkEntities.size.toDouble() * 100).toInt()
+                        it.percent = percent
+                        toBeUploadFileList.removeAt(index)
+                        toBeUploadFileList.add(index, it.copy())
+                        fileChunkDao.delete(fileChunkEntity);
+                    }
+                } else {
+                    logger.info("run: 文件块上传失败!" + fileChunkEntity.fileId + "|" + fileChunkEntity.chunkIndex)
+                    return@async false
+                }
+                if (i == fileChunkEntities.size - 1) {
+                    sendHead(outputStream, MsgType.OK, 0)
+                    logger.info("run: 数据已上传结束")
+                } else {
+                    sendHead(outputStream, MsgType.继续上传, 0)
+                }
+            }
+
+
+        } catch (e: Exception) {
+            logger.error("产生异常！$e", e)
+            return@async false
+        }
+        return@async true
+    }
 
     /**
      * 下载文件
@@ -423,6 +505,13 @@ object HomeViewModel {
             socket?.close()
             serverSocket?.close()
         } catch (e: Exception) {
+            if (e is BindException) {
+                logger.error("端口$port 被占用：", e)
+                uiScope.launch {
+                    showMsg = true
+                    msg = "端口$port 被占用！"
+                }
+            }
             logger.error("服务端下载产生异常：", e)
             socket?.close()
             serverSocket?.close()
@@ -518,7 +607,7 @@ object HomeViewModel {
                     socket.close()
                 } catch (e: Exception) {
                     if (e is SocketTimeoutException) {
-                        logger.error("等待下一个客户...", e)
+                        logger.error("等待下一个客户...")
                     } else if (e is BindException) {
                         logger.error("接收服务端口$ACCEPT_SERVER_POST 被占用", e)
                         acceptSocket?.reuseAddress = true;
@@ -891,87 +980,6 @@ object HomeViewModel {
 
     }
 
-    /**
-     * 异步发送数据
-     */
-    private fun syncUploadFile(serviceInfo: ServiceInfo, taskPo: TaskPo): Deferred<Boolean> = ioScope.async {
-        try {
-            // 执行异步上传逻辑成功返回true
-            val dataSocket = Socket(serviceInfo.ip, serviceInfo.port)
-            val outputStream: OutputStream = dataSocket.getOutputStream()
-            val inputStream: InputStream = dataSocket.getInputStream()
-            val fileChunkEntities: List<FileChunkEntity> =
-                taskPo.fileChunkEntityList.stream().filter { fileChunkEntity ->
-                    UploadState.已上传 != fileChunkEntity.uploadStatus
-                }.collect(Collectors.toList())
-            val file = File(taskPo.fileEntity.fileFullName)
-            val fileInputStream = FileInputStream(file)
-
-            for ((i, fileChunkEntity) in fileChunkEntities.withIndex()) {
-                if (!keepConnect) {
-                    return@async false
-                }
-                // 1、发送我要传输数据了
-                sendHeadBody(outputStream, MsgType.传输数据, fileChunkEntity);
-                val jump: Long = fileChunkEntity.chunkIndex.toLong() * taskPo.fileEntity.chunkSize
-
-                val skip = fileInputStream.skip(jump)
-                if (skip != jump) {
-                    println("跳转失败!文件块" + fileChunkEntity.chunkIndex)
-                    return@async false
-                }
-
-                val chunkSize = fileChunkEntity.chunkSize.toInt()
-                val bodyData = ByteArray(chunkSize)
-                val o = fileInputStream.read(bodyData)
-                if (o != chunkSize) {
-                    println("文件读取失败!文件块" + fileChunkEntity.chunkIndex.toString() + "要读取的文件大小是:" + chunkSize + "实际读取的文件块是:" + o)
-                    return@async false
-                }
-                // 3、再次发送传输数据
-                sendHead(outputStream, MsgType.传输数据, bodyData.size.toLong())
-                outputStream.write(bodyData)
-                outputStream.flush()
-                // 发送完毕 接收
-                val msgHead1: MsgHead = readHead(inputStream)
-                if (msgHead1.msgType == MsgType.传输成功) {
-                    fileChunkEntity.uploadStatus = UploadState.已上传
-                    fileChunkDao.updateFileChunkByFileId(
-                        fileChunkEntity.fileId, fileChunkEntity.chunkIndex, UploadState.已上传
-                    )
-                    // 更新进度
-                    toBeUploadFileList.find { it.fileId == fileChunkEntity.fileId }?.let {
-                        val index = toBeUploadFileList.indexOf(it)
-                        val chunkEntities: List<FileChunkEntity> =
-                            fileChunkDao.getFileChunksByFileId(taskPo.fileEntity.fileId)
-                        val count = chunkEntities.stream().filter { fileChunk: FileChunkEntity ->
-                            UploadState.已上传 == fileChunk.uploadStatus
-                        }.count()
-                        val percent = floor(count.toDouble() / chunkEntities.size.toDouble() * 100).toInt()
-                        it.percent = percent
-                        toBeUploadFileList.removeAt(index)
-                        toBeUploadFileList.add(index, it.copy())
-                        fileChunkDao.delete(fileChunkEntity);
-                    }
-                } else {
-                    logger.info("run: 文件块上传失败!" + fileChunkEntity.fileId + "|" + fileChunkEntity.chunkIndex)
-                    return@async false
-                }
-                if (i == fileChunkEntities.size - 1) {
-                    sendHead(outputStream, MsgType.OK, 0)
-                    logger.info("run: 数据已上传结束")
-                } else {
-                    sendHead(outputStream, MsgType.继续上传, 0)
-                }
-            }
-
-
-        } catch (e: Exception) {
-            logger.error("产生异常！$e", e)
-            return@async false
-        }
-        return@async true
-    }
 
     /**
      * 更新Button状态
