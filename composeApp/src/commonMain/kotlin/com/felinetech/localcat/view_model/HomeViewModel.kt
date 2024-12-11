@@ -194,7 +194,7 @@ object HomeViewModel {
                     heartServerSocket = ServerSocket(HEART_BEAT_SERVER_POST)
                     heartServerSocket!!.setSoTimeout(10000)
                     val socket: Socket = heartServerSocket!!.accept()
-                    socket.soTimeout = 2000
+                    socket.soTimeout = 10000
                     connectedIpAdd = socket.inetAddress.toString().replace("/", "")
                     println("被连接的ip地址是:$connectedIpAdd")
                     clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
@@ -231,7 +231,7 @@ object HomeViewModel {
                     heartServerSocket!!.close()
                 } catch (e: Exception) {
                     if (e is SocketTimeoutException) {
-                        println("监听客户超时...")
+                        println("服务端心跳超时...")
                     } else if (e is BindException) {
                         println("心跳服务端口$ACCEPT_SERVER_POST 被占用")
                     } else {
@@ -341,7 +341,7 @@ object HomeViewModel {
         var socket: Socket? = null
         try {
             serverSocket = ServerSocket(port);
-            socket = serverSocket.accept();
+            socket = serverSocket.accept()
             val dataInputStream = socket.getInputStream();
             val dataOutputStream = socket.getOutputStream();
             while (receiverAnimation.value) {
@@ -420,7 +420,7 @@ object HomeViewModel {
             socket?.close()
             serverSocket?.close()
         } catch (e: Exception) {
-            println("产生异常：${e.message}")
+            println("服务端下载产生异常：${e}")
             socket?.close()
             serverSocket?.close()
             return@async false
@@ -514,7 +514,7 @@ object HomeViewModel {
                     socket.close()
                 } catch (e: Exception) {
                     if (e is SocketTimeoutException) {
-                        println("监听客户超时...")
+                        println("等待下一个客户...")
                     } else if (e is BindException) {
                         println("接收服务端口$ACCEPT_SERVER_POST 被占用")
                         acceptSocket?.reuseAddress = true;
@@ -834,7 +834,7 @@ object HomeViewModel {
                         }
                     }
                 } catch (e: Exception) {
-                    println("链接失败${e}")
+                    println("客户端心跳${e}")
                     updateServiceState(servicePo, ConnectButtonState.连接)
                     keepConnect = false
                 }

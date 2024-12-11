@@ -69,10 +69,12 @@ object Constants {
     val SAVE_FILE = "save_file"
 
     val CACHE_FILE = "cache_file"
+
     /**
      * UDP 服务接口
      */
     const val ACCEPT_SERVER_POST = 8200
+
     /**
      * 心跳端口号
      */
@@ -86,7 +88,7 @@ object Constants {
     /**
      * 每个文件块大小
      */
-    val FILE_CHUNK_SIZE = 1024L
+    val FILE_CHUNK_SIZE = 1024 * 1024L
 
     val THREAD_COUNT = 1
 }
