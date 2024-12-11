@@ -25,7 +25,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.*
 import java.net.*
 import java.nio.channels.FileChannel
@@ -131,7 +130,7 @@ object HomeViewModel {
      */
     private var acceptSocket: DatagramSocket? = null
 
-    var logger: Logger = LoggerFactory.getLogger(javaClass)
+    private var logger: Logger = org.slf4j.LoggerFactory.getLogger(javaClass)
 
     /**
      * 初始化
@@ -201,7 +200,7 @@ object HomeViewModel {
                     val socket: Socket = heartServerSocket!!.accept()
                     socket.soTimeout = 10000
                     connectedIpAdd = socket.inetAddress.toString().replace("/", "")
-                    println("被连接的ip地址是:$connectedIpAdd")
+                    logger.info("被连接的ip地址是:$connectedIpAdd")
                     clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
                         val index = clineList.indexOf(it)
                         clineList.removeAt(index)
@@ -217,11 +216,11 @@ object HomeViewModel {
                         if (MsgType.心跳 == pingMsgHead.msgType) {
                             // 向客户端发送确认消息
                             sendHead(outputStream, MsgType.心跳, 0)
-                            println("接收到客户端:$connectedIpAdd 的心跳！")
+                            logger.info("接收到客户端:$connectedIpAdd 的心跳！")
                         } else if (MsgType.更新列表 == pingMsgHead.msgType) {
                             val command: Command =
                                 readBody(pingMsgHead.dataLength.toInt(), Command::class.java, inputStream)
-                            println("收到客户端需要${command.threadCount} 个线程上传数据,每个数据大小为${command.fileChunkSize} byte")
+                            logger.info("收到客户端需要${command.threadCount} 个线程上传数据,每个数据大小为${command.fileChunkSize} byte")
                             // 比对列表
                             val syncedData: TaskPo = syncData(command.taskPo)
                             command.taskPo = syncedData
@@ -286,7 +285,7 @@ object HomeViewModel {
             val unfinished = downloadResult.any { deferred -> !deferred.getCompleted() }
             // 有未完成的就直接退出
             if (unfinished) {
-                println("部分线程执行失败！不合并文件！")
+                logger.info("部分线程执行失败！不合并文件！")
                 return@launch
             }
             // 开始合并文件
@@ -302,7 +301,7 @@ object HomeViewModel {
                     fileEntityDao.updateStateByFileId(fileId, UploadState.已下载);
                 }
             } else {
-                println("合并文件失败！")
+                logger.info("合并文件失败！")
             }
         }
     }
@@ -330,7 +329,7 @@ object HomeViewModel {
                 // 关闭源文件的通道
                 sourceChannel.close()
             } catch (e: java.lang.Exception) {
-                println("合并文件产生异常!${e.message}")
+                logger.error("合并文件产生异常!${e.message}", e)
                 return false
             }
         }
@@ -345,7 +344,9 @@ object HomeViewModel {
         var socket: Socket? = null
         try {
             serverSocket = ServerSocket(port);
+            serverSocket.soTimeout = 30000
             socket = serverSocket.accept()
+            socket.soTimeout = 10000
             val dataInputStream = socket.getInputStream();
             val dataOutputStream = socket.getOutputStream();
             while (receiverAnimation.value) {
@@ -422,7 +423,7 @@ object HomeViewModel {
             socket?.close()
             serverSocket?.close()
         } catch (e: Exception) {
-            logger.info("服务端下载产生异常：", e)
+            logger.error("服务端下载产生异常：", e)
             socket?.close()
             serverSocket?.close()
             return@async false
@@ -461,11 +462,12 @@ object HomeViewModel {
             if (serviceFileChunkEntities.isEmpty()) {
                 for (i in clientFileChunkEntityList.indices) {
                     val fileChunkEntity = clientFileChunkEntityList[i]
+                    fileChunkEntity.uploadStatus = UploadState.未上传
                     val fileChunkById = fileChunkDao.getFileChunkById(fileChunkEntity.id)
                     if (fileChunkById == null) {
                         fileChunkDao.insert(fileChunkEntity)
                     } else {
-                        fileChunkDao.update(fileChunkById)
+                        fileChunkDao.update(fileChunkEntity)
                     }
                 }
             } else {
@@ -516,13 +518,13 @@ object HomeViewModel {
                     socket.close()
                 } catch (e: Exception) {
                     if (e is SocketTimeoutException) {
-                        logger.error("等待下一个客户...",e)
+                        logger.error("等待下一个客户...", e)
                     } else if (e is BindException) {
-                        logger.error("接收服务端口$ACCEPT_SERVER_POST 被占用",e)
+                        logger.error("接收服务端口$ACCEPT_SERVER_POST 被占用", e)
                         acceptSocket?.reuseAddress = true;
                         acceptSocket?.disconnect()
                     } else {
-                        logger.error("监听客户产生了异常...${e.message} ",e)
+                        logger.error("监听客户产生了异常...${e.message} ", e)
                     }
                     acceptSocket?.close()
                 }
@@ -754,7 +756,7 @@ object HomeViewModel {
                         scanService = false
                         return@launch
                     } catch (e: IOException) {
-                        logger.error("产生异常：${e.message}",e)
+                        logger.error("产生异常：${e.message}", e)
                     }
                 }
             }
@@ -965,7 +967,7 @@ object HomeViewModel {
 
 
         } catch (e: Exception) {
-            logger.error("产生异常！$e",e)
+            logger.error("产生异常！$e", e)
             return@async false
         }
         return@async true

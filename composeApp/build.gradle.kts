@@ -55,7 +55,9 @@ kotlin {
             implementation("com.github.YarikSOffice:lingver:1.3.0")
 
             implementation("com.google.code.gson:gson:2.11.0")
-            implementation("org.slf4j:slf4j-api:2.0.16")
+            // 日志
+            implementation ("org.slf4j:slf4j-api:2.0.3") // 确保使用最新的 SLF4J API
+            implementation ("ch.qos.logback:logback-classic:1.4.5") // 使用最新的 Logback 版本
 
 
             implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")
