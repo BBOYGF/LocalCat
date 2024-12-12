@@ -82,8 +82,15 @@ kotlin {
             implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
 
             implementation("com.google.code.gson:gson:2.11.0")
+        }
 
 
+        // Adds common test dependencies
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+
+            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+            implementation(compose.uiTest)
         }
 
     }

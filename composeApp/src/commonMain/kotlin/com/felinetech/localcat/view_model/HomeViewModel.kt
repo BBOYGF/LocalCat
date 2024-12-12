@@ -100,8 +100,8 @@ object HomeViewModel {
      */
     var scanService by mutableStateOf(false)
 
-    private val fileEntityDao: FileEntityDao
-    private var fileChunkDao: FileChunkDao
+    val fileEntityDao: FileEntityDao
+    var fileChunkDao: FileChunkDao
 
     /**
      * io协程
@@ -335,10 +335,11 @@ object HomeViewModel {
         }
         return true
     }
+
     /**
      * 异步发送数据
      */
-    private fun syncUploadFile(serviceInfo: ServiceInfo, taskPo: TaskPo): Deferred<Boolean> = ioScope.async {
+    fun syncUploadFile(serviceInfo: ServiceInfo, taskPo: TaskPo): Deferred<Boolean> = ioScope.async {
         try {
             // 执行异步上传逻辑成功返回true
             val dataSocket = Socket(serviceInfo.ip, serviceInfo.port)
@@ -409,8 +410,6 @@ object HomeViewModel {
                     sendHead(outputStream, MsgType.继续上传, 0)
                 }
             }
-
-
         } catch (e: Exception) {
             logger.error("产生异常！$e", e)
             return@async false
@@ -421,7 +420,7 @@ object HomeViewModel {
     /**
      * 下载文件
      */
-    private fun downFile(port: Int, command: Command): Deferred<Boolean> = ioScope.async {
+    fun downFile(port: Int, command: Command): Deferred<Boolean> = ioScope.async {
         var serverSocket: ServerSocket? = null
         var socket: Socket? = null
         try {
@@ -527,7 +526,7 @@ object HomeViewModel {
      * @param taskPo 文件task
      * @return 同步后
      */
-    private suspend fun syncData(taskPo: TaskPo): TaskPo {
+    suspend fun syncData(taskPo: TaskPo): TaskPo {
         val fileEntity = taskPo.fileEntity
         val clientFileChunkEntityList = taskPo.fileChunkEntityList
         // 两种大类 1、是没有这个文件，2、是有这个文件 2.1，有这个文件但是部分上传了，2.2 有这个文件全未上传
@@ -659,7 +658,7 @@ object HomeViewModel {
      *
      * @return 任务
      */
-    private suspend fun getTaskPo(): TaskPo? {
+    suspend fun getTaskPo(): TaskPo? {
         var taskPo: TaskPo? = null
         val uploadInFile: Optional<FileEntity> = fileEntityDao.getAllFiles().stream().filter { fileEntity ->
             UploadState.上传中 == fileEntity.uploadState
