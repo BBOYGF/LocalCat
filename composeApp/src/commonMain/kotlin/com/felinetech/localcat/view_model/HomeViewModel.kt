@@ -534,6 +534,7 @@ object HomeViewModel {
         // 1、类没有
         if (file == null) {
             fileEntity.id = null
+            fileEntity.uploadState = UploadState.下载中
             fileEntityDao.insert(fileEntity)
             for (i in clientFileChunkEntityList.indices) {
                 val fileChunkEntity = clientFileChunkEntityList[i]

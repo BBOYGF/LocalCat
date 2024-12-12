@@ -17,7 +17,7 @@ class HomeViewModelClient {
         val ioScope = CoroutineScope(Dispatchers.IO)
         val job = ioScope.launch {
             val taskPo = getTaskPo()
-            val service = ServiceInfo("192.168.3.209", 8080)
+            val service = ServiceInfo("192.168.3.101", 8080)
             syncUploadFile(service, taskPo!!)
         }
         job.join()
