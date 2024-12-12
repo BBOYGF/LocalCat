@@ -2,17 +2,16 @@ package com.felinetech.localcat.utlis
 
 import com.felinetech.localcat.enums.MsgType
 import com.felinetech.localcat.pojo.MsgHead
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
 
-private val gson = Gson()
+private val gson = GsonBuilder().setLenient().create()
 
 val logger: Logger = LoggerFactory.getLogger({}.javaClass);
 
