@@ -66,6 +66,17 @@ kotlin {
             // 工具类
             implementation("org.apache.commons:commons-lang3:3.15.0")
             implementation ("com.blankj:utilcodex:1.31.1")
+
+            // 网络ktor
+            implementation("io.ktor:ktor-client-cio:3.0.2")
+            implementation("io.ktor:ktor-client-content-negotiation-jvm:3.0.2")
+
+            implementation("io.ktor:ktor-serialization-gson-jvm:3.0.2")
+            implementation("io.ktor:ktor-server-content-negotiation-jvm:3.0.2")
+
+            implementation("io.ktor:ktor-server-netty:3.0.2") // netty 服务
+
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

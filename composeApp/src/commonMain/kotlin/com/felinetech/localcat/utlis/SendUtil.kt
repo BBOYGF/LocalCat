@@ -45,6 +45,7 @@ private fun msgHeadToBytes(msgType: MsgType, bodyLength: Long): ByteArray {
 fun readHead(inputStream: InputStream): MsgHead {
     var msgHead: MsgHead? = null
     var headMsgStr: String? = null
+    var str: String? = null
     try {
         val headMsgBytes = ByteArray(1000)
         val read = inputStream.read(headMsgBytes)
@@ -52,9 +53,10 @@ fun readHead(inputStream: InputStream): MsgHead {
             throw IOException("链接断开!")
         }
         headMsgStr = String(headMsgBytes, StandardCharsets.UTF_8)
-        msgHead = gson.fromJson(headMsgStr, MsgHead::class.java)
+        str = headMsgStr.replace('\u0000', ' ').trim()
+        msgHead = gson.fromJson(str, MsgHead::class.java)
     } catch (e: Exception) {
-        logger.error("解析Gson json: $headMsgStr $e",e)
+        logger.error("解析Gson json: $headMsgStr $str $e", e)
         throw e
     }
     return msgHead
@@ -114,6 +116,7 @@ fun sendHeadBody(outputStream: OutputStream, msgType: MsgType, obj: Any?) {
     val headData = msgHeadToBytes(msgType, bodyData.size.toLong())
     outputStream.write(headData)
     outputStream.flush()
+    Thread.sleep(200)
     outputStream.write(bodyData)
     outputStream.flush()
 }

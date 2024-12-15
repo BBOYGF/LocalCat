@@ -21,6 +21,21 @@ import com.felinetech.localcat.view_model.HistoryViewModel.downloadedFileList
 import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
+import com.google.gson.Gson
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.gson.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.util.cio.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.apache.commons.lang3.StringUtils
@@ -120,10 +135,6 @@ object HomeViewModel {
      */
     private var keepConnect = false
 
-    /**
-     * 心跳ServiceSocket
-     */
-    private var heartServerSocket: ServerSocket? = null
 
     /**
      * 链接服务器
@@ -133,6 +144,21 @@ object HomeViewModel {
     private var logger: Logger = org.slf4j.LoggerFactory.getLogger(javaClass)
 
     /**
+     * 请求客户端
+     */
+    private var client: HttpClient
+
+    /**
+     * 服务端
+     */
+    private var service: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
+
+    /**
+     * 当前链接的IP地址
+     */
+    var connectedIpAdd: String? = null
+
+    /**
      * 初始化
      */
     init {
@@ -140,6 +166,12 @@ object HomeViewModel {
         fileEntityDao = database.getFileEntityDao()
         fileChunkDao = database.getFileChunkEntityDao()
         defaultData()
+        // 客户端
+        client = HttpClient() {
+            install(ContentNegotiation) {
+                gson()
+            }
+        }
     }
 
     /**
@@ -175,8 +207,8 @@ object HomeViewModel {
             receiverAnimation.value = false
             accept = false
             clineList.clear()
-            heartServerSocket?.let {
-                it.close()
+            service?.let {
+                it.stop()
                 logger.info("关闭心跳服务！")
             }
             acceptSocket?.apply {
@@ -192,68 +224,50 @@ object HomeViewModel {
      */
     private fun serviceHeartbeat() {
         ioScope.launch {
-            while (receiverAnimation.value) {
-                var connectedIpAdd: String? = null
-                try {
-                    heartServerSocket = ServerSocket(HEART_BEAT_SERVER_POST)
-                    heartServerSocket!!.setSoTimeout(10000)
-                    val socket: Socket = heartServerSocket!!.accept()
-                    socket.soTimeout = 10000
-                    connectedIpAdd = socket.inetAddress.toString().replace("/", "")
-                    logger.info("被连接的ip地址是:$connectedIpAdd")
-                    clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
-                        val index = clineList.indexOf(it)
-                        clineList.removeAt(index)
-                        it.connectStatus = ConnectStatus.已连接
-                        clineList.add(index, it.copy())
-                    }
-                    val inputStream = socket.getInputStream()
-                    val outputStream = socket.getOutputStream()
-
-                    // 连接成功后就可以开始心跳
-                    while (receiverAnimation.value) {
-                        val pingMsgHead: MsgHead = readHead(inputStream)
-                        if (MsgType.心跳 == pingMsgHead.msgType) {
-                            // 向客户端发送确认消息
-                            sendHead(outputStream, MsgType.心跳, 0)
-                            logger.info("接收到客户端:$connectedIpAdd 的心跳！")
-                        } else if (MsgType.更新列表 == pingMsgHead.msgType) {
-                            val command: Command =
-                                readBody(pingMsgHead.dataLength.toInt(), Command::class.java, inputStream)
-                            logger.info("收到客户端需要${command.threadCount} 个线程上传数据,每个数据大小为${command.fileChunkSize} byte")
-                            // 比对列表
-                            val syncedData: TaskPo = syncData(command.taskPo)
-                            command.taskPo = syncedData
-                            // 异步执行文件上传
-                            val portTask: PortAndTask = asyncStartDownloadFile(command)
-                            // 同步数据
-                            sendHeadBody(outputStream, MsgType.传输数据, portTask)
-                        }
-                    }
-                    inputStream.close()
-                    outputStream.close()
-                    heartServerSocket!!.close()
-                } catch (e: Exception) {
-                    if (e is SocketTimeoutException) {
-                        logger.error("服务端心跳超时...", e)
-                    } else if (e is BindException) {
-                        logger.error("心跳服务端口$ACCEPT_SERVER_POST 被占用", e)
-                    } else {
-                        logger.error("服务端心跳异常...${e.message} ", e)
-                    }
-                    heartServerSocket?.close()
-
-                    connectedIpAdd?.let {
+            service = embeddedServer(Netty, port = HEART_BEAT_SERVER_POST, host = "0.0.0.0") {
+                // 安装内容协商以支持 JSON
+                install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
+                    Gson()
+                }
+                routing {
+                    // 登录
+                    get("/login") {
+                        connectedIpAdd = call.request.local.remoteAddress
                         clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
                             val index = clineList.indexOf(it)
                             clineList.removeAt(index)
-                            it.connectStatus = ConnectStatus.未连接
+                            it.connectStatus = ConnectStatus.已连接
                             clineList.add(index, it.copy())
                         }
-                    }
 
+                    }
+                    // ping
+                    get("/ping") {
+                        try {
+                            call.respondText("回复心跳！")
+                        } catch (e: Exception) {
+                            logger.error("心跳异常：", e)
+                            connectedIpAdd?.let {
+                                clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
+                                    val index = clineList.indexOf(it)
+                                    clineList.removeAt(index)
+                                    it.connectStatus = ConnectStatus.未连接
+                                    clineList.add(index, it.copy())
+                                }
+                            }
+                        }
+                    }
+                    // 下载文件
+                    post("/upload/{fileName}") {
+                        val filename = call.parameters["fileName"]
+                        val file = filename?.let {
+                            call.receiveChannel().copyAndClose(File(it).writeChannel())
+                            call.respondText("A file is uploaded")
+                        }
+                    }
                 }
             }
+            service?.start(wait = true)
         }
     }
 
@@ -358,7 +372,7 @@ object HomeViewModel {
                     return@async false
                 }
                 // 1、发送我要传输数据了
-                sendHeadBody(outputStream, MsgType.传输数据, fileChunkEntity);
+                sendHeadBody(outputStream, MsgType.传输数据, taskPo.fileEntity)
                 val jump: Long = fileChunkEntity.chunkIndex.toLong() * taskPo.fileEntity.chunkSize
 
                 val skip = fileInputStream.skip(jump)
@@ -434,7 +448,7 @@ object HomeViewModel {
                 // 2、开始接受数据
                 val msgHead: MsgHead = readHead(dataInputStream)
                 if (MsgType.传输数据 != msgHead.msgType) {
-                    logger.info("传输数据不符合预期")
+                    logger.info("首次传输数据不符合预期")
                     return@async false
                 }
                 // 接收数据对象
@@ -443,7 +457,7 @@ object HomeViewModel {
                 // 4、再次接收数据头
                 val msgHead1: MsgHead = readHead(dataInputStream)
                 if (MsgType.传输数据 != msgHead1.msgType) {
-                    logger.info("传输数据不符合预期")
+                    logger.info("再次传输数据不符合预期 {}", msgHead1.msgType)
                     return@async false
                 }
                 val bytes = ByteArray(msgHead1.dataLength.toInt())
@@ -891,49 +905,22 @@ object HomeViewModel {
         // 与接收者链接发送心跳信息
         // 启动心跳协程
         ioScope.launch {
-            var socket: Socket? = null
+            updateServiceState(servicePo, ConnectButtonState.断开)
             while (keepConnect) {
                 try {
-                    socket = Socket(servicePo.ip, HEART_BEAT_SERVER_POST)
-                    socket.setSoTimeout(10000)
-                    updateServiceState(servicePo, ConnectButtonState.断开)
-                    val inputStream = socket.getInputStream()
-                    val outputStream = socket.getOutputStream()
-                    // 发送心跳
-                    sendHead(outputStream, MsgType.心跳, 0)
-                    while (keepConnect) {
-                        // 接收心跳
-                        val msgHead: MsgHead = readHead(inputStream)
-                        if (MsgType.心跳 == msgHead.msgType) {
-                            // 收到确认消息，连接正常
-                            logger.info("接收心跳")
-                        } else if (MsgType.传输数据 == msgHead.msgType) {
-                            println("传输数据...")
-                            val portTask: PortAndTask =
-                                readBody(msgHead.dataLength.toInt(), PortAndTask::class.java, inputStream)
-                            uploadData(portTask, servicePo)
-                        }
-
-                        // 如果有命令 那么就执行命令
-                        if (commandQueue.isNotEmpty()) {
-                            val command: Command = commandQueue.poll()
-                            logger.info("run: 当前命令为")
-                            // 响应结果
-                            sendHeadBody(outputStream, MsgType.更新列表, command)
-                        } else {
-                            // 每秒发送心跳
-                            delay(1000)
-                            sendHead(outputStream, MsgType.心跳, 0)
-                        }
+                    val pingResult = client.get("${servicePo.ip}:${HEART_BEAT_SERVER_POST}/ping")
+                    if (pingResult.status == HttpStatusCode.OK) {
+                        println("请求结果是${pingResult.body<String>()}")
+                        delay(1000)
+                    } else {
+                        keepConnect = false
                     }
                 } catch (e: Exception) {
-                    logger.error("客户端心跳", e)
-                    updateServiceState(servicePo, ConnectButtonState.连接)
+                    println("请求异常！${e.message}")
                     keepConnect = false
+                    updateServiceState(servicePo, ConnectButtonState.连接)
                 }
             }
-            // 退出循环后关闭链接
-            socket?.close()
         }
     }
 
