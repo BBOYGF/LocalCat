@@ -908,7 +908,7 @@ object HomeViewModel {
             updateServiceState(servicePo, ConnectButtonState.断开)
             while (keepConnect) {
                 try {
-                    val pingResult = client.get("${servicePo.ip}:${HEART_BEAT_SERVER_POST}/ping")
+                    val pingResult = client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/ping")
                     if (pingResult.status == HttpStatusCode.OK) {
                         println("请求结果是${pingResult.body<String>()}")
                         delay(1000)
