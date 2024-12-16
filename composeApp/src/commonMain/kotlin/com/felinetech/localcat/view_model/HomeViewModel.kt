@@ -374,7 +374,7 @@ object HomeViewModel {
                     // 上传数据
                     val response =
                         client.post("http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${taskPo.fileEntity.fileName}") {
-                            setBody(File("download.png").readChannel())
+                            setBody(File(taskPo.fileEntity.fileFullName).readChannel())
                         }
                     if (response.status == HttpStatusCode.OK) {
                         val responseStr = response.body<String>()
