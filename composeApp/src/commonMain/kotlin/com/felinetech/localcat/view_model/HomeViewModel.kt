@@ -626,6 +626,7 @@ object HomeViewModel {
         // 启动心跳协程
         ioScope.launch {
             updateServiceState(servicePo, ConnectButtonState.断开)
+            connectedIpAdd="${servicePo.ip}"
             while (keepConnect) {
                 try {
                     val pingResult = client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/ping")
