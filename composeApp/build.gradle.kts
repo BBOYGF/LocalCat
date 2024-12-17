@@ -69,6 +69,7 @@ kotlin {
 
             // 网络ktor
             implementation("io.ktor:ktor-client-cio:3.0.2")
+            implementation("io.ktor:ktor-client-core-jvm:3.0.2")
             implementation("io.ktor:ktor-client-content-negotiation-jvm:3.0.2")
 
             implementation("io.ktor:ktor-serialization-gson-jvm:3.0.2")

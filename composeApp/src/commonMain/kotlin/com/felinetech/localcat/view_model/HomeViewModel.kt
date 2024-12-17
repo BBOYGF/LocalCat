@@ -24,8 +24,10 @@ import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
 import com.google.gson.Gson
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
@@ -350,6 +352,7 @@ object HomeViewModel {
     /**
      * 开始文件文件
      */
+    @OptIn(InternalAPI::class)
     fun startUploadClick() {
         // 如果没链接请先链接数据源
         if (keepConnect) {
@@ -371,17 +374,39 @@ object HomeViewModel {
                     // todo 上传完之后再发送
                     startUpload = false
                 } else {
+
+//                            setBody(File(taskPo.fileEntity.fileFullName).readChannel())
                     // 上传数据
                     val response =
                         client.post("http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${taskPo.fileEntity.fileName}") {
-                            setBody(File(taskPo.fileEntity.fileFullName).readChannel())
+                            setBody(
+                                MultiPartFormDataContent(
+                                    formData {
+                                        append("description", "Ktor logo")
+                                        append(
+                                            "image",
+                                            File(taskPo.fileEntity.fileFullName).readBytes(),
+                                            Headers.build {
+                                                append(HttpHeaders.ContentType, "image/png")
+                                                append(HttpHeaders.ContentDisposition, "filename=\"ktor_logo.png\"")
+                                            })
+                                    },
+                                    boundary = "WebAppBoundary"
+                                )
+                            )
+                            onUpload { bytesSentTotal, contentLength ->
+                                println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal / contentLength}")
+                            }
                         }
+
                     if (response.status == HttpStatusCode.OK) {
                         val responseStr = response.body<String>()
                         println("下载结果：$responseStr")
                         // 上传成功
                     } else {
                         // 上传失败
+                        // 使用流式上传文件并显示进度
+
                     }
                 }
             }
@@ -626,7 +651,7 @@ object HomeViewModel {
         // 启动心跳协程
         ioScope.launch {
             updateServiceState(servicePo, ConnectButtonState.断开)
-            connectedIpAdd="${servicePo.ip}"
+            connectedIpAdd = "${servicePo.ip}"
             while (keepConnect) {
                 try {
                     val pingResult = client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/ping")
