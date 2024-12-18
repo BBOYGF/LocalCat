@@ -168,6 +168,7 @@ object HomeViewModel {
             install(ContentNegotiation) {
                 gson()
             }
+            install(HttpTimeout)
         }
     }
 
@@ -258,6 +259,7 @@ object HomeViewModel {
                     }
                     // 下载文件
                     post("/upload/{fileName}") {
+
                         val filename = call.parameters["fileName"]
                         val file = filename?.let {
                             call.receiveChannel().copyAndClose(File(savedPosition, it).writeChannel())
@@ -374,11 +376,13 @@ object HomeViewModel {
                     // todo 上传完之后再发送
                     startUpload = false
                 } else {
-
 //                            setBody(File(taskPo.fileEntity.fileFullName).readChannel())
                     // 上传数据
                     val response =
                         client.post("http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${taskPo.fileEntity.fileName}") {
+                            timeout {
+                                requestTimeoutMillis = 60000
+                            }
                             setBody(
                                 MultiPartFormDataContent(
                                     formData {
@@ -395,7 +399,7 @@ object HomeViewModel {
                                 )
                             )
                             onUpload { bytesSentTotal, contentLength ->
-                                println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal / contentLength}")
+                                println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
                             }
                         }
 
