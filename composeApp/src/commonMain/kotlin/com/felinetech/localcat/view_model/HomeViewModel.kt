@@ -406,11 +406,11 @@ object HomeViewModel {
                     if (response.status == HttpStatusCode.OK) {
                         val responseStr = response.body<String>()
                         println("下载结果：$responseStr")
+                        return@launch
                         // 上传成功
                     } else {
                         // 上传失败
                         // 使用流式上传文件并显示进度
-
                     }
                 }
             }
