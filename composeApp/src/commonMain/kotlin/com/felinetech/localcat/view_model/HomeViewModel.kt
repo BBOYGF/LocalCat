@@ -391,7 +391,7 @@ object HomeViewModel {
                                             "image",
                                             File(taskPo.fileEntity.fileFullName).readBytes(),
                                             Headers.build {
-                                                append(HttpHeaders.ContentType, "image/png")
+                                                append(HttpHeaders.ContentType, "video/mp4")
                                                 append(HttpHeaders.ContentDisposition, "filename=\"ktor_logo.png\"")
                                             })
                                     },
