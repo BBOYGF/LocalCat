@@ -46,7 +46,6 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.*
-import java.net.URLDecoder.decode
 import java.net.URLEncoder.encode
 import java.nio.channels.FileChannel
 import java.util.*
@@ -261,14 +260,29 @@ object HomeViewModel {
                     // 下载文件
                     post("/upload/{fileName}") {
                         val filename = call.parameters["fileName"]
-                        val filenameStr = decode(filename, Charsets.UTF_8)
-                        val file = File(filenameStr, filename!!)
+                        val file = File(savedPosition, filename!!)
                         val outputChannel = file.writeChannel()
                         // 创建输出流
                         val inputChannel = call.receiveChannel()
-                        val totalBytes = inputChannel.availableForRead // 可读字节数
+                        // 获取 Content-Length 头
+                        val totalBytes = call.request.headers[HttpHeaders.ContentLength]
+//                        val totalBytes = inputChannel.availableForRead // 可读字节数
                         println("读取的总字节数：$totalBytes")
-                        inputChannel.copyAndClose(outputChannel)
+                        var bytesRead = 0L
+                        val bufferSize = 1024 // 每次读取的字节数
+                        val buffer = ByteArray(bufferSize)
+                        // 循环读取输入通道并写入输出通道
+                        while (true) {
+                            // 从输入通道读取数据
+                            val readCount = inputChannel.readAvailable(buffer)
+                            if (readCount == -1) break // 输入通道结束
+                            // 将读取的数据写入输出通道
+                            outputChannel.writeFully(buffer, 0, readCount)
+                            bytesRead += readCount
+                            // 计算并打印上传进度
+                            val progress = (bytesRead.toDouble() / totalBytes!!.toDouble() * 100).toInt()
+                            println("上传进度：$progress%")
+                        }
                         call.respondText("A file is uploaded")
                     }
                 }
@@ -384,7 +398,10 @@ object HomeViewModel {
                     val response =
                         client.post(
                             "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
-                                encode(taskPo.fileEntity.fileName, Charsets.UTF_8)
+                                encode(
+                                    taskPo.fileEntity.fileName,
+                                    Charsets.UTF_8
+                                )
                             }"
                         ) {
                             timeout {
