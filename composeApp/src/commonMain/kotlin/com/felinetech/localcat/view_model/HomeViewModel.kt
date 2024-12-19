@@ -266,7 +266,6 @@ object HomeViewModel {
                         val inputChannel = call.receiveChannel()
                         // 获取 Content-Length 头
                         val totalBytes = call.request.headers[HttpHeaders.ContentLength]
-//                        val totalBytes = inputChannel.availableForRead // 可读字节数
                         println("读取的总字节数：$totalBytes")
                         var bytesRead = 0L
                         val bufferSize = 1024 // 每次读取的字节数
@@ -283,6 +282,7 @@ object HomeViewModel {
                             val progress = (bytesRead.toDouble() / totalBytes!!.toDouble() * 100).toInt()
                             println("上传进度：$progress%")
                         }
+                        outputChannel.flushAndClose()
                         call.respondText("A file is uploaded")
                     }
                 }
