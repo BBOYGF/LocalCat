@@ -46,6 +46,8 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.*
+import java.net.URLDecoder.decode
+import java.net.URLEncoder.encode
 import java.nio.channels.FileChannel
 import java.util.*
 
@@ -259,24 +261,14 @@ object HomeViewModel {
                     // 下载文件
                     post("/upload/{fileName}") {
                         val filename = call.parameters["fileName"]
-                        val channel = call.receiveChannel()
-                        channel.copyAndClose(File(savedPosition, filename!!).writeChannel())
-//                        File(savedPosition, filename).writeBytes(channel)
-//                        multipartData.forEachPart { part ->
-//                            when (part) {
-//                                is PartData.FormItem -> {
-////                                    fileDescription = part.value
-//                                }
-//
-//                                is PartData.FileItem -> {
-//                                    val fileBytes = part.provider().readRemaining().readByteArray()
-//                                    File(savedPosition, filename).writeBytes(fileBytes)
-//                                }
-//
-//                                else -> {}
-//                            }
-//                            part.dispose()
-//                        }
+                        val filenameStr = decode(filename, Charsets.UTF_8)
+                        val file = File(filenameStr, filename!!)
+                        val outputChannel = file.writeChannel()
+                        // 创建输出流
+                        val inputChannel = call.receiveChannel()
+                        val totalBytes = inputChannel.availableForRead // 可读字节数
+                        println("读取的总字节数：$totalBytes")
+                        inputChannel.copyAndClose(outputChannel)
                         call.respondText("A file is uploaded")
                     }
                 }
@@ -386,30 +378,19 @@ object HomeViewModel {
                 if (taskPo == null) {
                     showMsg = true
                     msg = "上传结束！"
-                    // todo 上传完之后再发送
                     startUpload = false
                 } else {
-//                            setBody(File(taskPo.fileEntity.fileFullName).readChannel())
                     // 上传数据
                     val response =
-                        client.post("http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${taskPo.fileEntity.fileName}") {
+                        client.post(
+                            "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
+                                encode(taskPo.fileEntity.fileName, Charsets.UTF_8)
+                            }"
+                        ) {
                             timeout {
                                 requestTimeoutMillis = 60000
                             }
                             setBody(
-//                                MultiPartFormDataContent(
-//                                    formData {
-//                                        append("description", "Ktor logo")
-//                                        append(
-//                                            "image",
-//                                            File(taskPo.fileEntity.fileFullName).readBytes(),
-//                                            Headers.build {
-//                                                append(HttpHeaders.ContentType, "video/mp4")
-//                                                append(HttpHeaders.ContentDisposition, "filename=\"ktor_logo.png\"")
-//                                            })
-//                                    },
-//                                    boundary = "WebAppBoundary"
-//                                )
                                 File(taskPo.fileEntity.fileFullName).readBytes()
                             )
                             onUpload { bytesSentTotal, contentLength ->
@@ -423,8 +404,8 @@ object HomeViewModel {
                         return@launch
                         // 上传成功
                     } else {
-                        // 上传失败
-                        // 使用流式上传文件并显示进度
+                        msg = "上传失败！"
+                        startUpload = false
                     }
                 }
             }
