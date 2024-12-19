@@ -27,7 +27,6 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
@@ -259,12 +258,26 @@ object HomeViewModel {
                     }
                     // 下载文件
                     post("/upload/{fileName}") {
-
                         val filename = call.parameters["fileName"]
-                        val file = filename?.let {
-                            call.receiveChannel().copyAndClose(File(savedPosition, it).writeChannel())
-                            call.respondText("A file is uploaded")
-                        }
+                        val channel = call.receiveChannel()
+                        channel.copyAndClose(File(savedPosition, filename!!).writeChannel())
+//                        File(savedPosition, filename).writeBytes(channel)
+//                        multipartData.forEachPart { part ->
+//                            when (part) {
+//                                is PartData.FormItem -> {
+////                                    fileDescription = part.value
+//                                }
+//
+//                                is PartData.FileItem -> {
+//                                    val fileBytes = part.provider().readRemaining().readByteArray()
+//                                    File(savedPosition, filename).writeBytes(fileBytes)
+//                                }
+//
+//                                else -> {}
+//                            }
+//                            part.dispose()
+//                        }
+                        call.respondText("A file is uploaded")
                     }
                 }
             }
@@ -384,19 +397,20 @@ object HomeViewModel {
                                 requestTimeoutMillis = 60000
                             }
                             setBody(
-                                MultiPartFormDataContent(
-                                    formData {
-                                        append("description", "Ktor logo")
-                                        append(
-                                            "image",
-                                            File(taskPo.fileEntity.fileFullName).readBytes(),
-                                            Headers.build {
-                                                append(HttpHeaders.ContentType, "video/mp4")
-                                                append(HttpHeaders.ContentDisposition, "filename=\"ktor_logo.png\"")
-                                            })
-                                    },
-                                    boundary = "WebAppBoundary"
-                                )
+//                                MultiPartFormDataContent(
+//                                    formData {
+//                                        append("description", "Ktor logo")
+//                                        append(
+//                                            "image",
+//                                            File(taskPo.fileEntity.fileFullName).readBytes(),
+//                                            Headers.build {
+//                                                append(HttpHeaders.ContentType, "video/mp4")
+//                                                append(HttpHeaders.ContentDisposition, "filename=\"ktor_logo.png\"")
+//                                            })
+//                                    },
+//                                    boundary = "WebAppBoundary"
+//                                )
+                                File(taskPo.fileEntity.fileFullName).readChannel()
                             )
                             onUpload { bytesSentTotal, contentLength ->
                                 println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
