@@ -410,7 +410,7 @@ object HomeViewModel {
 //                                    },
 //                                    boundary = "WebAppBoundary"
 //                                )
-                                File(taskPo.fileEntity.fileFullName).readChannel()
+                                File(taskPo.fileEntity.fileFullName).readBytes()
                             )
                             onUpload { bytesSentTotal, contentLength ->
                                 println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
