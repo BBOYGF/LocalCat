@@ -95,7 +95,6 @@ object HomeViewModel {
      */
     val ipAddress = MutableStateFlow("127.0.0.1")
 
-    private var list = mutableListOf(FileItemVo("点击", FileType.doc文档, "文件", UploadState.待上传, 50, 1024))
 
     /**
      * 接收按钮状态
@@ -274,7 +273,8 @@ object HomeViewModel {
                             file.name,
                             UploadState.下载中,
                             0,
-                            totalBytes!!.toLong()
+                            totalBytes!!.toLong(),
+                            fileFillName = file.absolutePath
                         )
                         toBeDownloadFileList.add(fileItemVo)
                         println("读取的总字节数：$totalBytes")
@@ -411,56 +411,58 @@ object HomeViewModel {
         }
         ioScope.launch {
             // 找到之前没上传完的数据
-            while (startUpload) {
-                val taskPo = getTaskPo()
-                if (taskPo == null) {
+//                val taskPo = getTaskPo()
+            for (fileItemVo in toBeUploadFileList) {
+                // 上传数据
+                val response = client.post(
+                    "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
+                        encode(
+                            fileItemVo.fileName,
+                            Charsets.UTF_8
+                        )
+                    }"
+                ) {
+                    timeout {
+                        requestTimeoutMillis = 60000
+                    }
+                    setBody(
+                        File(fileItemVo.fileFillName).readBytes()
+                    )
+                    onUpload { bytesSentTotal, contentLength ->
+                        println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
+                        val progress = (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
+                        toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == fileItemVo.fileId }
+                            .takeIf { it != -1 }?.let {
+                                val fileItemVo = toBeUploadFileList[it]
+                                toBeUploadFileList[it] = fileItemVo.copy(percent = progress)
+                            }
+                        if (!startUpload) {
+                            cancel()
+                            return@onUpload
+                        }
+                    }
+                }
+                if (response.status == HttpStatusCode.OK) {
+                    val responseStr = response.body<String>()
+                    println("客户端上传结果：$responseStr")
+                    // 下载结束后
+                    toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == fileItemVo.fileId }
+                        .takeIf { it != -1 }?.let { index ->
+                            val fileItemVo = toBeUploadFileList[index]
+                            toBeUploadFileList.removeAt(index)
+                            uploadedFileList.add(fileItemVo)
+                        }
+                    return@launch
+                    // 上传成功
+                } else {
                     showMsg = true
                     msg = "上传结束！"
                     startUpload = false
-                } else {
-                    // 上传数据
-                    val response = client.post(
-                        "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
-                            encode(
-                                taskPo.fileEntity.fileName, Charsets.UTF_8
-                            )
-                        }"
-                    ) {
-                        timeout {
-                            requestTimeoutMillis = 60000
-                        }
-                        setBody(
-                            File(taskPo.fileEntity.fileFullName).readBytes()
-                        )
-                        onUpload { bytesSentTotal, contentLength ->
-                            println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
-                            val progress = (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
-                            toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == taskPo.fileEntity.fileId }
-                                .takeIf { it != -1 }?.let {
-                                    val fileItemVo = toBeUploadFileList[it]
-                                    toBeUploadFileList[it] = fileItemVo.copy(percent = progress)
-                                }
-                        }
-                    }
-
-                    if (response.status == HttpStatusCode.OK) {
-                        val responseStr = response.body<String>()
-                        println("客户端上传结果：$responseStr")
-                        // 下载结束后
-                        toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == taskPo.fileEntity.fileId }
-                            .takeIf { it != -1 }?.let { index ->
-                                val fileItemVo = toBeUploadFileList[index]
-                                toBeUploadFileList.removeAt(index)
-                                uploadedFileList.add(fileItemVo)
-                            }
-                        return@launch
-                        // 上传成功
-                    } else {
-                        msg = "上传失败！"
-                        startUpload = false
-                    }
                 }
             }
+            showMsg = true
+            msg = "上传结束！"
+            startUpload = false
         }
     }
 
@@ -626,7 +628,10 @@ object HomeViewModel {
                     val ipString = testConnectByIp(broadcastIp)
                     serviceList.add(
                         ServicePo(
-                            serviceList.size + 1, ipString, ConnectStatus.未连接, buttonState = ConnectButtonState.连接
+                            serviceList.size + 1,
+                            ipString,
+                            ConnectStatus.未连接,
+                            buttonState = ConnectButtonState.连接
                         )
                     )
                     scanService = false

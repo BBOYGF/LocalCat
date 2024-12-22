@@ -29,5 +29,7 @@ data class FileItemVo(
      * 文件大小
      */
 
-    val fileSize: Long = 0
+    val fileSize: Long = 0,
+
+    val fileFillName: String,
 )

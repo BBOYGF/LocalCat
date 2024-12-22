@@ -53,4 +53,4 @@ fun getFileType(fileName: String): FileType {
 }
 
 fun filePoToFileVo(it: FileEntity) =
-    FileItemVo(it.fileId, getFileType(it.fileName), it.fileName, it.uploadState, 0, it.fileSize)
+    FileItemVo(it.fileId, getFileType(it.fileName), it.fileName, it.uploadState, 0, it.fileSize, fileFillName = it.fileFullName)
