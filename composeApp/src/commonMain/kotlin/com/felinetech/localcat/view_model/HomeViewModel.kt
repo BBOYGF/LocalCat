@@ -18,6 +18,8 @@ import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
 import com.felinetech.localcat.pojo.TaskPo
 import com.felinetech.localcat.utlis.*
+import com.felinetech.localcat.view_model.HistoryViewModel.downloadedFileList
+import com.felinetech.localcat.view_model.HistoryViewModel.uploadedFileList
 import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
@@ -266,6 +268,15 @@ object HomeViewModel {
                         val inputChannel = call.receiveChannel()
                         // 获取 Content-Length 头
                         val totalBytes = call.request.headers[HttpHeaders.ContentLength]
+                        val fileItemVo = FileItemVo(
+                            UUID.randomUUID().toString(),
+                            FileType.doc文档,
+                            file.name,
+                            UploadState.下载中,
+                            0,
+                            totalBytes!!.toLong()
+                        )
+                        toBeDownloadFileList.add(fileItemVo)
                         println("读取的总字节数：$totalBytes")
                         var bytesRead = 0L
                         val bufferSize = 1024 // 每次读取的字节数
@@ -280,8 +291,21 @@ object HomeViewModel {
                             bytesRead += readCount
                             // 计算并打印上传进度
                             val progress = (bytesRead.toDouble() / totalBytes!!.toDouble() * 100).toInt()
+                            toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }.takeIf { it != -1 }
+                                ?.let { index ->
+                                    val item = toBeDownloadFileList[index]
+                                    // 直接更新percent
+                                    toBeDownloadFileList[index] = item.copy(percent = progress)
+                                }
                             println("上传进度：$progress%")
                         }
+                        println("数据接收成功！")
+                        toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }.takeIf { it != -1 }
+                            ?.let { index ->
+                                val itemVo = toBeDownloadFileList[index]
+                                toBeDownloadFileList.remove(itemVo)
+                                downloadedFileList.add(itemVo)
+                            }
                         outputChannel.flushAndClose()
                         call.respondText("A file is uploaded")
                     }
@@ -371,7 +395,7 @@ object HomeViewModel {
     }
 
     /**
-     * 开始文件文件
+     * 开始上传文件
      */
     @OptIn(InternalAPI::class)
     fun startUploadClick() {
@@ -395,29 +419,40 @@ object HomeViewModel {
                     startUpload = false
                 } else {
                     // 上传数据
-                    val response =
-                        client.post(
-                            "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
-                                encode(
-                                    taskPo.fileEntity.fileName,
-                                    Charsets.UTF_8
-                                )
-                            }"
-                        ) {
-                            timeout {
-                                requestTimeoutMillis = 60000
-                            }
-                            setBody(
-                                File(taskPo.fileEntity.fileFullName).readBytes()
+                    val response = client.post(
+                        "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
+                            encode(
+                                taskPo.fileEntity.fileName, Charsets.UTF_8
                             )
-                            onUpload { bytesSentTotal, contentLength ->
-                                println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
-                            }
+                        }"
+                    ) {
+                        timeout {
+                            requestTimeoutMillis = 60000
                         }
+                        setBody(
+                            File(taskPo.fileEntity.fileFullName).readBytes()
+                        )
+                        onUpload { bytesSentTotal, contentLength ->
+                            println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
+                            val progress = (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
+                            toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == taskPo.fileEntity.fileId }
+                                .takeIf { it != -1 }?.let {
+                                    val fileItemVo = toBeUploadFileList[it]
+                                    toBeUploadFileList[it] = fileItemVo.copy(percent = progress)
+                                }
+                        }
+                    }
 
                     if (response.status == HttpStatusCode.OK) {
                         val responseStr = response.body<String>()
-                        println("下载结果：$responseStr")
+                        println("客户端上传结果：$responseStr")
+                        // 下载结束后
+                        toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == taskPo.fileEntity.fileId }
+                            .takeIf { it != -1 }?.let { index ->
+                                val fileItemVo = toBeUploadFileList[index]
+                                toBeUploadFileList.removeAt(index)
+                                uploadedFileList.add(fileItemVo)
+                            }
                         return@launch
                         // 上传成功
                     } else {
