@@ -57,7 +57,6 @@ import java.util.*
 fun Sender(turnState: Boolean) {
     val turn = remember { Animatable(if (turnState) -180f else 0f) }
     val deepStart = remember { Animatable(if (turnState) 0.6f else 1f) }
-    val uiScope = CoroutineScope(Dispatchers.Main)
     if (turnState) {
         LaunchedEffect(false) {
             deepStart.animateTo(
@@ -136,7 +135,7 @@ fun Sender(turnState: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .height(800.dp)
+                .height(600.dp)
                 .padding(5.dp),
         ) {
             Row(

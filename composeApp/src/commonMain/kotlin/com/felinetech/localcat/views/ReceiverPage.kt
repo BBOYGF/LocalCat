@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -72,14 +73,14 @@ fun Receiver(turnState: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(800.dp)
+                .height(600.dp)
                 .padding(5.dp),
 
         ) {
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp), color = Color(0x00ffffff), shape = RoundedCornerShape(5.dp)
+                    .height(100.dp), color = Color(0x00ffffff), shape = RoundedCornerShape(5.dp)
             ) {
                 if (receiverAnima) {
                     ReceiverAnimation()
@@ -109,11 +110,11 @@ fun Receiver(turnState: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(100.dp)
                 .align(alignment = Alignment.BottomCenter),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Button(onClick = { clickReceiverButton() }) {
                 Text(
                     text = receiverBT,
@@ -121,7 +122,6 @@ fun Receiver(turnState: Boolean) {
                     textAlign = TextAlign.Center
                 )
             }
-
         }
     }
     MainViewModel.receiveState = true

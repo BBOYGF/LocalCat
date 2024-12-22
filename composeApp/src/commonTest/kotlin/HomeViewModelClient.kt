@@ -1,6 +1,5 @@
 import com.felinetech.localcat.pojo.ServiceInfo
 import com.felinetech.localcat.view_model.HomeViewModel.getTaskPo
-import com.felinetech.localcat.view_model.HomeViewModel.syncUploadFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,7 +17,7 @@ class HomeViewModelClient {
         val job = ioScope.launch {
             val taskPo = getTaskPo()
             val service = ServiceInfo("192.168.3.101", 8080)
-            syncUploadFile(service, taskPo!!)
+//            syncUploadFile(service, taskPo!!)
         }
         job.join()
     }

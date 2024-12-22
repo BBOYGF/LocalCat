@@ -62,13 +62,13 @@ fun History() {
 
         if (index == 0) {
             LazyColumn {
-                items(uploadedFileList) { item ->
+                items( downloadedFileList) { item ->
                     FileItem(item)
                 }
             }
         } else {
             LazyColumn {
-                items(downloadedFileList) { item ->
+                items(uploadedFileList) { item ->
                     FileItem(item)
                 }
             }
