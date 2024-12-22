@@ -6,6 +6,7 @@ import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.FileItemVo
 import java.io.File
 import java.net.InetAddress
+import java.util.*
 import kotlin.experimental.and
 import kotlin.experimental.inv
 import kotlin.experimental.or
@@ -53,4 +54,27 @@ fun getFileType(fileName: String): FileType {
 }
 
 fun filePoToFileVo(it: FileEntity) =
-    FileItemVo(it.fileId, getFileType(it.fileName), it.fileName, it.uploadState, 0, it.fileSize, fileFillName = it.fileFullName)
+    FileItemVo(
+        it.fileId,
+        getFileType(it.fileName),
+        it.fileName,
+        it.uploadState,
+        0,
+        it.fileSize,
+        fileFillName = it.fileFullName
+    )
+
+fun fileVoToFilePo(fileItemVo: FileItemVo): FileEntity {
+    return FileEntity(
+        null,
+        "1",
+        fileItemVo.fileId,
+        fileItemVo.fileName,
+        fileItemVo.fileFillName,
+        fileItemVo.fileSize,
+        fileItemVo.state,
+        fileItemVo.fileSize,
+        Date(),
+        Date()
+    )
+}

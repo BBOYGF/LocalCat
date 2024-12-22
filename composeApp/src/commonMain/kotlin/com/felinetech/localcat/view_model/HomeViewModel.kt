@@ -179,11 +179,22 @@ object HomeViewModel {
     private fun defaultData() {
         ioScope.launch {
             val allFile = fileEntityDao.getAllFiles()
-            val fileList = allFile.filter { it.uploadState == UploadState.待上传 }.map {
+            val toUploadFiles = allFile.filter { it.uploadState == UploadState.待上传 }.map {
                 filePoToFileVo(it)
             }.toList()
+
+            val uploadedFiles = allFile.filter { it.uploadState == UploadState.已上传 }.map {
+                filePoToFileVo(it)
+            }.toList()
+
+            val downLoadedFiles = allFile.filter { it.uploadState == UploadState.已下载 }.map {
+                filePoToFileVo(it)
+            }.toList()
+
             uiScope.launch {
-                toBeUploadFileList.addAll(fileList)
+                toBeUploadFileList.addAll(toUploadFiles)
+                uploadedFileList.addAll(uploadedFiles)
+                downloadedFileList.addAll(downLoadedFiles)
             }
         }
     }
@@ -305,6 +316,9 @@ object HomeViewModel {
                                 val itemVo = toBeDownloadFileList[index]
                                 toBeDownloadFileList.remove(itemVo)
                                 downloadedFileList.add(itemVo)
+                                val filePo = fileVoToFilePo(itemVo)
+                                filePo.uploadState = UploadState.已下载
+                                fileEntityDao.insert(filePo)
                             }
                         outputChannel.flushAndClose()
                         call.respondText("A file is uploaded")
@@ -451,6 +465,11 @@ object HomeViewModel {
                             val fileItemVo = toBeUploadFileList[index]
                             toBeUploadFileList.removeAt(index)
                             uploadedFileList.add(fileItemVo)
+                            val fileItemPo = fileEntityDao.getFileById(fileItemVo.fileId)
+                            fileItemPo?.let {
+                                it.uploadState = UploadState.已上传
+                                fileEntityDao.update(it)
+                            }
                         }
                     // 上传成功
                 } else {
@@ -588,7 +607,6 @@ object HomeViewModel {
                         file.length(),
                         UploadState.待上传
                     )
-
                     val fileVo = filePoToFileVo(filePo)
                     val any = toBeUploadFileList.any { fileItemVo -> fileItemVo.fileName == file.name }
                     if (any) {
