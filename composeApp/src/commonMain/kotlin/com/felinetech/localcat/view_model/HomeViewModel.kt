@@ -397,7 +397,6 @@ object HomeViewModel {
     /**
      * 开始上传文件
      */
-    @OptIn(InternalAPI::class)
     fun startUploadClick() {
         // 如果没链接请先链接数据源
         if (keepConnect) {
@@ -412,7 +411,8 @@ object HomeViewModel {
         ioScope.launch {
             // 找到之前没上传完的数据
 //                val taskPo = getTaskPo()
-            for (fileItemVo in toBeUploadFileList) {
+            val fileItemList = toBeUploadFileList.toList()
+            for (fileItemVo in fileItemList) {
                 // 上传数据
                 val response = client.post(
                     "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
@@ -452,7 +452,6 @@ object HomeViewModel {
                             toBeUploadFileList.removeAt(index)
                             uploadedFileList.add(fileItemVo)
                         }
-                    return@launch
                     // 上传成功
                 } else {
                     showMsg = true
