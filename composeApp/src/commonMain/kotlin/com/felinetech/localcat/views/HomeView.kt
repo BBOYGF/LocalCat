@@ -86,7 +86,7 @@ fun HomePage() {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
                 updateIpAddress()
-                println("生命周期开始")
+                println("生命周期开始===")
 
             } else if (event == Lifecycle.Event.ON_STOP) {
                 println("生命周期结束")

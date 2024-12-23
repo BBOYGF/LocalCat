@@ -50,20 +50,19 @@ actual fun getDatabase(): Database {
         .build()
 }
 
-@Composable
 actual fun getFileByDialog(): File? {
-    var selectedDirectory by remember { mutableStateOf<Uri?>(null) }
-    val context = LocalContext.current
-    val getContent =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
-            if (uri != null) {
-                selectedDirectory = uri
-                // 这里可以存储或处理所选目录的 URI
-            }
-        }
-    getContent.launch(null)
-    selectedDirectory?.let {
-        Text("选定的目录: $it")
-    } ?: Text("未选择目录")
+//    var selectedDirectory by remember { mutableStateOf<Uri?>(null) }
+//    val context = LocalContext.current
+//    val getContent =
+//        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
+//            if (uri != null) {
+//                selectedDirectory = uri
+//                // 这里可以存储或处理所选目录的 URI
+//            }
+//        }
+//    getContent.launch(null)
+//    selectedDirectory?.let {
+//        Text("选定的目录: $it")
+//    } ?: Text("未选择目录")
     return null
 }

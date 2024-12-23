@@ -88,7 +88,7 @@ fun FileItem(item: FileItemVo) {
                         modifier = Modifier.padding(start = 2.dp)
                     )
                     Text(
-                        text = "${item.percent / 100f}%",
+                        text = "${item.percent}%",
                         modifier = Modifier.padding(start = 2.dp)
                     )
                 }
