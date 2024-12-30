@@ -3,7 +3,7 @@ package com.felinetech.localcat.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.onClick
+//import androidx.compose.foundation.onClick
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
@@ -125,10 +125,11 @@ fun ServerItem(servicePo: ServicePo, connectFun: (service: ServicePo) -> Unit) {
             Text(
                 text = servicePo.buttonState.name,
                 modifier = Modifier.padding(end = 5.dp)
-                    .onClick {
-                        println("$servicePo 被点击")
-                        connectFun(servicePo)
-                    },
+//                    .onClick {
+//                        println("$servicePo 被点击")
+//                        connectFun(servicePo)
+//                    }
+                ,
                 color = MaterialTheme.colorScheme.tertiary
             )
             Text(
@@ -172,7 +173,11 @@ fun ClientItem(clientVo: ClientVo) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun RuleItem(item: UploadConfigItem, edit: (item: UploadConfigItem) -> Unit, delete: (item: UploadConfigItem) -> Unit) {
+fun RuleItem(
+    item: UploadConfigItem,
+    edit: (item: UploadConfigItem) -> Unit,
+    delete: (item: UploadConfigItem) -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -194,16 +199,17 @@ fun RuleItem(item: UploadConfigItem, edit: (item: UploadConfigItem) -> Unit, del
             Text(
                 text = getNames(Locale.getDefault().language).edit,
                 color = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.onClick {
-                    edit(item)
-                }
+//                modifier = Modifier
+//                    .onClick {
+//                        edit(item)
+//                    }
             )
             Text(
                 text = getNames(Locale.getDefault().language).delete,
                 color = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.onClick {
-                    delete(item)
-                }
+//                modifier = Modifier.onClick {
+//                    delete(item)
+//                }
             )
         }
     }

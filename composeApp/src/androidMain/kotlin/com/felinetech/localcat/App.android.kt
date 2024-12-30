@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.felinetech.localcat.Constants.PRIVACY_URL
-import com.felinetech.localcat.Constants.desktopDownload
 import com.felinetech.localcat.utlis.getNames
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState

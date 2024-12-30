@@ -66,3 +66,8 @@ actual fun getFileByDialog(): File? {
 //    } ?: Text("未选择目录")
     return null
 }
+
+actual fun getSubnetMask(): String {
+    TODO("Not yet implemented")
+    return ""
+}

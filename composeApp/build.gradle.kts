@@ -14,18 +14,16 @@ plugins {
 
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
-
     jvm("desktop")
+//    macosX64("macos") // macOS 平台
 
     sourceSets {
         val desktopMain by getting
-
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -33,8 +31,7 @@ kotlin {
             implementation("com.airbnb.android:lottie-compose:4.2.0")
             implementation("com.google.code.gson:gson:2.11.0")
             implementation("com.google.accompanist:accompanist-permissions:0.36.0")
-            // material3
-//            implementation("org.jetbrains.compose.material3:material3:1.7.0")
+            implementation ("org.slf4j:slf4j-android:1.7.36")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
         }
@@ -47,22 +44,18 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.room.runtime)
+            implementation(libs.sqlite.bundled)
 
-//            implementation("org.jetbrains.compose.material3:material3:1.7.0")
+            implementation("org.jetbrains.compose.material3:material3:1.7.3")
 
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
-
             implementation("com.github.YarikSOffice:lingver:1.3.0")
-
             implementation("com.google.code.gson:gson:2.11.0")
             // 日志
             implementation ("org.slf4j:slf4j-api:2.0.3") // 确保使用最新的 SLF4J API
-            implementation ("ch.qos.logback:logback-classic:1.4.5") // 使用最新的 Logback 版本
 
 
-            implementation("org.jetbrains.compose.material3:material3-desktop:1.6.11")
-            implementation(libs.room.runtime)
-            implementation(libs.sqlite.bundled)
             // 工具类
             implementation("org.apache.commons:commons-lang3:3.15.0")
             implementation ("com.blankj:utilcodex:1.31.1")
@@ -76,23 +69,18 @@ kotlin {
             implementation("io.ktor:ktor-server-content-negotiation-jvm:3.0.2")
 
             implementation("io.ktor:ktor-server-netty:3.0.2") // netty 服务
-
-
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(compose.components.resources)
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0")
-
-//            implementation("org.jetbrains.compose.material3:material3:1.7.0")
-
             // tollie Desktop 用
             implementation("io.github.alexzhirkevich:compottie:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-network:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
-
+            implementation ("ch.qos.logback:logback-classic:1.4.5") // 使用最新的 Logback 版本
             implementation("com.google.code.gson:gson:2.11.0")
         }
 
@@ -100,7 +88,6 @@ kotlin {
         // Adds common test dependencies
         commonTest.dependencies {
             implementation(kotlin("test"))
-
             @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)
         }
@@ -123,6 +110,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/*"
         }
     }
     buildTypes {
