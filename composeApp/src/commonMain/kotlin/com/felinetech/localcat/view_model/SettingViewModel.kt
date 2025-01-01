@@ -9,7 +9,9 @@ import com.felinetech.localcat.Constants.SAVE_FILE
 import com.felinetech.localcat.dao.UploadConfigDao
 import com.felinetech.localcat.database.Database
 import com.felinetech.localcat.po.UploadConfigItem
-import com.felinetech.localcat.utlis.PropertiesConfigUtils
+import com.felinetech.localcat.utlis.Settings
+import com.felinetech.localcat.utlis.createAppDir
+import com.felinetech.localcat.utlis.createSettings
 import com.felinetech.localcat.utlis.getDatabase
 import com.felinetech.localcat.utlis.getNames
 import kotlinx.coroutines.CoroutineScope
@@ -75,48 +77,43 @@ object SettingViewModel {
      */
     var cachePosition by mutableStateOf("./cache")
 
-    val propertiesConfigUtils: PropertiesConfigUtils
+    /**
+     * 配置工具
+     */
+    private var settings: Settings? = null
+
 
     init {
         val database: Database = getDatabase()
         uploadConfigDao = database.getUploadConfigItemDao()
-
         // 设置默认文件保存目录
-        val localCatFile = File(System.getProperty("user.home"), "local_cat")
-        if (!localCatFile.exists()) {
-            localCatFile.mkdir()
-        }
+        val localCatFile = createAppDir("local_cat")
         val configFile = File(localCatFile, "config")
         if (!configFile.exists()) {
             configFile.mkdir()
         }
-
-        val propertiesFile = File(configFile, "config.properties")
-        if (!propertiesFile.exists()) {
-            propertiesFile.createNewFile()
-        }
-        propertiesConfigUtils = PropertiesConfigUtils(propertiesFile)
-        var savePath = propertiesConfigUtils.getValue(SAVE_FILE)
+        settings = createSettings()
+        var savePath = settings?.getSetting(SAVE_FILE)
         if (savePath == null) {
             val saveFile = File(localCatFile, "save")
             if (!saveFile.exists()) {
                 saveFile.mkdirs()
             }
             savePath = saveFile.absolutePath
-            propertiesConfigUtils.setValue(SAVE_FILE, savePath)
+            settings?.saveSetting(SAVE_FILE, savePath)
         }
         savedPosition = savePath!!
 
         // 设置缓存保存目录
 
-        var cachePath = propertiesConfigUtils.getValue(CACHE_FILE)
+        var cachePath = settings?.getSetting(CACHE_FILE)
         if (cachePath == null) {
             val cacheFile = File(localCatFile, "cache")
             if (!cacheFile.exists()) {
                 cacheFile.mkdirs()
             }
             cachePath = cacheFile.absolutePath
-            propertiesConfigUtils.setValue(CACHE_FILE, cachePath)
+            settings?.saveSetting(CACHE_FILE, cachePath)
         }
         cachePosition = cachePath!!
         defaultData()
@@ -250,7 +247,7 @@ object SettingViewModel {
      * 更新文件保存路径
      */
     fun updateSaveFile(path: String) {
-        propertiesConfigUtils.setValue(SAVE_FILE, path)
+        settings?.saveSetting(SAVE_FILE, path)
         savedPosition = path
     }
 
@@ -258,7 +255,7 @@ object SettingViewModel {
      * 更新缓存文件保存路径
      */
     fun updateCacheFile(path: String) {
-        propertiesConfigUtils.setValue(CACHE_FILE, path)
+        settings?.saveSetting(CACHE_FILE, path)
         cachePosition = path
     }
 

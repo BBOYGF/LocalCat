@@ -9,6 +9,7 @@ import localcat.composeapp.generated.resources.cat9
 import org.jetbrains.compose.resources.painterResource
 
 fun main() = application {
+
     Window(
         onCloseRequest = ::exitApplication,
         title = "Local Cat",
@@ -16,6 +17,7 @@ fun main() = application {
         state = WindowState(width = 400.dp, height = 800.dp),
         resizable = true
     ) {
+
         App()
     }
 }

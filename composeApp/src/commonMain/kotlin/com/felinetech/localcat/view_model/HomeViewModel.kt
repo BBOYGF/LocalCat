@@ -24,6 +24,7 @@ import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
 import com.google.gson.Gson
+import io.github.vinceglb.filekit.core.FileKit
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*

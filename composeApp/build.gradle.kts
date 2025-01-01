@@ -69,6 +69,13 @@ kotlin {
             implementation("io.ktor:ktor-server-content-negotiation-jvm:3.0.2")
 
             implementation("io.ktor:ktor-server-netty:3.0.2") // netty 服务
+
+            // 跨平台文件选择
+            // Enables FileKit without Compose dependencies
+            implementation("io.github.vinceglb:filekit-core:0.8.8")
+
+            // Enables FileKit with Composable utilities
+            implementation("io.github.vinceglb:filekit-compose:0.8.8")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -139,6 +146,9 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "localcat"
             packageVersion = "1.0.0"
+            linux {
+                modules("jdk.security.auth")
+            }
         }
     }
 

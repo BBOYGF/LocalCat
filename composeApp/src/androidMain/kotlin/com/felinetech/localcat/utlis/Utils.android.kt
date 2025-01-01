@@ -1,20 +1,13 @@
 package com.felinetech.localcat.utlis
 
 import android.content.Context
-import android.net.Uri
 import android.net.wifi.WifiManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import android.os.Environment
 import androidx.compose.ui.platform.LocalContext
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.localcat.MainActivity
+import com.felinetech.localcat.MainActivity.Companion.instance
 import com.felinetech.localcat.database.Database
 import java.io.File
 
@@ -70,4 +63,22 @@ actual fun getFileByDialog(): File? {
 actual fun getSubnetMask(): String {
     TODO("Not yet implemented")
     return ""
+}
+
+actual fun createSettings(): Settings {
+    return AndroidSettings(context = instance)
+}
+
+/**
+ * 创建外包目录
+ */
+actual fun createAppDir(dirName: String): File {
+    if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
+        val dir = File(instance.getExternalFilesDir(null), dirName)
+        if (!dir.exists()) {
+            dir.mkdirs() // 创建目录
+        }
+        return dir
+    }
+    return File(dirName).apply { mkdirs() }
 }

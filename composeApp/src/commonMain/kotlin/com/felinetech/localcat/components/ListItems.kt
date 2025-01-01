@@ -1,9 +1,16 @@
 package com.felinetech.localcat.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.onClick
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
@@ -25,7 +32,7 @@ import com.felinetech.localcat.view_model.SettingViewModel.getFileName
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_black
 import org.jetbrains.compose.resources.painterResource
-import java.util.*
+import java.util.Locale
 
 /**
  * 文件列表 Item
@@ -97,7 +104,7 @@ fun FileItem(item: FileItemVo) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 fun ServerItem(servicePo: ServicePo, connectFun: (service: ServicePo) -> Unit) {
     Surface(
@@ -125,11 +132,10 @@ fun ServerItem(servicePo: ServicePo, connectFun: (service: ServicePo) -> Unit) {
             Text(
                 text = servicePo.buttonState.name,
                 modifier = Modifier.padding(end = 5.dp)
-//                    .onClick {
-//                        println("$servicePo 被点击")
-//                        connectFun(servicePo)
-//                    }
-                ,
+                    .clickable {
+                        println("$servicePo 被点击")
+                        connectFun(servicePo)
+                    },
                 color = MaterialTheme.colorScheme.tertiary
             )
             Text(
@@ -171,7 +177,6 @@ fun ClientItem(clientVo: ClientVo) {
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RuleItem(
     item: UploadConfigItem,
@@ -199,17 +204,17 @@ fun RuleItem(
             Text(
                 text = getNames(Locale.getDefault().language).edit,
                 color = MaterialTheme.colorScheme.tertiary,
-//                modifier = Modifier
-//                    .onClick {
-//                        edit(item)
-//                    }
+                modifier = Modifier
+                    .clickable {
+                        edit(item)
+                    }
             )
             Text(
                 text = getNames(Locale.getDefault().language).delete,
                 color = MaterialTheme.colorScheme.tertiary,
-//                modifier = Modifier.onClick {
-//                    delete(item)
-//                }
+                modifier = Modifier.clickable {
+                    delete(item)
+                }
             )
         }
     }

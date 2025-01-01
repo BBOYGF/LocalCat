@@ -5,8 +5,10 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -47,14 +49,16 @@ import com.felinetech.localcat.utlis.getNames
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import java.lang.StringBuilder
 import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 actual fun PermissionRequest() {
     val context = LocalContext.current
     val sharedPreferences =
-        remember { context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE) }
+        remember { context.getSharedPreferences("local_cat.cache", Context.MODE_PRIVATE) }
     // 读取存储的值
     var showPrivate by remember {
         mutableStateOf(
@@ -102,7 +106,9 @@ actual fun PermissionRequest() {
     if (showPrivate) {
         Dialog(onDismissRequest = { }) {
             Card(
-                modifier = Modifier.fillMaxWidth().height(300.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -116,7 +122,10 @@ actual fun PermissionRequest() {
                         fontWeight = FontWeight.Bold
                     )
                     Column(
-                        modifier = Modifier.fillMaxWidth().height(220.dp).padding(10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .padding(10.dp)
                             .background(Color.White, shape = RoundedCornerShape(10.dp))
                             .verticalScroll(ScrollState(0), enabled = true)
                     ) {
@@ -149,7 +158,10 @@ actual fun PermissionRequest() {
                         ClickableText(
                             text = annotatedText,
                             onClick = { _ ->
-                                Log.d(TAG, getNames(Locale.getDefault().language).privacyPolicyPermissions)
+                                Log.d(
+                                    TAG,
+                                    getNames(Locale.getDefault().language).privacyPolicyPermissions
+                                )
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL))
                                 MainActivity.instance.startActivity(intent)
                             }
@@ -209,11 +221,8 @@ private fun getTextToShowGivenPermissions(
 ): String {
     val revokedPermissionsSize = permissions.size
     if (revokedPermissionsSize == 0) return ""
-
-    val textToShow = StringBuilder().apply {
-        append("The ")
-    }
-
+    val textToShow = StringBuilder()
+    textToShow.append("The ")
     for (i in permissions.indices) {
         textToShow.append(permissions[i].permission)
         when {

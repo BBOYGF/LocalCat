@@ -4,17 +4,46 @@ package com.felinetech.localcat.views
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -53,14 +82,39 @@ import com.felinetech.localcat.view_model.SettingViewModel.showMsg
 import com.felinetech.localcat.view_model.SettingViewModel.showReluDialog
 import com.felinetech.localcat.view_model.SettingViewModel.updateCacheFile
 import com.felinetech.localcat.view_model.SettingViewModel.updateSaveFile
+import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
+import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.core.PickerMode
+import io.github.vinceglb.filekit.core.PickerType
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_gray
 import org.jetbrains.compose.resources.painterResource
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingView() {
+
+    // FileKit Compose
+    val launcher = rememberDirectoryPickerLauncher(
+        title = "Pick a directory",
+//        initialDirectory = "c:/"
+    ) { directory ->
+        println("选择的目录是$directory")
+    }
+
+    // FileKit Compose
+//    val launcher = rememberFilePickerLauncher(
+//        type = PickerType.ImageAndVideo,
+//        mode = PickerMode.Multiple(),
+//        title = "Pick a media",
+////        initialDirectory = "/"
+//    ) { files ->
+//        // Handle the picked files
+//        println("选择的目录是$files")
+//    }
+
     var showDatePicker by remember { mutableStateOf(false) }
     var eidt by remember { mutableStateOf(false) }
     val dataPickerState = rememberDatePickerState()
@@ -145,7 +199,8 @@ fun SettingView() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = getNames(Locale.getDefault().language).saveLocation, modifier = Modifier
+                        text = getNames(Locale.getDefault().language).saveLocation,
+                        modifier = Modifier
                             .height(40.dp)
                             .padding(3.dp)
                     )
@@ -163,10 +218,11 @@ fun SettingView() {
                     )
                     Button(
                         onClick = {
-                            val file = getFileByDialog()
-                            file?.let {
-                                updateSaveFile(file.absolutePath)
-                            }
+//                            val file = getFileByDialog()
+//                            file?.let {
+//                                updateSaveFile(file.absolutePath)
+//                            }
+                            launcher.launch()
                         },
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -255,7 +311,9 @@ fun SettingView() {
                     Text(
                         text = getNames(Locale.getDefault().language).ruleSetting,
                         style = TextStyle(
-                            color = MaterialTheme.colorScheme.tertiary, fontSize = 20.sp, fontWeight = FontWeight.Bold
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     )
                     Row(
@@ -341,7 +399,10 @@ fun SettingView() {
                         ) {
                             Text(text = getNames(Locale.getDefault().language).okText)
                         }
-                        Button(onClick = { showReluDialog = false }, shape = RoundedCornerShape(12.dp)) {
+                        Button(
+                            onClick = { showReluDialog = false },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
                             Text(text = getNames(Locale.getDefault().language).cancelButton)
                         }
                     }
@@ -474,7 +535,8 @@ fun SettingView() {
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
-                        Button(modifier = Modifier.fillMaxWidth().padding(5.dp), shape = RoundedCornerShape(2.dp),
+                        Button(modifier = Modifier.fillMaxWidth().padding(5.dp),
+                            shape = RoundedCornerShape(2.dp),
                             onClick = {
                                 showMsg = false
                             }) {
@@ -499,11 +561,8 @@ fun SettingView() {
             }
         }
 
-        // Add the observer to the lifecycle
         lifecycleOwner.lifecycle.addObserver(observer)
 
-
-        // When the effect leaves the Composition, remove the observer
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
@@ -516,7 +575,6 @@ fun SettingView() {
 @Composable
 fun ComboBox(items: MutableState<List<String>>) {
     var expanded by remember { mutableStateOf(false) }
-
     //  用于实现下拉菜单
     ExposedDropdownMenuBox(
         expanded = expanded,

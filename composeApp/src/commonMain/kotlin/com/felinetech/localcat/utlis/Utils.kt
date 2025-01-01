@@ -78,3 +78,13 @@ fun fileVoToFilePo(fileItemVo: FileItemVo): FileEntity {
         Date()
     )
 }
+
+/**
+ * 创建设置器
+ */
+expect fun createSettings(): Settings
+
+/**
+ * 创建外包目录
+ */
+expect fun createAppDir(dirName: String): File

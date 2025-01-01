@@ -45,7 +45,8 @@ actual fun getSubnetMask(): String {
         println("局域网名称 (主机名): $hostName")
 
         // 获取局域网子网掩码
-        val interfaces: List<NetworkInterface> = Collections.list(NetworkInterface.getNetworkInterfaces())
+        val interfaces: List<NetworkInterface> =
+            Collections.list(NetworkInterface.getNetworkInterfaces())
         for (networkInterface in interfaces) {
             // 确保网络接口是启用的，并且不是虚拟接口
             if (networkInterface.isUp && !networkInterface.isLoopback) {
@@ -109,4 +110,29 @@ actual fun getFileByDialog(): File? {
         return null
     }
 
+}
+
+actual fun createSettings(): Settings {
+    val localCatFile = createAppDir("local_cat")
+    val cacheDir = File(localCatFile, "cache")
+    if (!cacheDir.exists()) {
+        cacheDir.mkdir()
+    }
+    val configFile = File(cacheDir, "local_cat.cache")
+    if (!configFile.exists()) {
+        configFile.createNewFile()
+    }
+    return DesktopSettings(configFile.absolutePath)
+}
+
+
+/**
+ * 创建外包目录
+ */
+actual fun createAppDir(dirName: String): File {
+    val localCatFile = File(System.getProperty("user.home"), dirName)
+    if (!localCatFile.exists()) {
+        localCatFile.mkdir()
+    }
+    return localCatFile
 }
