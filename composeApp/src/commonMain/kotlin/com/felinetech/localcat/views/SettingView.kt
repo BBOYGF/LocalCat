@@ -61,7 +61,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.RuleItem
 import com.felinetech.localcat.enums.FileType
-import com.felinetech.localcat.utlis.getFileByDialog
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.SettingViewModel.addRule
 import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
@@ -83,9 +82,6 @@ import com.felinetech.localcat.view_model.SettingViewModel.showReluDialog
 import com.felinetech.localcat.view_model.SettingViewModel.updateCacheFile
 import com.felinetech.localcat.view_model.SettingViewModel.updateSaveFile
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
-import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.core.PickerMode
-import io.github.vinceglb.filekit.core.PickerType
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_gray
 import org.jetbrains.compose.resources.painterResource
@@ -96,24 +92,35 @@ import java.util.Locale
 @Composable
 fun SettingView() {
 
-    // FileKit Compose
-    val launcher = rememberDirectoryPickerLauncher(
+    // 文件保存路径
+    val launcherSave = rememberDirectoryPickerLauncher(
         title = "Pick a directory",
-//        initialDirectory = "c:/"
+        initialDirectory = savedPosition,
     ) { directory ->
-        println("选择的目录是$directory")
+        println("选择的保存目录是$directory")
+        directory?.let {
+            updateSaveFile(it.path.toString())
+        }
     }
-
-    // FileKit Compose
-//    val launcher = rememberFilePickerLauncher(
-//        type = PickerType.ImageAndVideo,
-//        mode = PickerMode.Multiple(),
-//        title = "Pick a media",
-////        initialDirectory = "/"
-//    ) { files ->
-//        // Handle the picked files
-//        println("选择的目录是$files")
-//    }
+    // 缓存保存位置
+    val launcherCache = rememberDirectoryPickerLauncher(
+        title = "Pick a directory",
+        initialDirectory = cachePosition
+    ) { directory ->
+        directory?.let {
+            updateCacheFile(it.path.toString())
+            println("选择的缓存目录是$directory")
+        }
+    }
+    val launcherConfig = rememberDirectoryPickerLauncher(
+        title = "Pick a directory",
+//        initialDirectory = "c:\\"
+    ) { directory ->
+        directory?.let {
+            selectedDirectory = it.path.toString()
+            println("选择的规则目录是$directory")
+        }
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var eidt by remember { mutableStateOf(false) }
@@ -218,11 +225,7 @@ fun SettingView() {
                     )
                     Button(
                         onClick = {
-//                            val file = getFileByDialog()
-//                            file?.let {
-//                                updateSaveFile(file.absolutePath)
-//                            }
-                            launcher.launch()
+                            launcherSave.launch()
                         },
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -257,10 +260,8 @@ fun SettingView() {
                     )
                     Button(
                         onClick = {
-                            val file = getFileByDialog()
-                            file?.let {
-                                updateCacheFile(file.absolutePath)
-                            }
+
+                            launcherCache.launch()
                         },
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -328,11 +329,8 @@ fun SettingView() {
                         )
                         // 选择目录被点击
                         IconButton(onClick = {
-                            val file = getFileByDialog()
-                            file?.let {
-                                selectedDirectory = file.absolutePath
-                            }
-                            println("选择的文件是:${file?.absolutePath}")
+                            launcherConfig.launch()
+
                         }) {
                             Icon(
                                 painter = painterResource(Res.drawable.folder_gray),

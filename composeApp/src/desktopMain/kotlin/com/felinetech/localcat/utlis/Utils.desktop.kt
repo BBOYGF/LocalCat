@@ -3,6 +3,8 @@ package com.felinetech.localcat.utlis
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.localcat.database.Database
+import com.felinetech.localcat.enums.UploadState
+import com.felinetech.localcat.po.FileEntity
 import kotlinx.coroutines.Dispatchers
 import java.io.File
 import java.net.InetAddress
@@ -95,22 +97,6 @@ actual fun getDatabase(): Database {
         .build()
 }
 
-actual fun getFileByDialog(): File? {
-    val frame = JFrame()
-    val dialog = JFileChooser()
-    dialog.dialogTitle = "选择目录"
-    dialog.dialogType = JFileChooser.DIRECTORIES_ONLY
-    dialog.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-    val returnValue = dialog.showOpenDialog(frame)
-    if (returnValue == JFileChooser.APPROVE_OPTION) {
-        // 获取所选文件夹
-        val selectedDirectory = dialog.selectedFile
-        return selectedDirectory
-    } else {
-        return null
-    }
-
-}
 
 actual fun createSettings(): Settings {
     val localCatFile = createAppDir("local_cat")
@@ -135,4 +121,35 @@ actual fun createAppDir(dirName: String): File {
         localCatFile.mkdir()
     }
     return localCatFile
+}
+
+/**
+ * 扫描到文件
+ */
+actual fun scanFileUtil(
+    path: String,
+    filter: (fileName: String, date: Date) -> Boolean
+): MutableList<FileEntity> {
+    val list = mutableListOf<FileEntity>()
+    val fileDir = File(path)
+    val fileList = fileDir.listFiles()
+    for (file in fileList!!) {
+        val lastModified = file.lastModified()
+        // 将时间戳转换为可读的日期格式
+        val lastModifiedDate = Date(lastModified)
+        if (!filter(file.name, lastModifiedDate)) {
+            continue
+        }
+        val filePo = FileEntity(
+            null,
+            "1",
+            UUID.randomUUID().toString(),
+            file.name,
+            file.absolutePath,
+            file.length(),
+            UploadState.待上传
+        )
+        list.add(filePo)
+    }
+    return list
 }

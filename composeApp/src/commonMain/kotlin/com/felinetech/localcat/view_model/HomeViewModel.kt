@@ -100,7 +100,8 @@ object HomeViewModel {
     /**
      * 接收按钮状态
      */
-    val receiverButtonTitle = MutableStateFlow(getNames(Locale.getDefault().language).startReceiving)
+    val receiverButtonTitle =
+        MutableStateFlow(getNames(Locale.getDefault().language).startReceiving)
     val receiverAnimation = MutableStateFlow(false)
 
     /**
@@ -150,7 +151,8 @@ object HomeViewModel {
     /**
      * 服务端
      */
-    private var service: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
+    private var service: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? =
+        null
 
     /**
      * 当前链接的IP地址
@@ -302,8 +304,10 @@ object HomeViewModel {
                             outputChannel.writeFully(buffer, 0, readCount)
                             bytesRead += readCount
                             // 计算并打印上传进度
-                            val progress = (bytesRead.toDouble() / totalBytes!!.toDouble() * 100).toInt()
-                            toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }.takeIf { it != -1 }
+                            val progress =
+                                (bytesRead.toDouble() / totalBytes!!.toDouble() * 100).toInt()
+                            toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
+                                .takeIf { it != -1 }
                                 ?.let { index ->
                                     val item = toBeDownloadFileList[index]
                                     // 直接更新percent
@@ -312,7 +316,8 @@ object HomeViewModel {
                             println("上传进度：$progress%")
                         }
                         println("数据接收成功！")
-                        toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }.takeIf { it != -1 }
+                        toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
+                            .takeIf { it != -1 }
                             ?.let { index ->
                                 val itemVo = toBeDownloadFileList[index]
                                 toBeDownloadFileList.remove(itemVo)
@@ -351,7 +356,11 @@ object HomeViewModel {
                 // 打开源文件的通道
                 val sourceChannel = FileInputStream(File(cachePosition, chunkName)).channel
                 withContext(Dispatchers.IO) {
-                    targetChannel.transferFrom(sourceChannel, targetChannel.size(), sourceChannel.size())
+                    targetChannel.transferFrom(
+                        sourceChannel,
+                        targetChannel.size(),
+                        sourceChannel.size()
+                    )
                 }
                 // 关闭源文件的通道
                 sourceChannel.close()
@@ -381,13 +390,16 @@ object HomeViewModel {
                     socket.receive(packet)
                     println("监听客户接收到数据来自: " + packet.address)
                     val response = "OK".toByteArray()
-                    val responsePacket = DatagramPacket(response, response.size, packet.address, packet.port)
+                    val responsePacket =
+                        DatagramPacket(response, response.size, packet.address, packet.port)
                     socket.send(responsePacket)
                     val ip = packet.address.toString().replace("/", "")
                     if (!clineList.any { clientVo -> clientVo.ip == ip }) {
                         clineList.add(
                             ClientVo(
-                                clineList.size + 1, packet.address.toString().replace("/", ""), ConnectStatus.被发现
+                                clineList.size + 1,
+                                packet.address.toString().replace("/", ""),
+                                ConnectStatus.被发现
                             )
                         )
                     }
@@ -445,7 +457,8 @@ object HomeViewModel {
                     )
                     onUpload { bytesSentTotal, contentLength ->
                         println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
-                        val progress = (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
+                        val progress =
+                            (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
                         toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == fileItemVo.fileId }
                             .takeIf { it != -1 }?.let {
                                 val fileItemVo = toBeUploadFileList[it]
@@ -492,9 +505,10 @@ object HomeViewModel {
      */
     suspend fun getTaskPo(): TaskPo? {
         var taskPo: TaskPo? = null
-        val uploadInFile: Optional<FileEntity> = fileEntityDao.getAllFiles().stream().filter { fileEntity ->
-            UploadState.上传中 == fileEntity.uploadState
-        }.findFirst()
+        val uploadInFile: Optional<FileEntity> =
+            fileEntityDao.getAllFiles().stream().filter { fileEntity ->
+                UploadState.上传中 == fileEntity.uploadState
+            }.findFirst()
         if (uploadInFile.isPresent) {
             val fileEntity = uploadInFile.get()
             val fileChunks = fileChunkDao.getFileChunksByFileId(fileEntity.fileId)
@@ -514,7 +528,8 @@ object HomeViewModel {
                 val fileEntity = noUploadFile.get()
                 // 根据配置生成文件块
                 // 生成待上传的块
-                val fileChunkEntities: List<FileChunkEntity> = generateFileChunkEntity(fileEntity, FILE_CHUNK_SIZE)
+                val fileChunkEntities: List<FileChunkEntity> =
+                    generateFileChunkEntity(fileEntity, FILE_CHUNK_SIZE)
                 // 保存到数据库
                 for (fileChunk in fileChunkEntities) {
                     fileChunkDao.insert(fileChunk)
@@ -585,31 +600,18 @@ object HomeViewModel {
             delay(500)
             // 遍历每个规则
             for (uploadConfigItem in ruleList) {
-                val paramFile = File(uploadConfigItem.listeningDir)
-                if (!paramFile.exists()) {
-                    continue
-                }
-                val fileList = paramFile.listFiles { _, name ->
-                    name.lowercase().endsWith(uploadConfigItem.matchingRule.split(".")[1])
-                }
-                for (file in fileList!!) {
-                    val lastModified = file.lastModified()
-                    // 将时间戳转换为可读的日期格式
-                    val lastModifiedDate = Date(lastModified)
-                    if (lastModifiedDate.before(uploadConfigItem.startDate)) {
-                        continue
+                val fileEntityList =
+                    scanFileUtil(uploadConfigItem.listeningDir) { fileName, createDate ->
+                        fileName.lowercase()
+                            .endsWith(uploadConfigItem.matchingRule.split(".")[1]) && createDate.before(
+                            uploadConfigItem.startDate
+                        )
                     }
-                    val filePo = FileEntity(
-                        null,
-                        "1",
-                        UUID.randomUUID().toString(),
-                        file.name,
-                        file.absolutePath,
-                        file.length(),
-                        UploadState.待上传
-                    )
+                for (filePo in fileEntityList) {
+
                     val fileVo = filePoToFileVo(filePo)
-                    val any = toBeUploadFileList.any { fileItemVo -> fileItemVo.fileName == file.name }
+                    val any =
+                        toBeUploadFileList.any { fileItemVo -> fileItemVo.fileName == fileVo.fileName }
                     if (any) {
                         continue
                     }
@@ -694,7 +696,8 @@ object HomeViewModel {
         socket.soTimeout = 500
         val request = "HELLO".toByteArray()
         println("测试广播:$ip")
-        val requestPacket = DatagramPacket(request, request.size, InetAddress.getByName(ip), BROADCAST_PORT)
+        val requestPacket =
+            DatagramPacket(request, request.size, InetAddress.getByName(ip), BROADCAST_PORT)
         socket.send(requestPacket)
         println("链接成功:$ip")
         val buffer = ByteArray(1024)
@@ -728,7 +731,8 @@ object HomeViewModel {
             connectedIpAdd = "${servicePo.ip}"
             while (keepConnect) {
                 try {
-                    val pingResult = client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/ping")
+                    val pingResult =
+                        client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/ping")
                     if (pingResult.status == HttpStatusCode.OK) {
                         println("请求结果是${pingResult.body<String>()}")
                         delay(1000)

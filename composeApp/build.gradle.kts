@@ -71,10 +71,7 @@ kotlin {
             implementation("io.ktor:ktor-server-netty:3.0.2") // netty 服务
 
             // 跨平台文件选择
-            // Enables FileKit without Compose dependencies
             implementation("io.github.vinceglb:filekit-core:0.8.8")
-
-            // Enables FileKit with Composable utilities
             implementation("io.github.vinceglb:filekit-compose:0.8.8")
         }
         desktopMain.dependencies {

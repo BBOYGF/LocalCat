@@ -6,7 +6,7 @@ import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.FileItemVo
 import java.io.File
 import java.net.InetAddress
-import java.util.*
+import java.util.Date
 import kotlin.experimental.and
 import kotlin.experimental.inv
 import kotlin.experimental.or
@@ -17,8 +17,6 @@ expect fun getSubnetMask(): String
 
 
 expect fun getDatabase(): Database
-
-expect fun getFileByDialog(): File?
 
 
 /**
@@ -88,3 +86,8 @@ expect fun createSettings(): Settings
  * 创建外包目录
  */
 expect fun createAppDir(dirName: String): File
+
+/**
+ * 扫描到文件
+ */
+expect fun scanFileUtil(path: String, filter: (fileName: String, date:Date) -> Boolean): MutableList<FileEntity>
