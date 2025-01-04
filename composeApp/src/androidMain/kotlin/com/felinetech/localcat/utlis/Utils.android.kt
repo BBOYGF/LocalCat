@@ -5,9 +5,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Environment
-import android.provider.DocumentsContract
 import android.provider.MediaStore
-import android.provider.OpenableColumns
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.localcat.MainActivity
@@ -82,16 +80,14 @@ actual fun scanFileUtil(
     path: String,
     filter: (fileName: String, date: Date) -> Boolean
 ): MutableList<FileEntity> {
-    val uri = Uri.parse(path) // 将路径转换为 URI
     val fileList = mutableListOf<FileEntity>()
-//    if (!DocumentsContract.isTreeUri(uri)) {
-//        return fileList
-//    }
     val contentResolver = instance.contentResolver
     val projection = arrayOf(
         MediaStore.Images.Media._ID,
+        MediaStore.Images.Media.SIZE,
         MediaStore.Images.Media.DISPLAY_NAME,
-        MediaStore.Images.Media.DATA
+        MediaStore.Images.Media.DATA,
+        MediaStore.Images.Media.DATE_ADDED
     )
     val selection = "${MediaStore.Images.Media.DATA} LIKE ?"
     val selectionArgs = arrayOf("%${path.split(":")[1]}%") // 指定目录
@@ -105,14 +101,18 @@ actual fun scanFileUtil(
     )
 
     cursor?.use {
-        val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
-        val lastModifiedIndex = it.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)
+        val id = it.getColumnIndex(MediaStore.Images.Media._ID)
+        val sizeIndex = it.getColumnIndex(MediaStore.Images.Media.SIZE)
+        val nameIndex = it.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)
+        val fileFillNameIndex = it.getColumnIndex(MediaStore.Images.Media.DATA)
+        val addedDateIndex = it.getColumnIndex(MediaStore.Images.Media.DATE_ADDED)
         while (it.moveToNext()) {
+            val id = it.getString(id)
             val fileName = it.getString(nameIndex)
             val fileSize = it.getLong(sizeIndex)
-            val lastModified = it.getLong(lastModifiedIndex) * 1000 // 转换为毫秒
+            val lastModified = it.getLong(addedDateIndex) * 1000 // 转换为毫秒
             val lastModifiedDate = Date(lastModified)
+            val fileFillName = it.getString(fileFillNameIndex)
             if (!filter(fileName, lastModifiedDate)) {
                 continue // 如果过滤条件不满足，跳过文件
             }
@@ -121,7 +121,7 @@ actual fun scanFileUtil(
                 "1", // userId 示例
                 UUID.randomUUID().toString(),
                 fileName,
-                uri.toString(), // 这里使用 URI 作为文件路径
+                fileFillName, // 这里使用 URI 作为文件路径
                 fileSize,
                 UploadState.待上传
             )

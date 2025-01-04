@@ -603,12 +603,11 @@ object HomeViewModel {
                 val fileEntityList =
                     scanFileUtil(uploadConfigItem.listeningDir) { fileName, createDate ->
                         fileName.lowercase()
-                            .endsWith(uploadConfigItem.matchingRule.split(".")[1]) && createDate.before(
-                            uploadConfigItem.startDate
+                            .endsWith(uploadConfigItem.matchingRule.split(".")[1]) && uploadConfigItem.startDate.before(
+                            createDate
                         )
                     }
                 for (filePo in fileEntityList) {
-
                     val fileVo = filePoToFileVo(filePo)
                     val any =
                         toBeUploadFileList.any { fileItemVo -> fileItemVo.fileName == fileVo.fileName }
