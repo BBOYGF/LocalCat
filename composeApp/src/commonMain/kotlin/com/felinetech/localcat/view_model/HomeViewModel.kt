@@ -92,10 +92,9 @@ object HomeViewModel {
     var serviceList = mutableStateListOf<ServicePo>()
 
     /**
-     * 本机IP地址
+     * 本机网络
      */
-    val ipAddress = MutableStateFlow("127.0.0.1")
-
+    var netWork by mutableStateOf("无网络")
 
     /**
      * 接收按钮状态
@@ -307,8 +306,7 @@ object HomeViewModel {
                             val progress =
                                 (bytesRead.toDouble() / totalBytes!!.toDouble() * 100).toInt()
                             toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
-                                .takeIf { it != -1 }
-                                ?.let { index ->
+                                .takeIf { it != -1 }?.let { index ->
                                     val item = toBeDownloadFileList[index]
                                     // 直接更新percent
                                     toBeDownloadFileList[index] = item.copy(percent = progress)
@@ -317,8 +315,7 @@ object HomeViewModel {
                         }
                         println("数据接收成功！")
                         toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
-                            .takeIf { it != -1 }
-                            ?.let { index ->
+                            .takeIf { it != -1 }?.let { index ->
                                 val itemVo = toBeDownloadFileList[index]
                                 toBeDownloadFileList.remove(itemVo)
                                 downloadedFileList.add(itemVo)
@@ -357,9 +354,7 @@ object HomeViewModel {
                 val sourceChannel = FileInputStream(File(cachePosition, chunkName)).channel
                 withContext(Dispatchers.IO) {
                     targetChannel.transferFrom(
-                        sourceChannel,
-                        targetChannel.size(),
-                        sourceChannel.size()
+                        sourceChannel, targetChannel.size(), sourceChannel.size()
                     )
                 }
                 // 关闭源文件的通道
@@ -444,8 +439,7 @@ object HomeViewModel {
                 val response = client.post(
                     "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
                         encode(
-                            fileItemVo.fileName,
-                            Charsets.UTF_8
+                            fileItemVo.fileName, Charsets.UTF_8
                         )
                     }"
                 ) {
@@ -587,7 +581,6 @@ object HomeViewModel {
      * 结束上传文件
      */
     fun closeUploadFile() {
-
         startUpload = false
     }
 
@@ -624,7 +617,10 @@ object HomeViewModel {
 
     fun updateIpAddress() {
         defaultScope.launch {
-            ipAddress.value = getLocalIp()
+            val ipInfo = getIpInfo()
+            ipInfo?.let {
+                netWork = it.netName
+            }
         }
     }
 
@@ -638,25 +634,25 @@ object HomeViewModel {
             println("开始扫描数据源...")
             defaultScope.launch {
                 // 方案1 根据子网掩码 获取广播网位
-                if (StringUtils.isEmpty(ipAddress.value)) {
-                    ipAddress.value = getLocalIp()
-                }
-                val subnetMask = getSubnetMask()
-                val broadcastIp = getBroadcastAddress(ipAddress.value, subnetMask)
-                try {
-                    val ipString = testConnectByIp(broadcastIp)
-                    serviceList.add(
-                        ServicePo(
-                            serviceList.size + 1,
-                            ipString,
-                            ConnectStatus.未连接,
-                            buttonState = ConnectButtonState.连接
+                val ipInfo = getIpInfo()
+                ipInfo?.let {
+                    val subnetMask = it.subnetMask
+                    val broadcastIp = getBroadcastAddress(it.ip, subnetMask)
+                    try {
+                        val ipString = testConnectByIp(broadcastIp)
+                        serviceList.add(
+                            ServicePo(
+                                serviceList.size + 1,
+                                ipString,
+                                ConnectStatus.未连接,
+                                buttonState = ConnectButtonState.连接
+                            )
                         )
-                    )
-                    scanService = false
-                    return@launch
-                } catch (e: Exception) {
-                    println("产生异常：${e.message}")
+                        scanService = false
+                        return@launch
+                    } catch (e: Exception) {
+                        println("产生异常：${e.message}")
+                    }
                 }
                 // 方案2 扫描默认广播位
                 for (i in 0..25) {
@@ -682,11 +678,11 @@ object HomeViewModel {
                         logger.error("产生异常：${e.message}", e)
                     }
                 }
+                scanService = false
             }
         } else {
             logger.info("停止扫描")
         }
-
     }
 
     private fun testConnectByIp(ip: String): String {

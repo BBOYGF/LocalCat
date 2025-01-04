@@ -2,7 +2,9 @@ package com.felinetech.localcat.utlis
 
 import android.content.Context
 import android.database.Cursor
-import android.net.Uri
+import android.net.ConnectivityManager
+import android.net.LinkProperties
+import android.net.Network
 import android.net.wifi.WifiManager
 import android.os.Environment
 import android.provider.MediaStore
@@ -13,29 +15,13 @@ import com.felinetech.localcat.MainActivity.Companion.instance
 import com.felinetech.localcat.database.Database
 import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileEntity
+import com.felinetech.localcat.pojo.IpInfo
 import java.io.File
+import java.net.Inet4Address
+import java.net.NetworkInterface
 import java.util.Date
 import java.util.UUID
 
-actual fun getLocalIp(): String {
-    val wifiManager: WifiManager =
-        MainActivity.instance.getSystemService(Context.WIFI_SERVICE) as WifiManager
-    var substring: String = ""
-    if (wifiManager.isWifiEnabled) {
-        val wifiInfo = wifiManager.connectionInfo
-        if (wifiInfo != null) {
-            val ssid = wifiInfo.getSSID()
-            substring = ssid
-            if (ssid.length > 2 && ssid[0] == '"' && ssid[ssid.length - 1] == '"') {
-                substring = ssid.substring(1, ssid.length - 1)
-            }
-            if ("<unknown ssid>" == substring) {
-                substring = "无权限"
-            }
-        }
-    }
-    return substring
-}
 
 actual fun getDatabase(): Database {
     val dbFile = MainActivity.instance.getDatabasePath("local_cat_database.db")
@@ -49,11 +35,6 @@ actual fun getDatabase(): Database {
         .build()
 }
 
-
-actual fun getSubnetMask(): String {
-    TODO("Not yet implemented")
-    return ""
-}
 
 actual fun createSettings(): Settings {
     return AndroidSettings(context = instance)
@@ -129,4 +110,73 @@ actual fun scanFileUtil(
         }
     }
     return fileList
+}
+
+/**
+ * 获取IP地址信息
+ */
+actual fun getIpInfo(): IpInfo? {
+    var ip = ""
+    var subnetMask = ""
+    var netName = ""
+    val connectivityManager =
+        instance.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val activeNetwork: Network? = connectivityManager.activeNetwork
+    if (activeNetwork != null) {
+        val linkProperties: LinkProperties? = connectivityManager.getLinkProperties(activeNetwork)
+        if (linkProperties != null) {
+            val firstAdd =
+                linkProperties.linkAddresses.firstOrNull { linkAddress -> linkAddress.address is Inet4Address }
+            firstAdd?.let {
+                ip = it.address.hostAddress!!
+                subnetMask = intToIpAddress(it.prefixLength)
+                val activeNetworkInfo = connectivityManager.activeNetworkInfo
+                val isWifiConnected = activeNetworkInfo != null &&
+                        activeNetworkInfo.type == ConnectivityManager.TYPE_WIFI &&
+                        activeNetworkInfo.isConnected
+                // 如果当前连接的是 Wi-Fi，获取 SSID
+                if (isWifiConnected) {
+                    val wifiManager: WifiManager =
+                        (instance.application.getSystemService(Context.WIFI_SERVICE)) as WifiManager
+                    val ssid = getWifiSsid(wifiManager)
+                    if (ssid != null) {
+                        netName = ssid
+                    } else {
+                        netName = "NO"
+                    }
+                } else {
+                    netName = it.address.hostName
+                }
+
+            }
+        }
+    }
+    return IpInfo(ip, subnetMask, netName)
+}
+
+fun intToIpAddress(ipInt: Int): String {
+    // 将整数转换为无符号的 32 位整数
+    val unsignedInt = ipInt.toLong() and 0xFFFFFFFF
+
+    // 提取 4 个字节
+    val byte1 = (unsignedInt shr 24) and 0xFF
+    val byte2 = (unsignedInt shr 16) and 0xFF
+    val byte3 = (unsignedInt shr 8) and 0xFF
+    val byte4 = unsignedInt and 0xFF
+
+    // 拼接为 IP 地址
+    return "$byte4.$byte3.$byte2.$byte1"
+}
+
+private fun getWifiSsid(wifiManager: WifiManager): String? {
+    return if (wifiManager.isWifiEnabled) {
+        val wifiInfo = wifiManager.connectionInfo
+        var ssid = wifiInfo.ssid
+        if (ssid.startsWith("\"") && ssid.endsWith("\"")) {
+            ssid = ssid.substring(1, ssid.length - 1)
+        }
+        ssid
+    } else {
+        null
+    }
 }

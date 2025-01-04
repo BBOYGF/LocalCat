@@ -4,6 +4,7 @@ import com.felinetech.localcat.database.Database
 import com.felinetech.localcat.enums.FileType
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.FileItemVo
+import com.felinetech.localcat.pojo.IpInfo
 import java.io.File
 import java.net.InetAddress
 import java.util.Date
@@ -11,12 +12,24 @@ import kotlin.experimental.and
 import kotlin.experimental.inv
 import kotlin.experimental.or
 
-expect fun getLocalIp(): String
 
-expect fun getSubnetMask(): String
-
+expect fun getIpInfo(): IpInfo?
 
 expect fun getDatabase(): Database
+
+/**
+ * 计算子网掩码
+ */
+fun getSubnetMask(prefixLength: Int): String {
+    val mask = -0x1 shl (32 - prefixLength)
+    return String.format(
+        "%d.%d.%d.%d",
+        (mask ushr 24) and 0xff,
+        (mask ushr 16) and 0xff,
+        (mask ushr 8) and 0xff,
+        mask and 0xff
+    )
+}
 
 
 /**
@@ -90,4 +103,7 @@ expect fun createAppDir(dirName: String): File
 /**
  * 扫描到文件
  */
-expect fun scanFileUtil(path: String, filter: (fileName: String, date:Date) -> Boolean): MutableList<FileEntity>
+expect fun scanFileUtil(
+    path: String,
+    filter: (fileName: String, date: Date) -> Boolean
+): MutableList<FileEntity>

@@ -1,6 +1,12 @@
 package com.felinetech.localcat.views
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -23,19 +29,18 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.utlis.getNames
-import com.felinetech.localcat.view_model.HomeViewModel.ipAddress
+import com.felinetech.localcat.view_model.HomeViewModel.netWork
 import com.felinetech.localcat.view_model.HomeViewModel.updateIpAddress
 import com.felinetech.localcat.view_model.MainViewModel
 import com.felinetech.localcat.view_model.MainViewModel.receiveState
 import com.felinetech.localcat.view_model.MainViewModel.sendState
 import com.felinetech.localcat.view_model.MainViewModel.turnFun
-import java.util.*
+import java.util.Locale
 
 
 @Composable
 fun HomePage() {
     val turnState by MainViewModel.turnState.collectAsState()
-    val ip by ipAddress.collectAsState()
     ColorBackground()
     Column(
         modifier = Modifier
@@ -71,7 +76,7 @@ fun HomePage() {
                 }, colors = SwitchDefaults.colors(uncheckedBorderColor = Color(0x00ffffff)))
                 Text(getNames(Locale.getDefault().language).sender)
                 Text(text = getNames(Locale.getDefault().language).network)
-                Text(text = ip)
+                Text(text = netWork)
             }
         }
         if (turnState) {
