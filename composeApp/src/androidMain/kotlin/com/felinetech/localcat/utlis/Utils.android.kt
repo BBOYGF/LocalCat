@@ -43,9 +43,9 @@ actual fun createSettings(): Settings {
 /**
  * 创建外包目录
  */
-actual fun createAppDir(dirName: String): File {
+actual fun  createAppDir(dirName: String): File {
     if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
-        val dir = File(instance.getExternalFilesDir(null), dirName)
+        val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath, dirName)
         if (!dir.exists()) {
             dir.mkdirs() // 创建目录
         }

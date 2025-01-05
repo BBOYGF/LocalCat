@@ -63,6 +63,7 @@ fun Receiver(turnState: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(600.dp)
             .graphicsLayer(
                 rotationY = start.value,
                 scaleX = deepStart.value,
@@ -72,11 +73,10 @@ fun Receiver(turnState: Boolean) {
         // 当前链接的发送者和当前接收的文件
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(600.dp)
+                .fillMaxSize()
                 .padding(5.dp),
 
-        ) {
+            ) {
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,7 +99,7 @@ fun Receiver(turnState: Boolean) {
                     }
                 }
             }
-            Text(text =  getNames(Locale.getDefault().language).currentlyReceivingFiles)
+            Text(text = getNames(Locale.getDefault().language).currentlyReceivingFiles)
             LazyColumn {
                 items(toBeDownloadFileList) { item ->
                     FileItem(item = item)
@@ -109,8 +109,8 @@ fun Receiver(turnState: Boolean) {
         // 开始上传按钮层
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
+                .fillMaxSize()
+//                .height(100.dp)
                 .align(alignment = Alignment.BottomCenter),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally

@@ -10,48 +10,78 @@ import com.felinetech.localcat.Constants.FILE_CHUNK_SIZE
 import com.felinetech.localcat.Constants.HEART_BEAT_SERVER_POST
 import com.felinetech.localcat.dao.FileChunkDao
 import com.felinetech.localcat.dao.FileEntityDao
-import com.felinetech.localcat.enums.*
+import com.felinetech.localcat.enums.ConnectButtonState
+import com.felinetech.localcat.enums.ConnectStatus
+import com.felinetech.localcat.enums.FileType
+import com.felinetech.localcat.enums.ServiceButtonState
+import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileChunkEntity
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
 import com.felinetech.localcat.pojo.TaskPo
-import com.felinetech.localcat.utlis.*
+import com.felinetech.localcat.utlis.filePoToFileVo
+import com.felinetech.localcat.utlis.fileVoToFilePo
+import com.felinetech.localcat.utlis.getBroadcastAddress
+import com.felinetech.localcat.utlis.getDatabase
+import com.felinetech.localcat.utlis.getIpInfo
+import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.utlis.scanFileUtil
 import com.felinetech.localcat.view_model.HistoryViewModel.downloadedFileList
 import com.felinetech.localcat.view_model.HistoryViewModel.uploadedFileList
 import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
 import com.google.gson.Gson
-import io.github.vinceglb.filekit.core.FileKit
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.gson.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.util.cio.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.onUpload
+import io.ktor.client.plugins.timeout
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.gson.gson
+import io.ktor.server.application.install
+import io.ktor.server.engine.EmbeddedServer
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.request.receiveChannel
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
+import io.ktor.util.cio.writeChannel
+import io.ktor.utils.io.readAvailable
+import io.ktor.utils.io.writeFully
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.apache.commons.lang3.StringUtils
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import java.net.*
+import java.net.BindException
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.SocketTimeoutException
 import java.net.URLEncoder.encode
 import java.nio.channels.FileChannel
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.Optional
+import java.util.UUID
 
 
 object HomeViewModel {
@@ -255,6 +285,15 @@ object HomeViewModel {
                         }
 
                     }
+                    get("/logout") {
+                        connectedIpAdd = call.request.local.remoteAddress
+                        clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
+                            val index = clineList.indexOf(it)
+                            clineList.removeAt(index)
+                            it.connectStatus = ConnectStatus.被发现
+                            clineList.add(index, it.copy())
+                        }
+                    }
                     // ping
                     get("/ping") {
                         try {
@@ -304,7 +343,7 @@ object HomeViewModel {
                             bytesRead += readCount
                             // 计算并打印上传进度
                             val progress =
-                                (bytesRead.toDouble() / totalBytes!!.toDouble() * 100).toInt()
+                                (bytesRead.toDouble() / totalBytes.toDouble() * 100).toInt()
                             toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
                                 .takeIf { it != -1 }?.let { index ->
                                     val item = toBeDownloadFileList[index]
@@ -333,39 +372,7 @@ object HomeViewModel {
     }
 
 
-    /**
-     * 合并文件
-     */
-    private suspend fun mergeFile(fileEntity: FileEntity): Boolean {
-        val chunkList = fileChunkDao.getFileChunksByFileId(fileEntity.fileId)
-        if (chunkList.isEmpty()) {
-            println("没有找到文件块，合并失败！")
-            return false
-        }
-        chunkList.sortedBy { fileChunkEntity -> fileChunkEntity.chunkIndex }
-        // 目标地址
-        val targetFile = File(savedPosition, fileEntity.fileName)
-        val outputStream = FileOutputStream(targetFile)
-        val targetChannel: FileChannel = outputStream.getChannel()
-        for ((_, fileId, chunkIndex) in chunkList) {
-            val chunkName: String = fileEntity.fileName + fileId + chunkIndex + ".cache"
-            try {
-                // 打开源文件的通道
-                val sourceChannel = FileInputStream(File(cachePosition, chunkName)).channel
-                withContext(Dispatchers.IO) {
-                    targetChannel.transferFrom(
-                        sourceChannel, targetChannel.size(), sourceChannel.size()
-                    )
-                }
-                // 关闭源文件的通道
-                sourceChannel.close()
-            } catch (e: java.lang.Exception) {
-                logger.error("合并文件产生异常!${e.message}", e)
-                return false
-            }
-        }
-        return true
-    }
+
 
 
     /**
@@ -453,10 +460,10 @@ object HomeViewModel {
                         println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
                         val progress =
                             (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
-                        toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == fileItemVo.fileId }
+                        toBeUploadFileList.indexOfFirst { vo -> vo.fileId == fileItemVo.fileId }
                             .takeIf { it != -1 }?.let {
-                                val fileItemVo = toBeUploadFileList[it]
-                                toBeUploadFileList[it] = fileItemVo.copy(percent = progress)
+                                val itemVo = toBeUploadFileList[it]
+                                toBeUploadFileList[it] = itemVo.copy(percent = progress)
                             }
                         if (!startUpload) {
                             cancel()
@@ -722,8 +729,9 @@ object HomeViewModel {
         // 与接收者链接发送心跳信息
         // 启动心跳协程
         ioScope.launch {
+            client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/login")
             updateServiceState(servicePo, ConnectButtonState.断开)
-            connectedIpAdd = "${servicePo.ip}"
+            connectedIpAdd = servicePo.ip
             while (keepConnect) {
                 try {
                     val pingResult =
@@ -749,6 +757,9 @@ object HomeViewModel {
     fun closeDataSources(servicePo: ServicePo) {
         keepConnect = false
         updateServiceState(servicePo, ConnectButtonState.连接)
+        ioScope.launch {
+            client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/logout")
+        }
     }
 
 

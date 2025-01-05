@@ -118,14 +118,15 @@ fun Sender(turnState: Boolean) {
                 rotationDegrees2.snapTo(rotationDegrees.value % 360)
             }
         } else {
-            // 停止旋转，重置角度
+            // 停止旋转，重置角度K
             rotationDegrees2.stop()
         }
     }
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
+            .height(600.dp)
             .graphicsLayer(
                 rotationY = turn.value,
                 scaleX = deepStart.value,
@@ -135,7 +136,6 @@ fun Sender(turnState: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .height(600.dp)
                 .padding(5.dp),
         ) {
             Row(

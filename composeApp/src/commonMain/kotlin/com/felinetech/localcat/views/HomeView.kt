@@ -1,5 +1,6 @@
 package com.felinetech.localcat.views
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,7 +45,8 @@ fun HomePage() {
     ColorBackground()
     Column(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+        ,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(

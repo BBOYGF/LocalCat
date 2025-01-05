@@ -91,7 +91,7 @@ fun FileItem(item: FileItemVo) {
                         modifier = Modifier.weight(1f), color = Color.Black
                     )
                     Text(
-                        text = "${item.fileSize / 102 / 1024}M",
+                        text = "${item.fileSize / 1024 / 1024}M",
                         modifier = Modifier.padding(start = 2.dp)
                     )
                     Text(
