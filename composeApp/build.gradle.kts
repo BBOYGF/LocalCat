@@ -143,7 +143,14 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "localcat"
             packageVersion = "1.0.0"
+            macOS {
+                iconFile.set(project.file("icon.icns"))
+            }
+            windows {
+                iconFile.set(project.file("src/commonMain/composeResources/drawable/ico.ico"))
+            }
             linux {
+                iconFile.set(project.file("icon.png"))
                 modules("jdk.security.auth")
             }
         }
