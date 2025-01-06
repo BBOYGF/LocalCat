@@ -50,7 +50,6 @@ kotlin {
             implementation("org.jetbrains.compose.material3:material3:1.7.3")
 
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
-            implementation("com.github.YarikSOffice:lingver:1.3.0")
             implementation("com.google.code.gson:gson:2.11.0")
             // 日志
             implementation ("org.slf4j:slf4j-api:2.0.3") // 确保使用最新的 SLF4J API
