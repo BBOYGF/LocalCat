@@ -5,6 +5,7 @@ import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.felinetech.localcat.components.ClientItem
 import com.felinetech.localcat.components.FileItem
 import com.felinetech.localcat.components.ReceiverAnimation
+import com.felinetech.localcat.theme.borderColor
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel.clickReceiverButton
 import com.felinetech.localcat.view_model.HomeViewModel.clineList
@@ -62,8 +64,7 @@ fun Receiver(turnState: Boolean) {
     }
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(600.dp)
+            .fillMaxSize()
             .graphicsLayer(
                 rotationY = start.value,
                 scaleX = deepStart.value,
@@ -80,7 +81,7 @@ fun Receiver(turnState: Boolean) {
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp), color = Color(0x00ffffff), shape = RoundedCornerShape(5.dp)
+                    .height(200.dp), color = Color(0x00ffffff), shape = RoundedCornerShape(5.dp)
             ) {
                 if (receiverAnima) {
                     ReceiverAnimation()
@@ -90,7 +91,9 @@ fun Receiver(turnState: Boolean) {
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp), color = Color(0x99ffffff),
+                    .height(100.dp)
+                    .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
+                , color = Color(0x99ffffff),
                 shape = RoundedCornerShape(5.dp)
             ) {
                 LazyColumn {
@@ -110,8 +113,8 @@ fun Receiver(turnState: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-//                .height(100.dp)
-                .align(alignment = Alignment.BottomCenter),
+                .align(alignment = Alignment.BottomCenter)
+                .offset(y = (-70).dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

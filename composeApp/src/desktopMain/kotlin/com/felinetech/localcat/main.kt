@@ -17,7 +17,6 @@ fun main() = application {
         state = WindowState(width = 400.dp, height = 800.dp),
         resizable = true
     ) {
-
         App()
     }
 }

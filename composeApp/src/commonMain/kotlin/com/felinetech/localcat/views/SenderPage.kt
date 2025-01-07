@@ -5,6 +5,7 @@ import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
@@ -32,6 +33,7 @@ import com.felinetech.localcat.components.FileItem
 import com.felinetech.localcat.components.ScanFile
 import com.felinetech.localcat.components.ServerItem
 import com.felinetech.localcat.enums.ConnectButtonState
+import com.felinetech.localcat.theme.borderColor
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel.closeDataSources
 import com.felinetech.localcat.view_model.HomeViewModel.closeUploadFile
@@ -46,8 +48,6 @@ import com.felinetech.localcat.view_model.HomeViewModel.startUpload
 import com.felinetech.localcat.view_model.HomeViewModel.startUploadClick
 import com.felinetech.localcat.view_model.HomeViewModel.toBeUploadFileList
 import com.felinetech.localcat.view_model.MainViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import java.util.*
 
 /**
@@ -125,8 +125,7 @@ fun Sender(turnState: Boolean) {
 
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(600.dp)
+            .fillMaxSize()
             .graphicsLayer(
                 rotationY = turn.value,
                 scaleX = deepStart.value,
@@ -167,6 +166,7 @@ fun Sender(turnState: Boolean) {
                         scaleX = deepStart.value,
                         scaleY = deepStart.value
                     )
+                    .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
                     .scrollable(state = rememberScrollState(10), orientation = Orientation.Vertical),
                 color = Color(0x99ffffff),
                 shape = RoundedCornerShape(5.dp)
@@ -220,7 +220,9 @@ fun Sender(turnState: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .align(alignment = Alignment.BottomEnd),
+                .align(alignment = Alignment.BottomEnd)
+                .offset(y = (-70).dp)
+            ,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {

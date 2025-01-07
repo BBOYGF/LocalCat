@@ -1,13 +1,8 @@
 package com.felinetech.localcat.views
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -29,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.felinetech.localcat.components.ColorBackground
+import com.felinetech.localcat.theme.borderColor
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.HomeViewModel.netWork
 import com.felinetech.localcat.view_model.HomeViewModel.updateIpAddress
@@ -45,8 +41,7 @@ fun HomePage() {
     ColorBackground()
     Column(
         modifier = Modifier
-            .fillMaxSize()
-        ,
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -62,7 +57,9 @@ fun HomePage() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)
-                .padding(start = 5.dp, end = 5.dp),
+                .padding(start = 5.dp, end = 5.dp)
+                .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
+            ,
             color = Color(0x99ffffff)
         ) {
             Row(
@@ -81,10 +78,15 @@ fun HomePage() {
                 Text(text = netWork)
             }
         }
-        if (turnState) {
-            Sender(!sendState)
-        } else {
-            Receiver(!receiveState)
+        Box(
+            modifier = Modifier.weight(1f)
+                .fillMaxSize()
+        ) {
+            if (turnState) {
+                Sender(!sendState)
+            } else {
+                Receiver(!receiveState)
+            }
         }
     }
 

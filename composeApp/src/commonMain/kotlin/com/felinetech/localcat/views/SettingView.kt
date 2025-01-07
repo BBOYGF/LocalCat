@@ -61,6 +61,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.RuleItem
 import com.felinetech.localcat.enums.FileType
+import com.felinetech.localcat.theme.borderColor
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.SettingViewModel.addRule
 import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
@@ -149,7 +150,9 @@ fun SettingView() {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp),
+                .height(500.dp)
+                .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
+            ,
             color = Color(0x99ffffff),
             shape = RoundedCornerShape(5.dp)
         ) {
@@ -193,7 +196,9 @@ fun SettingView() {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .height(200.dp)
+                .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
+            ,
             color = Color(0x99ffffff),
             shape = RoundedCornerShape(5.dp)
         ) {

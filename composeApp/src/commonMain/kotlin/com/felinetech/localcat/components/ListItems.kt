@@ -1,6 +1,7 @@
 package com.felinetech.localcat.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import com.felinetech.localcat.po.UploadConfigItem
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
+import com.felinetech.localcat.theme.borderColor
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.SettingViewModel.getFileName
 import localcat.composeapp.generated.resources.Res
@@ -43,7 +45,9 @@ fun FileItem(item: FileItemVo) {
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp)
-            .padding(4.dp),
+            .padding(4.dp)
+            .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
+        ,
         color = Color(0x99ffffff),
         shape = RoundedCornerShape(5.dp),
         shadowElevation = 10.dp
