@@ -407,60 +407,62 @@ object HomeViewModel {
             return
         }
         ioScope.launch {
-            // 找到之前没上传完的数据
-//                val taskPo = getTaskPo()
             val fileItemList = toBeUploadFileList.toList()
-            for (fileItemVo in fileItemList) {
-                // 上传数据
-                val response = client.post(
-                    "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
-                        encode(
-                            fileItemVo.fileName, Charsets.UTF_8
+            try {
+                for (fileItemVo in fileItemList) {
+                    // 上传数据
+                    val response = client.post(
+                        "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
+                            encode(
+                                fileItemVo.fileName, Charsets.UTF_8
+                            )
+                        }"
+                    ) {
+                        timeout {
+                            requestTimeoutMillis = 60000
+                        }
+                        setBody(
+                            File(fileItemVo.fileFillName).readBytes()
                         )
-                    }"
-                ) {
-                    timeout {
-                        requestTimeoutMillis = 60000
-                    }
-                    setBody(
-                        File(fileItemVo.fileFillName).readBytes()
-                    )
-                    onUpload { bytesSentTotal, contentLength ->
-                        println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
-                        val progress =
-                            (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
-                        toBeUploadFileList.indexOfFirst { vo -> vo.fileId == fileItemVo.fileId }
-                            .takeIf { it != -1 }?.let {
-                                val itemVo = toBeUploadFileList[it]
-                                toBeUploadFileList[it] = itemVo.copy(percent = progress)
-                            }
-                        if (!startUpload) {
-                            cancel()
-                            return@onUpload
-                        }
-                    }
-                }
-                if (response.status == HttpStatusCode.OK) {
-                    val responseStr = response.body<String>()
-                    println("客户端上传结果：$responseStr")
-                    // 下载结束后
-                    toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == fileItemVo.fileId }
-                        .takeIf { it != -1 }?.let { index ->
-                            val fileItemVo = toBeUploadFileList[index]
-                            toBeUploadFileList.removeAt(index)
-                            uploadedFileList.add(fileItemVo)
-                            val fileItemPo = fileEntityDao.getFileById(fileItemVo.fileId)
-                            fileItemPo?.let {
-                                it.uploadState = UploadState.已上传
-                                fileEntityDao.update(it)
+                        onUpload { bytesSentTotal, contentLength ->
+                            println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
+                            val progress =
+                                (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
+                            toBeUploadFileList.indexOfFirst { vo -> vo.fileId == fileItemVo.fileId }
+                                .takeIf { it != -1 }?.let {
+                                    val itemVo = toBeUploadFileList[it]
+                                    toBeUploadFileList[it] = itemVo.copy(percent = progress)
+                                }
+                            if (!startUpload) {
+                                cancel()
+                                return@onUpload
                             }
                         }
-                    // 上传成功
-                } else {
-                    showMsg = true
-                    msg = "上传结束！"
-                    startUpload = false
+                    }
+                    if (response.status == HttpStatusCode.OK) {
+                        val responseStr = response.body<String>()
+                        println("客户端上传结果：$responseStr")
+                        // 下载结束后
+                        toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == fileItemVo.fileId }
+                            .takeIf { it != -1 }?.let { index ->
+                                val fileItemVo = toBeUploadFileList[index]
+                                toBeUploadFileList.removeAt(index)
+                                uploadedFileList.add(fileItemVo)
+                                val fileItemPo = fileEntityDao.getFileById(fileItemVo.fileId)
+                                fileItemPo?.let {
+                                    it.uploadState = UploadState.已上传
+                                    fileEntityDao.update(it)
+                                }
+                            }
+                        // 上传成功
+                    } else {
+                        showMsg = true
+                        msg = "上传结束！"
+                        startUpload = false
+                    }
                 }
+            } catch (e: Exception) {
+                logger.error("上传异常：", e);
             }
             showMsg = true
             msg = "上传结束！"
