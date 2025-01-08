@@ -31,6 +31,7 @@ import com.felinetech.localcat.view_model.HomeViewModel.receiverAnimation
 import com.felinetech.localcat.view_model.HomeViewModel.receiverButtonTitle
 import com.felinetech.localcat.view_model.HomeViewModel.toBeDownloadFileList
 import com.felinetech.localcat.view_model.MainViewModel
+import org.slf4j.LoggerFactory
 import java.util.*
 
 
@@ -43,6 +44,8 @@ fun Receiver(turnState: Boolean) {
     val deepStart = remember { Animatable(if (turnState) 0.6f else 1f) }
     val receiverBT by receiverButtonTitle.collectAsState()
     val receiverAnima by receiverAnimation.collectAsState()
+
+    val logger = remember { LoggerFactory.getLogger("测试") }
 
     if (turnState) {
         LaunchedEffect(false) {
@@ -92,8 +95,7 @@ fun Receiver(turnState: Boolean) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
-                , color = Color(0x99ffffff),
+                    .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp)), color = Color(0x99ffffff),
                 shape = RoundedCornerShape(5.dp)
             ) {
                 LazyColumn {
@@ -103,11 +105,18 @@ fun Receiver(turnState: Boolean) {
                 }
             }
             Text(text = getNames(Locale.getDefault().language).currentlyReceivingFiles)
+
             LazyColumn {
-                items(toBeDownloadFileList) { item ->
-                    FileItem(item = item)
+                items(toBeDownloadFileList.size) { index ->
+                    val item = toBeDownloadFileList.getOrNull(index)
+                    if (item != null) {
+                        FileItem(item = item)
+                    } else {
+                        Text("无效项")
+                    }
                 }
             }
+
         }
         // 开始上传按钮层
         Column(

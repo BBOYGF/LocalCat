@@ -10,78 +10,42 @@ import com.felinetech.localcat.Constants.FILE_CHUNK_SIZE
 import com.felinetech.localcat.Constants.HEART_BEAT_SERVER_POST
 import com.felinetech.localcat.dao.FileChunkDao
 import com.felinetech.localcat.dao.FileEntityDao
-import com.felinetech.localcat.enums.ConnectButtonState
-import com.felinetech.localcat.enums.ConnectStatus
-import com.felinetech.localcat.enums.FileType
-import com.felinetech.localcat.enums.ServiceButtonState
-import com.felinetech.localcat.enums.UploadState
+import com.felinetech.localcat.enums.*
 import com.felinetech.localcat.po.FileChunkEntity
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.ClientVo
 import com.felinetech.localcat.pojo.FileItemVo
 import com.felinetech.localcat.pojo.ServicePo
 import com.felinetech.localcat.pojo.TaskPo
-import com.felinetech.localcat.utlis.filePoToFileVo
-import com.felinetech.localcat.utlis.fileVoToFilePo
-import com.felinetech.localcat.utlis.getBroadcastAddress
-import com.felinetech.localcat.utlis.getDatabase
-import com.felinetech.localcat.utlis.getIpInfo
-import com.felinetech.localcat.utlis.getNames
-import com.felinetech.localcat.utlis.scanFileUtil
+import com.felinetech.localcat.utlis.*
 import com.felinetech.localcat.view_model.HistoryViewModel.downloadedFileList
 import com.felinetech.localcat.view_model.HistoryViewModel.uploadedFileList
-import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.ruleList
 import com.felinetech.localcat.view_model.SettingViewModel.savedPosition
 import com.google.gson.Gson
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.onUpload
-import io.ktor.client.plugins.timeout
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.gson.gson
-import io.ktor.server.application.install
-import io.ktor.server.engine.EmbeddedServer
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.server.netty.NettyApplicationEngine
-import io.ktor.server.request.receiveChannel
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.routing
-import io.ktor.util.cio.writeChannel
-import io.ktor.utils.io.readAvailable
-import io.ktor.utils.io.writeFully
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.gson.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.util.cio.*
+import io.ktor.utils.io.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
-import java.net.BindException
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
-import java.net.SocketTimeoutException
+import java.net.*
 import java.net.URLEncoder.encode
-import java.nio.channels.FileChannel
-import java.util.Date
-import java.util.Locale
-import java.util.Optional
-import java.util.UUID
+import java.util.*
 
 
 object HomeViewModel {
@@ -105,6 +69,7 @@ object HomeViewModel {
     var startUpload by mutableStateOf(false)
 
     /**
+
      * 显示异常信息
      */
     var showMsg by mutableStateOf(false)
@@ -180,6 +145,7 @@ object HomeViewModel {
     /**
      * 服务端
      */
+
     private var service: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? =
         null
 
@@ -216,6 +182,7 @@ object HomeViewModel {
             }.toList()
 
             val uploadedFiles = allFile.filter { it.uploadState == UploadState.已上传 }.map {
+
                 filePoToFileVo(it)
             }.toList()
 
@@ -254,6 +221,7 @@ object HomeViewModel {
                     it.stop()
                     logger.info("关闭心跳服务！")
                 }
+
             }
             acceptSocket?.apply {
                 close()
@@ -290,6 +258,7 @@ object HomeViewModel {
                         clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
                             val index = clineList.indexOf(it)
                             clineList.removeAt(index)
+
                             it.connectStatus = ConnectStatus.被发现
                             clineList.add(index, it.copy())
                         }
@@ -328,6 +297,7 @@ object HomeViewModel {
                             totalBytes!!.toLong(),
                             fileFillName = file.absolutePath
                         )
+
                         toBeDownloadFileList.add(fileItemVo)
                         println("读取的总字节数：$totalBytes")
                         var bytesRead = 0L
@@ -341,18 +311,20 @@ object HomeViewModel {
                             // 将读取的数据写入输出通道
                             outputChannel.writeFully(buffer, 0, readCount)
                             bytesRead += readCount
+
                             // 计算并打印上传进度
                             val progress =
                                 (bytesRead.toDouble() / totalBytes.toDouble() * 100).toInt()
                             toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
                                 .takeIf { it != -1 }?.let { index ->
+
                                     val item = toBeDownloadFileList[index]
                                     // 直接更新percent
                                     toBeDownloadFileList[index] = item.copy(percent = progress)
+
                                 }
-                            println("上传进度：$progress%")
+
                         }
-                        println("数据接收成功！")
                         toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
                             .takeIf { it != -1 }?.let { index ->
                                 val itemVo = toBeDownloadFileList[index]
@@ -370,9 +342,6 @@ object HomeViewModel {
             service?.start(wait = true)
         }
     }
-
-
-
 
 
     /**
@@ -715,6 +684,9 @@ object HomeViewModel {
      */
     fun cleanHistory() {
         toBeUploadFileList.clear()
+        uploadedFileList.clear()
+        downloadedFileList.clear()
+        toBeDownloadFileList.clear()
         ioScope.launch {
             fileEntityDao.deleteAll()
         }
