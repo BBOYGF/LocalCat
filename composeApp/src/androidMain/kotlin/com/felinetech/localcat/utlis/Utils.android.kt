@@ -1,13 +1,16 @@
 package com.felinetech.localcat.utlis
 
 import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
+import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Environment
 import android.provider.MediaStore
+import androidx.compose.ui.platform.LocalContext
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.localcat.MainActivity
@@ -178,5 +181,18 @@ private fun getWifiSsid(wifiManager: WifiManager): String? {
         ssid
     } else {
         null
+    }
+}
+
+/**
+ * 打开网页
+ */
+actual fun openUrl(url: String) {
+    val context = instance
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }

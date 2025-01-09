@@ -7,6 +7,7 @@ import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.IpInfo
 import kotlinx.coroutines.Dispatchers
+import java.awt.Desktop
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -14,6 +15,7 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
+import java.net.URI
 import java.util.*
 
 
@@ -112,4 +114,19 @@ actual fun getIpInfo(): IpInfo? {
         println("获取网络异常：${e.message}")
     }
     return IpInfo(ip, subnetMask, netName)
+}
+/**
+ * 打开网页
+ */
+actual fun openUrl(url: String) {
+    try {
+        if (Desktop.isDesktopSupported()) {
+            val desktop = Desktop.getDesktop()
+            if (desktop.isSupported(Desktop.Action.BROWSE)) {
+                desktop.browse(URI(url))
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
 }

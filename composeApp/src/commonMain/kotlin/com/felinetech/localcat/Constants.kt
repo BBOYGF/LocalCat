@@ -46,17 +46,17 @@ object Constants {
     /**
      * 产品主页
      */
-    var productHume = "https://felinetech.cn/#/"
+    var productHome = "https://felinetech.cn/#/"
 
     /**
      * 桌面端下载
      */
-    var desktopDownload = "https://felinetech.cn/#/"
+    var desktopDownload = "https://felinetech.cn/#/p?id=1"
 
     /**
      * 问题反馈
      */
-    var feedback = "https://felinetech.cn/#/"
+    var feedback = "https://felinetech.cn/#/p?id=1"
 
     /**
      * 客户端扫描服务器时用的端口

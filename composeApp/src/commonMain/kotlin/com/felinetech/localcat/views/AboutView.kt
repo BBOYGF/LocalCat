@@ -38,8 +38,12 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.felinetech.localcat.Constants.desktopDownload
+import com.felinetech.localcat.Constants.feedback
+import com.felinetech.localcat.Constants.productHome
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.utlis.openUrl
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.money
 import org.jetbrains.compose.resources.painterResource
@@ -83,17 +87,18 @@ fun About() {
             modifier = Modifier.offset(y = -30.dp)
         )
         Button(onClick = {
-
+            // 打开产品界面
+            openUrl(desktopDownload)
         }) {
             Text(
-                text = getNames(Locale.getDefault().language).downDesktop,
+                text = getNames(Locale.getDefault().language).downloadAPP,
                 modifier = Modifier.width(150.dp),
                 textAlign = TextAlign.Center,
-
-                )
+            )
         }
         Button(onClick = {
-
+            // 打开反馈页面
+            openUrl(feedback)
         }) {
             Text(
                 text = getNames(Locale.getDefault().language).feedBackTitle,
@@ -103,10 +108,11 @@ fun About() {
         }
 
         Button(onClick = {
+            // 打赏作者
             openDialog = true
         }) {
             Text(
-                text = getNames(Locale.getDefault().language).registrationCode,
+                text = getNames(Locale.getDefault().language).rewardAuthor,
                 modifier = Modifier.width(150.dp),
                 textAlign = TextAlign.Center
             )
@@ -116,7 +122,7 @@ fun About() {
             color = MaterialTheme.colorScheme.tertiary,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable {
-
+                openUrl(productHome)
             }
         )
     }

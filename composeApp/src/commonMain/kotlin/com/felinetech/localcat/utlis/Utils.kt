@@ -107,3 +107,8 @@ expect fun scanFileUtil(
     path: String,
     filter: (fileName: String, date: Date) -> Boolean
 ): MutableList<FileEntity>
+
+/**
+ * 打开网页
+ */
+expect fun openUrl(url: String)
