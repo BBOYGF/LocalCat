@@ -75,6 +75,7 @@ kotlin {
             // 跨平台文件选择
             implementation("io.github.vinceglb:filekit-core:0.8.8")
             implementation("io.github.vinceglb:filekit-compose:0.8.8")
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
