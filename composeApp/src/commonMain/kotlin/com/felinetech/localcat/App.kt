@@ -35,6 +35,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 @Preview
 fun App() {
+
     LocalCatTheme(
         darkTheme = false,
         dynamicColor = true

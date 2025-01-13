@@ -94,8 +94,6 @@ fun About() {
 
         Button(onClick = {
             // 打赏作者
-//            payDialog = true
-//            coroutineScope.launch { sheetState.show() }
             bottomSheetVisible = true
         }) {
             Text(
