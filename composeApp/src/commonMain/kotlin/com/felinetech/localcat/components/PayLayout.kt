@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.felinetech.localcat.view_model.AboutViewModel.payTypeItemList
 import com.felinetech.localcat.view_model.MainViewModel.bottomSheetVisible
 import localcat.composeapp.generated.resources.*
 import localcat.composeapp.generated.resources.ApplePay
@@ -62,7 +63,10 @@ fun BottomSheetPar() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(450.dp)
-                    .background(color = MaterialTheme.colorScheme.primary, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -84,81 +88,34 @@ fun BottomSheetPar() {
                                 .fillMaxWidth().height(300.dp).padding(top = 30.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    modifier = Modifier
-                                        .size(50.dp),
-                                    painter = painterResource(Res.drawable.WechatPay),
-                                    contentDescription = "logo"
-                                )
-                                Text(
-                                    text = "微信支付",
-                                    modifier = Modifier.width(120.dp).padding(start = 20.dp),
-                                    style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                )
-                                Checkbox(checked = false, onCheckedChange = {}, modifier = Modifier.width(70.dp))
+                            for (payItem in payTypeItemList) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        modifier = Modifier
+                                            .size(50.dp),
+                                        painter = painterResource(payItem.icon),
+                                        contentDescription = "logo"
+                                    )
+                                    Text(
+                                        text = payItem.title,
+                                        modifier = Modifier.width(150.dp).padding(start = 20.dp),
+                                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                    )
+                                    Checkbox(
+                                        checked = payItem.selected.value,
+                                        onCheckedChange = {
+                                            payTypeItemList.forEach { payItem -> payItem.selected.value = false }
+                                            payItem.selected.value = true
+                                        },
+                                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.tertiary),
+                                        modifier = Modifier.width(70.dp)
+                                    )
+                                }
                             }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    modifier = Modifier
-                                        .size(50.dp),
-                                    painter = painterResource(Res.drawable.Alipay),
-                                    contentDescription = "logo"
-                                )
-                                Text(
-                                    text = "支付宝支付",
-                                    modifier = Modifier.width(120.dp).padding(start = 20.dp),
-                                    style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                )
-                                Checkbox(checked = false, onCheckedChange = {}, modifier = Modifier.width(70.dp))
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    modifier = Modifier
-                                        .size(50.dp),
-                                    painter = painterResource(Res.drawable.ApplePay),
-                                    contentDescription = "logo"
-                                )
-                                Text(
-                                    text = "Apple Pay",
-                                    modifier = Modifier.width(120.dp).padding(start = 20.dp),
-                                    style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                )
-                                Checkbox(checked = false, onCheckedChange = {}, modifier = Modifier.width(70.dp))
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    modifier = Modifier
-                                        .size(50.dp),
-                                    painter = painterResource(Res.drawable.GooglePay),
-                                    contentDescription = "logo"
-                                )
-                                Text(
-                                    text = "Google Pay",
-                                    modifier = Modifier.width(120.dp).padding(start = 20.dp),
-                                    style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                )
-                                Checkbox(checked = false, onCheckedChange = {}, modifier = Modifier.width(70.dp))
-                            }
-
                         }
 
                         Box(
