@@ -1,8 +1,11 @@
 package com.felinetech.localcat.enums
 
 
+import localcat.composeapp.generated.resources.*
 import localcat.composeapp.generated.resources.Res
+import localcat.composeapp.generated.resources.doc
 import localcat.composeapp.generated.resources.img
+import localcat.composeapp.generated.resources.video_mp4
 import org.jetbrains.compose.resources.DrawableResource
 
 /**
@@ -12,6 +15,7 @@ enum class FileType(val imgId: DrawableResource, val suffix: String, val showNam
     jpg图片(Res.drawable.img, "jpg", "图片"),
     jpeg图片(Res.drawable.img, "jpeg", "图片"),
     png图片(Res.drawable.img, "png", "图片"),
-    mp4视频(Res.drawable.img, "mp4", "视频"),
-    doc文档(Res.drawable.img, "doc", "文档"),
+    mp4视频(Res.drawable.video_mp4, "mp4", "视频"),
+    doc文档(Res.drawable.doc, "doc", "文档"),
+    APK(Res.drawable.APK, "apk", "安装包"),
 }
