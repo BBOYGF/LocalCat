@@ -2,11 +2,20 @@ package com.felinetech.localcat.utlis
 
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.felinetech.localcat.Constants.BASE_URI
 import com.felinetech.localcat.database.Database
 import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.IpInfo
+import com.google.gson.Gson
+import io.ktor.client.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.awt.Desktop
 import java.io.BufferedReader
 import java.io.File
@@ -115,6 +124,7 @@ actual fun getIpInfo(): IpInfo? {
     }
     return IpInfo(ip, subnetMask, netName)
 }
+
 /**
  * 打开网页
  */
@@ -129,4 +139,34 @@ actual fun openUrl(url: String) {
     } catch (e: Exception) {
         e.printStackTrace()
     }
+}
+
+/**
+ * 阿里支付
+ */
+actual suspend fun aliPay(name: String, amount: Double, callback: (result: Boolean, msh: String) -> Unit) {
+   val job= CoroutineScope(Dispatchers.IO).launch {
+        val client = HttpClient(){
+            install(ContentNegotiation) {
+                Gson()
+            }
+        }
+        val response = client.get("$BASE_URI/alipay/payRewardQR"){
+            // 设置查询参数
+            parameter("userName", "测试支付")
+            // 设置请求头
+            accept(ContentType.Application.Json)
+        }
+        val content = response.bodyAsText()
+        if (content.isEmpty()) {
+            callback(false, "支付失败！")
+        } else {
+            if (content.startsWith("https:")) {
+                callback(true, content)
+            }else{
+                callback(false, content)
+            }
+        }
+    }
+    job.join()
 }

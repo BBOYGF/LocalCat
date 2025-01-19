@@ -91,4 +91,6 @@ object Constants {
     val FILE_CHUNK_SIZE = 1024 * 1024L
 
     val THREAD_COUNT = 1
+
+    const val BASE_URI="https://felinetech.cn:81"
 }

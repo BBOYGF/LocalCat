@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.felinetech.localcat.view_model.AboutViewModel.pay
 import com.felinetech.localcat.view_model.AboutViewModel.payTypeItemList
 import com.felinetech.localcat.view_model.MainViewModel.bottomSheetVisible
 import localcat.composeapp.generated.resources.*
@@ -136,7 +137,11 @@ fun BottomSheetPar() {
                     }
                 }
                 Button(
-                    onClick = { bottomSheetVisible = false },
+                    onClick = {
+                        bottomSheetVisible = false
+                        // 支付
+                        pay()
+                    },
                     modifier = Modifier.width(100.dp).height(50.dp).padding(bottom = 15.dp),
                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colorScheme.tertiary)
                 ) {
