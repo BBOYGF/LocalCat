@@ -76,6 +76,9 @@ kotlin {
             implementation("io.github.vinceglb:filekit-core:0.8.8")
             implementation("io.github.vinceglb:filekit-compose:0.8.8")
 
+            // 二维码
+            implementation("com.google.zxing:core:3.5.1")
+            implementation( "com.google.zxing:javase:3.5.1")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

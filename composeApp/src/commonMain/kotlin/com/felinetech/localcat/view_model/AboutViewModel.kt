@@ -9,10 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import localcat.composeapp.generated.resources.*
-import localcat.composeapp.generated.resources.Alipay
-import localcat.composeapp.generated.resources.GooglePay
-import localcat.composeapp.generated.resources.Res
-import localcat.composeapp.generated.resources.WechatPay
 
 object AboutViewModel {
     /**
@@ -20,6 +16,7 @@ object AboutViewModel {
      */
     val payTypeItemList = mutableStateListOf<PayItem>()
 
+    val showQsDialog = mutableStateOf(false)
 
     init {
         payTypeItemList.add(PayItem(PayTypes.微信支付, "微信支付", mutableStateOf(false), Res.drawable.WechatPay))
@@ -51,4 +48,5 @@ object AboutViewModel {
             }
         }
     }
+
 }

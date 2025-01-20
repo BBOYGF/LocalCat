@@ -1,5 +1,6 @@
 package com.felinetech.localcat.views
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,13 +21,16 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.felinetech.localcat.Constants.desktopDownload
 import com.felinetech.localcat.Constants.feedback
 import com.felinetech.localcat.Constants.productHome
 import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.utlis.openUrl
+import com.felinetech.localcat.view_model.AboutViewModel.showQsDialog
 import com.felinetech.localcat.view_model.MainViewModel.bottomSheetVisible
+import localcat.composeapp.generated.resources.APK
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.money
 import org.jetbrains.compose.resources.painterResource
@@ -182,6 +186,34 @@ fun About() {
                     .height(300.dp), colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
 
+            }
+        }
+    }
+
+    if (showQsDialog.value) {
+        Dialog(
+            onDismissRequest = { showQsDialog.value = false },
+            properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // 显示二维码
+                Image(
+                    painter = painterResource(Res.drawable.APK),
+                    contentDescription = "QR Code",
+                    modifier = Modifier.size(200.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                // 关闭按钮
+                Button(onClick = {
+                    showQsDialog.value = false
+                }) {
+                    Text("关闭")
+                }
             }
         }
     }
