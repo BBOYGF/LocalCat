@@ -15,6 +15,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.awt.Desktop
 import java.io.BufferedReader
@@ -141,32 +142,38 @@ actual fun openUrl(url: String) {
     }
 }
 
+val ioScope = CoroutineScope(Dispatchers.IO)
+
+val client = HttpClient() {
+    install(ContentNegotiation) {
+        Gson()
+    }
+}
+
 /**
  * 阿里支付
  */
 actual suspend fun aliPay(name: String, amount: Double, callback: (result: Boolean, msh: String) -> Unit) {
-   val job= CoroutineScope(Dispatchers.IO).launch {
-        val client = HttpClient(){
-            install(ContentNegotiation) {
-                Gson()
-            }
-        }
-        val response = client.get("$BASE_URI/alipay/payRewardQR"){
-            // 设置查询参数
-            parameter("userName", "测试支付")
-            // 设置请求头
-            accept(ContentType.Application.Json)
-        }
-        val content = response.bodyAsText()
-        if (content.isEmpty()) {
-            callback(false, "支付失败！")
-        } else {
-            if (content.startsWith("https:")) {
-                callback(true, content)
-            }else{
-                callback(false, content)
-            }
-        }
+
+    val job = ioScope.launch {
+//        val response = client.get("$BASE_URI/alipay/payRewardQR") {
+//            // 设置查询参数
+//            parameter("userName", "测试支付")
+//            // 设置请求头
+//            accept(ContentType.Application.Json)
+//        }
+//        val content = response.bodyAsText()
+//        if (content.isEmpty()) {
+//            callback(false, "支付失败！")
+//        } else {
+//            if (content.startsWith("https:")) {
+//                callback(true, content)
+//            } else {
+//                callback(false, content)
+//            }
+//        }
+        delay(1000)
+        callback(true, "https://www.felinetech.cn:81/doc.html#")
     }
     job.join()
 }

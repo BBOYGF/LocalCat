@@ -37,3 +37,19 @@ actual fun ScanFile() {
         modifier = Modifier.fillMaxWidth()
     )
 }
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+actual fun WaitingAnimation() {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.search_file))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = Int.MAX_VALUE,
+        speed = 2f
+    )
+    LottieAnimation(
+        composition = composition,
+        progress = progress,
+        modifier = Modifier.fillMaxWidth()
+    )
+}

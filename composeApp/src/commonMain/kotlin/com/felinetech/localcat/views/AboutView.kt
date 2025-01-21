@@ -3,12 +3,31 @@ package com.felinetech.localcat.views
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,15 +45,19 @@ import com.felinetech.localcat.Constants.desktopDownload
 import com.felinetech.localcat.Constants.feedback
 import com.felinetech.localcat.Constants.productHome
 import com.felinetech.localcat.components.ColorBackground
+import com.felinetech.localcat.components.ReceiverAnimation
+import com.felinetech.localcat.components.WaitingAnimation
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.utlis.openUrl
+import com.felinetech.localcat.view_model.AboutViewModel.qrUrl
 import com.felinetech.localcat.view_model.AboutViewModel.showQsDialog
+import com.felinetech.localcat.view_model.AboutViewModel.waitingDialog
 import com.felinetech.localcat.view_model.MainViewModel.bottomSheetVisible
-import localcat.composeapp.generated.resources.APK
+import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.money
 import org.jetbrains.compose.resources.painterResource
-import java.util.*
+import java.util.Locale
 
 
 @Composable
@@ -190,33 +213,48 @@ fun About() {
         }
     }
 
-    if (showQsDialog.value) {
+    if (showQsDialog) {
         Dialog(
-            onDismissRequest = { showQsDialog.value = false },
+            onDismissRequest = { showQsDialog = false },
             properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
         ) {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .background(color = Color.White),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text(
+                    text = "请扫描支付！",
+                    color = Color(0xFFFF9000),
+                    fontSize = TextUnit(20f, TextUnitType.Sp),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.background(color = MaterialTheme.colorScheme.primary)
+                        .fillMaxWidth(),
+                )
                 // 显示二维码
                 Image(
-                    painter = painterResource(Res.drawable.APK),
-                    contentDescription = "QR Code",
-                    modifier = Modifier.size(200.dp)
+                    painter = rememberQrCodePainter(qrUrl),
+                    contentDescription = ""
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                // 关闭按钮
-                Button(onClick = {
-                    showQsDialog.value = false
-                }) {
-                    Text("关闭")
-                }
             }
         }
     }
 
+    if (waitingDialog) {
+        Dialog(onDismissRequest = { waitingDialog = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                WaitingAnimation()
+            }
+
+        }
+
+    }
 
 }

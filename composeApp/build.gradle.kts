@@ -34,9 +34,11 @@ kotlin {
             implementation("com.airbnb.android:lottie-compose:4.2.0")
             implementation("com.google.code.gson:gson:2.11.0")
             implementation("com.google.accompanist:accompanist-permissions:0.36.0")
-            implementation ("org.slf4j:slf4j-android:1.7.36")
+            implementation("org.slf4j:slf4j-android:1.7.36")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -55,12 +57,12 @@ kotlin {
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
             implementation("com.google.code.gson:gson:2.11.0")
             // 日志
-            implementation ("org.slf4j:slf4j-api:2.0.3") // 确保使用最新的 SLF4J API
+            implementation("org.slf4j:slf4j-api:2.0.3") // 确保使用最新的 SLF4J API
 
 
             // 工具类
             implementation("org.apache.commons:commons-lang3:3.15.0")
-            implementation ("com.blankj:utilcodex:1.31.1")
+            implementation("com.blankj:utilcodex:1.31.1")
 
             // 网络ktor
             implementation("io.ktor:ktor-client-cio:3.0.2")
@@ -77,8 +79,7 @@ kotlin {
             implementation("io.github.vinceglb:filekit-compose:0.8.8")
 
             // 二维码
-            implementation("com.google.zxing:core:3.5.1")
-            implementation( "com.google.zxing:javase:3.5.1")
+            implementation("io.github.alexzhirkevich:qrose:1.0.1")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -90,7 +91,7 @@ kotlin {
             implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-network:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
-            implementation ("ch.qos.logback:logback-classic:1.4.5") // 使用最新的 Logback 版本
+            implementation("ch.qos.logback:logback-classic:1.4.5") // 使用最新的 Logback 版本
             implementation("com.google.code.gson:gson:2.11.0")
         }
 

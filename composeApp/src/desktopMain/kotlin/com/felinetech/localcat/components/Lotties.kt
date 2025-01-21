@@ -65,3 +65,28 @@ actual fun ScanFile() {
         modifier = Modifier.fillMaxWidth(), contentDescription = "Lottie animation"
     )
 }
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+actual fun WaitingAnimation() {
+    val composition by rememberLottieComposition {
+        LottieCompositionSpec.JsonString(
+//            File("src/commonMain/composeResources/drawable/search_file.json")
+//                .run {
+//                    readText(Charsets.UTF_8)
+//                }
+            Res.readBytes("files/awiting.json").decodeToString()
+        )
+    }
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = Compottie.IterateForever
+    )
+    Image(
+        painter = rememberLottiePainter(
+            composition = composition,
+            progress = { progress },
+        ),
+        modifier = Modifier.fillMaxWidth(), contentDescription = "Lottie animation"
+    )
+}

@@ -10,3 +10,6 @@ expect fun ReceiverAnimation()
 // 扫描文件动画
 @Composable
 expect fun ScanFile()
+
+@Composable
+expect fun WaitingAnimation()
