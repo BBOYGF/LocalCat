@@ -113,4 +113,7 @@ expect fun scanFileUtil(
  */
 expect fun openUrl(url: String)
 
-expect suspend fun aliPay(name: String, amount: Double, callback: (resul: Boolean, msh: String) -> Unit)
+/**
+ * 打开别的app
+ */
+expect fun startOtherAPP(qrUrl: String)

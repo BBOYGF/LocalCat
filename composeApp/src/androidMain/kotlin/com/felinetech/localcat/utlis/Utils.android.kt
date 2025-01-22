@@ -10,9 +10,9 @@ import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Environment
 import android.provider.MediaStore
-import androidx.compose.ui.platform.LocalContext
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.felinetech.localcat.Constants.AILPAY_STRING
 import com.felinetech.localcat.MainActivity
 import com.felinetech.localcat.MainActivity.Companion.instance
 import com.felinetech.localcat.database.Database
@@ -21,7 +21,6 @@ import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.IpInfo
 import java.io.File
 import java.net.Inet4Address
-import java.net.NetworkInterface
 import java.util.Date
 import java.util.UUID
 
@@ -46,9 +45,12 @@ actual fun createSettings(): Settings {
 /**
  * 创建外包目录
  */
-actual fun  createAppDir(dirName: String): File {
+actual fun createAppDir(dirName: String): File {
     if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
-        val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath, dirName)
+        val dir = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath,
+            dirName
+        )
         if (!dir.exists()) {
             dir.mkdirs() // 创建目录
         }
@@ -195,4 +197,13 @@ actual fun openUrl(url: String) {
     } catch (e: Exception) {
         e.printStackTrace()
     }
+}
+
+/**
+ * 打开别的app
+ */
+actual fun startOtherAPP(qrUrl: String) {
+    val intent = Intent.parseUri(AILPAY_STRING + qrUrl, Intent.URI_INTENT_SCHEME)
+    intent.addCategory("android.intent.category.BROWSABLE")
+    instance.startActivity(intent)
 }

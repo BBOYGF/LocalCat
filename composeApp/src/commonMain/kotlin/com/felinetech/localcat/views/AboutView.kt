@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -45,7 +44,6 @@ import com.felinetech.localcat.Constants.desktopDownload
 import com.felinetech.localcat.Constants.feedback
 import com.felinetech.localcat.Constants.productHome
 import com.felinetech.localcat.components.ColorBackground
-import com.felinetech.localcat.components.ReceiverAnimation
 import com.felinetech.localcat.components.WaitingAnimation
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.utlis.openUrl
