@@ -47,11 +47,13 @@ import com.felinetech.localcat.components.ColorBackground
 import com.felinetech.localcat.components.WaitingAnimation
 import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.utlis.openUrl
+import com.felinetech.localcat.view_model.AboutViewModel.payMsg
 import com.felinetech.localcat.view_model.AboutViewModel.qrUrl
 import com.felinetech.localcat.view_model.AboutViewModel.showQsDialog
 import com.felinetech.localcat.view_model.AboutViewModel.waitingDialog
 import com.felinetech.localcat.view_model.MainViewModel.bottomSheetVisible
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
+
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.money
 import org.jetbrains.compose.resources.painterResource
@@ -224,7 +226,7 @@ fun About() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "请扫描支付！",
+                    text = payMsg,
                     color = Color(0xFFFF9000),
                     fontSize = TextUnit(20f, TextUnitType.Sp),
                     textAlign = TextAlign.Center,

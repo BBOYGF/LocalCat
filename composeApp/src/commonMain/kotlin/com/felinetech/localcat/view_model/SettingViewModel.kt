@@ -105,7 +105,6 @@ object SettingViewModel {
         savedPosition = savePath!!
 
         // 设置缓存保存目录
-
         var cachePath = settings?.getSetting(CACHE_FILE)
         if (cachePath == null) {
             val cacheFile = File(localCatFile, "cache")
