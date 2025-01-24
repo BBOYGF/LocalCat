@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -220,8 +221,8 @@ fun About() {
         ) {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
+                    .width(IntrinsicSize.Max)
+                    .height(IntrinsicSize.Max)
                     .background(color = Color.White),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -237,7 +238,8 @@ fun About() {
                 // 显示二维码
                 Image(
                     painter = rememberQrCodePainter(qrUrl),
-                    contentDescription = ""
+                    contentDescription = "",
+                    modifier = Modifier.width(200.dp).height(200.dp)
                 )
             }
         }

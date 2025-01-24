@@ -38,6 +38,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.slf4j.Logger
@@ -419,15 +420,20 @@ object HomeViewModel {
                         }"
                     ) {
                         timeout {
-                            requestTimeoutMillis = 60000
+                            requestTimeoutMillis = 300000
                         }
                         setBody(
-                            File(fileItemVo.fileFillName).readBytes()
+                            File(fileItemVo.fileFillName).readChannel()
                         )
+                        val total = File(fileItemVo.fileFillName).length()
                         onUpload { bytesSentTotal, contentLength ->
-                            println("Sent $bytesSentTotal bytes from $contentLength ${bytesSentTotal.toDouble() / contentLength!!.toDouble()}")
+                            var t = contentLength
+                            if (contentLength == null) {
+                                t = total
+                            }
+                            println("Sent $bytesSentTotal bytes from $t ${bytesSentTotal.toDouble() / t!!.toDouble()}")
                             val progress =
-                                (bytesSentTotal.toDouble() / contentLength!!.toDouble() * 100).toInt()
+                                (bytesSentTotal.toDouble() / t!!.toDouble() * 100).toInt()
                             toBeUploadFileList.indexOfFirst { vo -> vo.fileId == fileItemVo.fileId }
                                 .takeIf { it != -1 }?.let {
                                     val itemVo = toBeUploadFileList[it]

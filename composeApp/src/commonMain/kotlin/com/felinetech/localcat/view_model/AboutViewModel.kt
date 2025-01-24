@@ -157,22 +157,24 @@ object AboutViewModel {
      */
     suspend fun aliPay(userID: String, amount: Double, callback: (result: Boolean, msh: String) -> Unit) {
         val job = ioScope.launch {
-            val response = client.get("$BASE_URI/alipay/payRewardQR") {
-                // 设置查询参数
-                parameter("userID", userID)
-                // 设置请求头
-                accept(ContentType.Application.Json)
-            }
-            val content = response.bodyAsText()
-            if (content.isEmpty()) {
-                callback(false, "支付失败！")
-            } else {
-                if (content.startsWith("https:")) {
-                    callback(true, content)
-                } else {
-                    callback(false, content)
-                }
-            }
+//            val response = client.get("$BASE_URI/alipay/payRewardQR") {
+//                // 设置查询参数
+//                parameter("userID", userID)
+//                // 设置请求头
+//                accept(ContentType.Application.Json)
+//            }
+//            val content = response.bodyAsText()
+//            if (content.isEmpty()) {
+//                callback(false, "支付失败！")
+//            } else {
+//                if (content.startsWith("https:")) {
+//                    callback(true, content)
+//                } else {
+//                    callback(false, content)
+//                }
+//            }
+            delay(1000)
+            callback(true, "/alipay/payRewardQR")
         }
         job.join()
     }
