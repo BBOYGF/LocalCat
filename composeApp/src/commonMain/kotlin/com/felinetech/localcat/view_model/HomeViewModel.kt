@@ -38,7 +38,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.slf4j.Logger
@@ -47,6 +46,7 @@ import java.io.IOException
 import java.net.*
 import java.net.URLEncoder.encode
 import java.util.*
+import kotlin.text.toByteArray
 
 
 object HomeViewModel {
@@ -413,19 +413,19 @@ object HomeViewModel {
                 for (fileItemVo in fileItemList) {
                     // 上传数据
                     val response = client.post(
-                        "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
-                            encode(
-                                fileItemVo.fileName, Charsets.UTF_8
-                            )
-                        }"
+                        "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${encode(fileItemVo.fileName, Charsets.UTF_8)}"
                     ) {
                         timeout {
-                            requestTimeoutMillis = 300000
+                            requestTimeoutMillis = 10 * 60 * 1000
+                        }
+                        val total = File(fileItemVo.fileFillName).length()
+                        headers {
+                            append(HttpHeaders.ContentLength, total.toString())
                         }
                         setBody(
-                            File(fileItemVo.fileFillName).readChannel()
+                            File(fileItemVo.fileFillName).inputStream()
                         )
-                        val total = File(fileItemVo.fileFillName).length()
+                        contentType(ContentType.Application.OctetStream)
                         onUpload { bytesSentTotal, contentLength ->
                             var t = contentLength
                             if (contentLength == null) {
@@ -445,16 +445,17 @@ object HomeViewModel {
                             }
                         }
                     }
+
                     if (response.status == HttpStatusCode.OK) {
                         val responseStr = response.body<String>()
                         println("客户端上传结果：$responseStr")
                         // 下载结束后
-                        toBeUploadFileList.indexOfFirst { fileItemVo -> fileItemVo.fileId == fileItemVo.fileId }
+                        toBeUploadFileList.indexOfFirst { itemVo -> itemVo.fileId == fileItemVo.fileId }
                             .takeIf { it != -1 }?.let { index ->
-                                val fileItemVo = toBeUploadFileList[index]
+                                val element = toBeUploadFileList[index]
                                 toBeUploadFileList.removeAt(index)
-                                uploadedFileList.add(fileItemVo)
-                                val fileItemPo = fileEntityDao.getFileById(fileItemVo.fileId)
+                                uploadedFileList.add(element)
+                                val fileItemPo = fileEntityDao.getFileById(element.fileId)
                                 fileItemPo?.let {
                                     it.uploadState = UploadState.已上传
                                     fileEntityDao.update(it)
@@ -475,6 +476,7 @@ object HomeViewModel {
             startUpload = false
         }
     }
+
 
     /**
      * 查看当前未上传或者待上传的数据
