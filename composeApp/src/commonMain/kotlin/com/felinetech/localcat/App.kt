@@ -108,7 +108,7 @@ fun App() {
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
-                                modifier = Modifier.background(color = Color.White, shape = RoundedCornerShape(20.dp))
+                                modifier = Modifier.background(color = Color.White, shape = RoundedCornerShape(5.dp))
                                     .fillMaxWidth().height(100.dp).padding(top = 30.dp),
                             ) {
                                 Text(
