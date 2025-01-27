@@ -15,6 +15,16 @@ object MainViewModel {
     var bottomSheetVisible by mutableStateOf(false)
     var userID: String? = null
 
+    /**
+     * 显示消息框
+     */
+    var showDialog by mutableStateOf(false)
+
+    /**
+     * 消息类型
+     */
+    var msgPair by mutableStateOf(Pair("", ""))
+
     init {
         val settings = createSettings()
         userID = settings.getSetting("userID")

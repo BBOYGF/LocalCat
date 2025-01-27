@@ -19,6 +19,9 @@ import com.felinetech.localcat.database.Database
 import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.IpInfo
+import com.felinetech.localcat.view_model.MainViewModel
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.Inet4Address
 import java.util.Date
@@ -203,7 +206,13 @@ actual fun openUrl(url: String) {
  * 打开别的app
  */
 actual fun startOtherAPP(qrUrl: String) {
-    val intent = Intent.parseUri(AILPAY_STRING + qrUrl, Intent.URI_INTENT_SCHEME)
-    intent.addCategory("android.intent.category.BROWSABLE")
-    instance.startActivity(intent)
+    try {
+        val intent = Intent.parseUri(AILPAY_STRING + qrUrl, Intent.URI_INTENT_SCHEME)
+        intent.addCategory("android.intent.category.BROWSABLE")
+        instance.startActivity(intent)
+    } catch (e: Exception) {
+        println("发生异常：${e.message}")
+        MainViewModel.showDialog = true
+        MainViewModel.msgPair = Pair("异常", "当前软件内没安装支付宝！")
+    }
 }

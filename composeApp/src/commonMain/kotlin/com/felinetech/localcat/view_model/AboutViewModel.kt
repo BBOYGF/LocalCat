@@ -9,6 +9,7 @@ import com.felinetech.localcat.enums.PayTypes
 import com.felinetech.localcat.pojo.PayItem
 import com.felinetech.localcat.pojo.RespBean
 import com.felinetech.localcat.utlis.startOtherAPP
+import com.felinetech.localcat.view_model.MainViewModel.showDialog
 import com.felinetech.localcat.view_model.MainViewModel.userID
 import com.google.gson.Gson
 import io.ktor.client.*

@@ -2,20 +2,32 @@ package com.felinetech.localcat
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,6 +35,9 @@ import androidx.navigation.compose.rememberNavController
 import com.felinetech.localcat.components.BottomSheetPar
 import com.felinetech.localcat.components.MenuButton
 import com.felinetech.localcat.theme.LocalCatTheme
+import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.MainViewModel.msgPair
+import com.felinetech.localcat.view_model.MainViewModel.showDialog
 import com.felinetech.localcat.views.About
 import com.felinetech.localcat.views.History
 import com.felinetech.localcat.views.HomePage
@@ -30,8 +45,13 @@ import com.felinetech.localcat.views.SettingView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import localcat.composeapp.generated.resources.Res
+import localcat.composeapp.generated.resources.cat_empty
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import java.util.*
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 @Preview
 fun App() {
@@ -60,6 +80,78 @@ fun App() {
         PermissionRequest()
 
         BottomSheetPar()
+        if (showDialog) {
+            Dialog(onDismissRequest = { showDialog = false }) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            RoundedCornerShape(size = 10.dp)
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = msgPair.first,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            style = TextStyle(fontSize = 35.sp),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 10.dp, start = 20.dp).weight(1f)
+                        )
+
+                    }
+                    Row(modifier = Modifier.fillMaxWidth().weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(300.dp).padding(start = 20.dp, end = 20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                modifier = Modifier.background(color = Color.White, shape = RoundedCornerShape(20.dp))
+                                    .fillMaxWidth().height(100.dp).padding(top = 30.dp),
+                            ) {
+                                Text(
+                                    modifier = Modifier.fillMaxSize(),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    text = msgPair.second,
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .offset(x = 100.dp, y = (-60).dp) // 向上偏移 20 像素
+                            ) {
+                                Image(
+                                    modifier = Modifier
+                                        .width(80.dp)
+                                        .height(80.dp)
+                                        .align(Alignment.Center),
+                                    painter = painterResource(Res.drawable.cat_empty),
+                                    contentDescription = "logo"
+                                )
+                            }
+                        }
+                    }
+                    Button(
+                        onClick = {
+                            showDialog = false
+                        },
+                        modifier = Modifier.width(100.dp).height(50.dp).padding(bottom = 15.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colorScheme.tertiary)
+                    ) {
+                        Text(
+                            text = getNames(Locale.getDefault().language).okText,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -9,6 +9,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.felinetech.localcat.R
+import localcat.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 
@@ -41,7 +42,7 @@ actual fun ScanFile() {
 
 @Composable
 actual fun WaitingAnimation() {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.search_file))
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.awiting))
     val progress by animateLottieCompositionAsState(
         composition,
         iterations = Int.MAX_VALUE,

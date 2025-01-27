@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -20,13 +21,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.felinetech.localcat.utlis.getNames
 import com.felinetech.localcat.view_model.AboutViewModel.pay
 import com.felinetech.localcat.view_model.AboutViewModel.payTypeItemList
 import com.felinetech.localcat.view_model.AboutViewModel.showQsDialog
+import com.felinetech.localcat.view_model.MainViewModel
 import com.felinetech.localcat.view_model.MainViewModel.bottomSheetVisible
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.cat_empty
 import org.jetbrains.compose.resources.painterResource
+import java.util.*
 
 @Composable
 fun BottomSheetPar() {
@@ -100,8 +104,12 @@ fun BottomSheetPar() {
                                     )
                                     Text(
                                         text = payItem.title,
-                                        modifier = Modifier.width(150.dp).padding(start = 20.dp),
-                                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                        modifier = Modifier.width(150.dp).padding(start = 20.dp).clickable{
+                                            payTypeItemList.forEach { payItem -> payItem.selected.value = false }
+                                            payItem.selected.value = true
+                                        },
+                                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+
                                     )
                                     Checkbox(
                                         checked = payItem.selected.value,
@@ -144,7 +152,7 @@ fun BottomSheetPar() {
                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colorScheme.tertiary)
                 ) {
                     Text(
-                        "支付",
+                        text = getNames(Locale.getDefault().language).okText,
                         color = MaterialTheme.colorScheme.primary,
                         style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     )
