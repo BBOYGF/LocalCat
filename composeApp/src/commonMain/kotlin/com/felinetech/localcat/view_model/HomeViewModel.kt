@@ -433,7 +433,7 @@ object HomeViewModel {
                             }
                             println("Sent $bytesSentTotal bytes from $t ${bytesSentTotal.toDouble() / t!!.toDouble()}")
                             val progress =
-                                (bytesSentTotal.toDouble() / t!!.toDouble() * 100).toInt()
+                                (bytesSentTotal.toDouble() / t.toDouble() * 100).toInt()
                             toBeUploadFileList.indexOfFirst { vo -> vo.fileId == fileItemVo.fileId }
                                 .takeIf { it != -1 }?.let {
                                     val itemVo = toBeUploadFileList[it]
