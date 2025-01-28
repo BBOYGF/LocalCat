@@ -22,7 +22,7 @@ object Constants {
     val PRIVACY_URL = "https://felinetech.cn/#/privacy"
 
     /**
-     * 请求支付宝Install
+     * 请求支付宝 Install
      */
     val AILPAY_STRING = "alipays://platformapi/startapp?saId=10000007&qrcode="
 

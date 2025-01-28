@@ -1,6 +1,8 @@
 package com.felinetech.localcat.views
 
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,13 +39,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -63,6 +59,7 @@ import com.felinetech.localcat.components.RuleItem
 import com.felinetech.localcat.enums.FileType
 import com.felinetech.localcat.theme.borderColor
 import com.felinetech.localcat.utlis.getNames
+import com.felinetech.localcat.view_model.MainViewModel
 import com.felinetech.localcat.view_model.SettingViewModel.addRule
 import com.felinetech.localcat.view_model.SettingViewModel.cachePosition
 import com.felinetech.localcat.view_model.SettingViewModel.currDate
@@ -83,6 +80,10 @@ import com.felinetech.localcat.view_model.SettingViewModel.showReluDialog
 import com.felinetech.localcat.view_model.SettingViewModel.updateCacheFile
 import com.felinetech.localcat.view_model.SettingViewModel.updateSaveFile
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.folder_gray
 import org.jetbrains.compose.resources.painterResource
@@ -151,8 +152,7 @@ fun SettingView() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(500.dp)
-                .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
-            ,
+                .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp)),
             color = Color(0x99ffffff),
             shape = RoundedCornerShape(5.dp)
         ) {
@@ -197,8 +197,7 @@ fun SettingView() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp))
-            ,
+                .border(1.dp, color = borderColor, shape = RoundedCornerShape(5.dp)),
             color = Color(0x99ffffff),
             shape = RoundedCornerShape(5.dp)
         ) {
@@ -293,127 +292,156 @@ fun SettingView() {
         is24Hour = true,
     )
 
+    val defScope = CoroutineScope(Dispatchers.Default)
 
     // 添加规则弹窗
     if (showReluDialog) {
-
-        Dialog(
-            onDismissRequest = {
-                showReluDialog = false
-            },
+        var isDialogVisible by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            isDialogVisible = true // 触发进入动画
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(0.1f)) // 半透明黑色背景
+                .clickable { // 点击背景关闭弹窗
+                    isDialogVisible = false
+                    defScope.launch {
+                        delay(timeMillis = 450)
+                        showReluDialog = false
+                    }
+                },
+            contentAlignment = Alignment.Center
         ) {
-            Card(
-                modifier = Modifier
-                    .width(300.dp)
-                    .height(300.dp)
+            AnimatedVisibility(
+                visible = isDialogVisible,
+                enter = fadeIn(animationSpec = tween(500)) + scaleIn(animationSpec = tween(500)),
+                exit = fadeOut(animationSpec = tween(500)) + scaleOut(animationSpec = tween(500))
             ) {
-                Column(
+                Card(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.White),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceAround
+                        .width(300.dp)
+                        .height(300.dp)
                 ) {
-                    Text(
-                        text = getNames(Locale.getDefault().language).ruleSetting,
-                        style = TextStyle(
-                            color = MaterialTheme.colorScheme.tertiary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = getNames(Locale.getDefault().language).filterDirectory)
-                        Text(
-                            text = getFileName(selectedDirectory), modifier = Modifier
-                                .width(100.dp)
-                                .border(1.dp, Color.Black, shape = RoundedCornerShape(2.dp))
-                        )
-                        // 选择目录被点击
-                        IconButton(onClick = {
-                            launcherConfig.launch()
-
-                        }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.folder_gray),
-                                contentDescription = "",
-                                modifier = Modifier
-                                    .width(30.dp)
-                                    .height(30.dp)
-                            )
-                        }
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = getNames(Locale.getDefault().language).fileExtension)
-
-                        val suffixList = remember {
-                            mutableStateOf(
-                                FileType.entries.map { "*." + it.suffix }.toList()
-                            )
-                        }
-                        ComboBox(suffixList)
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = getNames(Locale.getDefault().language).afterWhatTime)
-                        // 什么日期后
-                        Text(
-                            text = currDate,
-                            modifier = Modifier
-                                .width(90.dp)
-                                .clickable {
-                                    showDatePicker = true
-                                }, textAlign = TextAlign.Center
-                        )
-                        // 什么时间后
-                        Text(
-                            text = currTime,
-                            modifier = Modifier
-                                .width(80.dp)
-                                .clickable {
-                                    showTimePicker = true
-                                }, textAlign = TextAlign.Center
-                        )
-                    }
-                    Row(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp), horizontalArrangement = Arrangement.SpaceEvenly
+                            .fillMaxSize()
+                            .background(Color.White),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceAround
                     ) {
-                        Button(
-                            onClick = {
-                                // 如果有一个没选就提醒
-                                if (eidt) {
-                                    showReluDialog = !saveConfig()
-                                } else {
-                                    showReluDialog = !addRule()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                            shape = RoundedCornerShape(12.dp)
+                        Text(
+                            text = getNames(Locale.getDefault().language).ruleSetting,
+                            style = TextStyle(
+                                color = MaterialTheme.colorScheme.tertiary,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = getNames(Locale.getDefault().language).okText)
+                            Text(text = getNames(Locale.getDefault().language).filterDirectory)
+                            Text(
+                                text = getFileName(selectedDirectory), modifier = Modifier
+                                    .width(100.dp)
+                                    .border(1.dp, Color.Black, shape = RoundedCornerShape(2.dp))
+                            )
+                            // 选择目录被点击
+                            IconButton(onClick = {
+                                launcherConfig.launch()
+
+                            }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.folder_gray),
+                                    contentDescription = "",
+                                    modifier = Modifier
+                                        .width(30.dp)
+                                        .height(30.dp)
+                                )
+                            }
                         }
-                        Button(
-                            onClick = { showReluDialog = false },
-                            shape = RoundedCornerShape(12.dp)
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = getNames(Locale.getDefault().language).cancelButton)
+                            Text(text = getNames(Locale.getDefault().language).fileExtension)
+
+                            val suffixList = remember {
+                                mutableStateOf(
+                                    FileType.entries.map { "*." + it.suffix }.toList()
+                                )
+                            }
+                            ComboBox(suffixList)
                         }
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = getNames(Locale.getDefault().language).afterWhatTime)
+                            // 什么日期后
+                            Text(
+                                text = currDate,
+                                modifier = Modifier
+                                    .width(90.dp)
+                                    .clickable {
+                                        showDatePicker = true
+                                    }, textAlign = TextAlign.Center
+                            )
+                            // 什么时间后
+                            Text(
+                                text = currTime,
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .clickable {
+                                        showTimePicker = true
+                                    }, textAlign = TextAlign.Center
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp), horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Button(
+                                onClick = {
+                                    // 如果有一个没选就提醒
+                                    if (eidt) {
+                                        showReluDialog = !saveConfig()
+                                    } else {
+                                        isDialogVisible = !addRule()
+                                        if (!isDialogVisible) {
+                                            defScope.launch {
+                                                delay(timeMillis = 450)
+                                                showReluDialog = false
+                                            }
+                                        }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(text = getNames(Locale.getDefault().language).okText)
+                            }
+                            Button(
+                                onClick = {
+                                    isDialogVisible = false
+                                    defScope.launch {
+                                        delay(timeMillis = 450)
+                                        showReluDialog = false
+                                    }
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(text = getNames(Locale.getDefault().language).cancelButton)
+                            }
+                        }
+
                     }
 
                 }
-
             }
-
         }
     }
     // 显示时间

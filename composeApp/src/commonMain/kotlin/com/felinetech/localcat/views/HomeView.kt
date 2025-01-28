@@ -1,6 +1,5 @@
 package com.felinetech.localcat.views
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +31,7 @@ import com.felinetech.localcat.view_model.MainViewModel
 import com.felinetech.localcat.view_model.MainViewModel.receiveState
 import com.felinetech.localcat.view_model.MainViewModel.sendState
 import com.felinetech.localcat.view_model.MainViewModel.turnFun
-import java.util.Locale
+import java.util.*
 
 
 @Composable
