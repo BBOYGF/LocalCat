@@ -45,8 +45,6 @@ import java.util.*
 @Composable
 fun About() {
     var registerDialog by remember { mutableStateOf(false) }
-    var payDialog by remember { mutableStateOf(false) }
-
     ColorBackground()
 
     Column(
@@ -182,18 +180,7 @@ fun About() {
         }
     }
 
-    // 支付选择弹出
-    if (payDialog) {
-        Dialog(onDismissRequest = { payDialog = false }) {
-            Card(
-                modifier = Modifier
-                    .width(300.dp)
-                    .height(300.dp), colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
 
-            }
-        }
-    }
 
     if (showQsDialog) {
         Dialog(

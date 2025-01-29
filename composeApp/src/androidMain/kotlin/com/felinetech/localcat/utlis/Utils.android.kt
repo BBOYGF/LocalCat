@@ -1,5 +1,7 @@
 package com.felinetech.localcat.utlis
 
+import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
@@ -10,9 +12,23 @@ import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Environment
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingFlowParams.ProductDetailsParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.ConsumeParams
+import com.android.billingclient.api.ConsumeResponseListener
+import com.android.billingclient.api.ProductDetails
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.QueryProductDetailsParams
+import com.blankj.utilcode.util.LogUtils
 import com.felinetech.localcat.Constants.AILPAY_STRING
+import com.felinetech.localcat.Constants.product1year
 import com.felinetech.localcat.MainActivity
 import com.felinetech.localcat.MainActivity.Companion.instance
 import com.felinetech.localcat.database.Database
@@ -20,13 +36,15 @@ import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.IpInfo
 import com.felinetech.localcat.view_model.MainViewModel
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.net.Inet4Address
 import java.util.Date
 import java.util.UUID
 
+var ioScope = CoroutineScope(Dispatchers.IO)
 
 actual fun getDatabase(): Database {
     val dbFile = MainActivity.instance.getDatabasePath("local_cat_database.db")
@@ -216,3 +234,20 @@ actual fun startOtherAPP(qrUrl: String) {
         MainViewModel.msgPair = Pair("异常", "当前软件内没安装支付宝！")
     }
 }
+
+
+
+
+/**
+ * google pay
+ */
+actual fun googlePay() {
+    // 初始化
+    CoroutineScope(Dispatchers.Main).launch {
+        val googlePayUtils = GooglePayUtils()
+        googlePayUtils.pay("1_fast_cat")
+
+    }
+
+}
+

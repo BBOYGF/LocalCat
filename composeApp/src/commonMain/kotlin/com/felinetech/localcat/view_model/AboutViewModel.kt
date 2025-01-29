@@ -8,6 +8,7 @@ import com.felinetech.localcat.Constants.BASE_URI
 import com.felinetech.localcat.enums.PayTypes
 import com.felinetech.localcat.pojo.PayItem
 import com.felinetech.localcat.pojo.RespBean
+import com.felinetech.localcat.utlis.googlePay
 import com.felinetech.localcat.utlis.startOtherAPP
 import com.felinetech.localcat.view_model.MainViewModel.showDialog
 import com.felinetech.localcat.view_model.MainViewModel.userID
@@ -63,10 +64,38 @@ object AboutViewModel {
     }
 
     init {
-        payTypeItemList.add(PayItem(PayTypes.微信支付, "微信支付", mutableStateOf(false), Res.drawable.WechatPay))
-        payTypeItemList.add(PayItem(PayTypes.支付宝, "支付宝支付", mutableStateOf(false), Res.drawable.Alipay))
-        payTypeItemList.add(PayItem(PayTypes.GooglePlay, "Google Pay", mutableStateOf(false), Res.drawable.GooglePay))
-        payTypeItemList.add(PayItem(PayTypes.ApplePay, "Apple Pay", mutableStateOf(false), Res.drawable.ApplePay))
+        payTypeItemList.add(
+            PayItem(
+                PayTypes.微信支付,
+                "微信支付",
+                mutableStateOf(false),
+                Res.drawable.WechatPay
+            )
+        )
+        payTypeItemList.add(
+            PayItem(
+                PayTypes.支付宝,
+                "支付宝支付",
+                mutableStateOf(false),
+                Res.drawable.Alipay
+            )
+        )
+        payTypeItemList.add(
+            PayItem(
+                PayTypes.GooglePlay,
+                "Google Pay",
+                mutableStateOf(false),
+                Res.drawable.GooglePay
+            )
+        )
+        payTypeItemList.add(
+            PayItem(
+                PayTypes.ApplePay,
+                "Apple Pay",
+                mutableStateOf(false),
+                Res.drawable.ApplePay
+            )
+        )
 
 
     }
@@ -109,7 +138,8 @@ object AboutViewModel {
                                         }
                                         val bodyAsText = response.bodyAsText(Charsets.UTF_8)
                                         logger.info("响应字符串是：{}", bodyAsText)
-                                        val repBean: RespBean = gson.fromJson(bodyAsText, RespBean::class.java)
+                                        val repBean: RespBean =
+                                            gson.fromJson(bodyAsText, RespBean::class.java)
                                         if (200L == repBean.code) {
                                             if ("等待支付" == repBean.message) {
                                                 payMsg = "正在支付..."
@@ -149,6 +179,8 @@ object AboutViewModel {
                         }
                     }
                 }
+            } else if (payItem.type == PayTypes.GooglePlay) {
+                googlePay()
             }
         }
     }
@@ -156,7 +188,11 @@ object AboutViewModel {
     /**
      * 阿里支付
      */
-    suspend fun aliPay(userID: String, amount: Double, callback: (result: Boolean, msh: String) -> Unit) {
+    suspend fun aliPay(
+        userID: String,
+        amount: Double,
+        callback: (result: Boolean, msh: String) -> Unit
+    ) {
         val job = ioScope.launch {
 //            val response = client.get("$BASE_URI/alipay/payRewardQR") {
 //                // 设置查询参数

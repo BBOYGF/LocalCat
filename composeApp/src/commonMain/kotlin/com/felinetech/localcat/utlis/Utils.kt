@@ -117,3 +117,9 @@ expect fun openUrl(url: String)
  * 打开别的app
  */
 expect fun startOtherAPP(qrUrl: String)
+
+/**
+ * google pay
+ */
+
+expect fun googlePay()

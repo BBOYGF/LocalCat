@@ -38,7 +38,7 @@ kotlin {
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-
+            implementation("com.android.billingclient:billing:7.0.0")
         }
         commonMain.dependencies {
             implementation(compose.runtime)

@@ -134,3 +134,10 @@ actual fun openUrl(url: String) {
 actual fun startOtherAPP(qrUrl: String) {
 
 }
+
+/**
+ * google pay
+ */
+actual fun googlePay() {
+    println("空方法")
+}
