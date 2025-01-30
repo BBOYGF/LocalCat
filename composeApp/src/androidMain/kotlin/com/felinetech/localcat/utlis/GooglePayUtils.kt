@@ -135,9 +135,11 @@ class GooglePayUtils {
                 .build()
 
             billingClient.queryProductDetailsAsync(params) { _, productDetailsList ->
-                productDetailsList?.firstOrNull()?.let {
-                    continuation.resume(it)
-                } ?: continuation.resumeWithException(Exception("Product not found"))
+                if (productDetailsList.isEmpty()) {
+                    continuation.resumeWithException(Exception("没有找到匹配的产品！"))
+                } else {
+                    continuation.resume(productDetailsList[0])
+                }
             }
         }
 
@@ -169,17 +171,18 @@ class GooglePayUtils {
     /**
      * 支付
      */
-    suspend fun pay(productID: String) {
+    suspend fun pay(productID: String): Pair<Boolean, String> {
         try {
             billingClient = connectGooglePlay()
             billingClient?.let {
                 val queryProductDetails = queryProductDetails(it, productID)
                 launchBillingFlowAndWait(it, queryProductDetails)
             }
-
+            return Pair(true, "ok")
         } catch (e: Exception) {
             println("google支付产生异常：${e.message}" + e.toString())
             logger.e("谷歌支付异常", e)
+            return Pair(false, "${e.message}")
         }
     }
 

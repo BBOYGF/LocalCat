@@ -35,6 +35,7 @@ import com.felinetech.localcat.database.Database
 import com.felinetech.localcat.enums.UploadState
 import com.felinetech.localcat.po.FileEntity
 import com.felinetech.localcat.pojo.IpInfo
+import com.felinetech.localcat.view_model.AboutViewModel.waitingDialog
 import com.felinetech.localcat.view_model.MainViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -230,12 +231,11 @@ actual fun startOtherAPP(qrUrl: String) {
         instance.startActivity(intent)
     } catch (e: Exception) {
         println("发生异常：${e.message}")
+        waitingDialog=false
         MainViewModel.showDialog = true
         MainViewModel.msgPair = Pair("异常", "当前软件内没安装支付宝！")
     }
 }
-
-
 
 
 /**
@@ -245,8 +245,12 @@ actual fun googlePay() {
     // 初始化
     CoroutineScope(Dispatchers.Main).launch {
         val googlePayUtils = GooglePayUtils()
-        googlePayUtils.pay("1_fast_cat")
-
+        val result = googlePayUtils.pay("1_fast_cat")
+        if (!result.first) {
+            waitingDialog=false
+            MainViewModel.showDialog = true
+            MainViewModel.msgPair = Pair("异常", result.second)
+        }
     }
 
 }
