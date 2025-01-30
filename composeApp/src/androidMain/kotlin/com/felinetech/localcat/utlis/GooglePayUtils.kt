@@ -1,5 +1,6 @@
 package com.felinetech.localcat.utlis
 
+import co.touchlab.kermit.Logger
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
@@ -29,33 +30,39 @@ class GooglePayUtils {
     /**
      * 日志类
      */
-    val logger = LoggerFactory.getLogger(GooglePayUtils::class.java)
+    val logger = Logger.withTag("SharedClass")
 
+    var billingClient: BillingClient? = null
 
+    /**
+     * 购买成功监听器
+     */
     private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
         // To be implemented in a later section.
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
             for (purchase in purchases) {
                 // 消耗产品
                 handlePurchase(purchase)
-                logger.info("getPurchaseToken: " + purchase.purchaseToken)
-                logger.info("getSignature: " + purchase.signature)
-                logger.info("getSignature: " + purchase.signature)
+                logger.i("getPurchaseToken: " + purchase.purchaseToken)
+                logger.i("getSignature: " + purchase.signature)
+                logger.i("getSignature: " + purchase.signature)
             }
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
             // 用户取消支付
-            logger.info("用户取消操作！")
+            logger.i("用户取消操作！")
         } else {
-            logger.info("其他事件")
+            logger.i("其他事件")
         }
     }
+
     /**
      * 消耗产品
      *
      * @param purchase 购买的产品
      */
-    internal fun handlePurchase(purchase: Purchase) {
-        val consumeParams = ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
+    private fun handlePurchase(purchase: Purchase) {
+        val consumeParams =
+            ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
         val listener =
             ConsumeResponseListener { billingResult: BillingResult, purchaseToken: String? ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
@@ -77,8 +84,9 @@ class GooglePayUtils {
                     println("getSignature: " + purchase.signature)
                 }
             }
-//        billingClient?.consumeAsync(consumeParams, listener)
+        billingClient?.consumeAsync(consumeParams, listener)
     }
+
     /**
      * 1、初始化Google Pay
      */
@@ -92,7 +100,7 @@ class GooglePayUtils {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     // The BillingClient is ready. You can query purchases here.
                     // 连接成功 回调
-                    logger.info("连接Google Play 成功！")
+                    logger.i("连接Google Play 成功！")
                     continuation.resume(billingClient)
                 } else {
                     continuation.resumeWithException(Error("连接失败！" + billingResult.debugMessage))
@@ -102,7 +110,7 @@ class GooglePayUtils {
             override fun onBillingServiceDisconnected() {
                 continuation.resumeWithException(Error("关闭连接！"))
                 // 连接端口后回调
-                logger.info("连接Google Play 失败！")
+                logger.i("连接Google Play 失败！")
             }
         })
     }
@@ -163,11 +171,15 @@ class GooglePayUtils {
      */
     suspend fun pay(productID: String) {
         try {
-            val billingClient = connectGooglePlay()
-            val queryProductDetails = queryProductDetails(billingClient, productID)
-            launchBillingFlowAndWait(billingClient, queryProductDetails)
+            billingClient = connectGooglePlay()
+            billingClient?.let {
+                val queryProductDetails = queryProductDetails(it, productID)
+                launchBillingFlowAndWait(it, queryProductDetails)
+            }
+
         } catch (e: Exception) {
-            logger.error("谷歌支付异常", e)
+            println("google支付产生异常：${e.message}" + e.toString())
+            logger.e("谷歌支付异常", e)
         }
     }
 

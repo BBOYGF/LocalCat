@@ -34,7 +34,10 @@ kotlin {
             implementation("com.airbnb.android:lottie-compose:4.2.0")
             implementation("com.google.code.gson:gson:2.11.0")
             implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+
+            implementation("org.slf4j:slf4j-api:1.7.36")// 确保使用最新的 SLF4J API
             implementation("org.slf4j:slf4j-android:1.7.36")
+
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
@@ -56,8 +59,6 @@ kotlin {
 
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
             implementation("com.google.code.gson:gson:2.11.0")
-            // 日志
-            implementation("org.slf4j:slf4j-api:2.0.3") // 确保使用最新的 SLF4J API
 
 
             // 工具类
@@ -80,6 +81,9 @@ kotlin {
 
             // 二维码
             implementation("io.github.alexzhirkevich:qrose:1.0.1")
+
+            // 日志
+            implementation("co.touchlab:kermit:2.0.0") // 使用最新版本
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -91,7 +95,11 @@ kotlin {
             implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-network:2.0.0-rc01")
             implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
+            // 日志
+            implementation("org.slf4j:slf4j-api:2.0.3") // 确保使用最新的 SLF4J API
+
             implementation("ch.qos.logback:logback-classic:1.4.5") // 使用最新的 Logback 版本
+
             implementation("com.google.code.gson:gson:2.11.0")
         }
 
@@ -115,8 +123,8 @@ android {
         applicationId = "com.felinetech.localcat"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 16
+        versionName = "1.3.0"
     }
     packaging {
         resources {
