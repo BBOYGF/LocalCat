@@ -91,17 +91,18 @@ actual fun scanFileUtil(
     val fileList = mutableListOf<FileEntity>()
     val contentResolver = instance.contentResolver
     val projection = arrayOf(
-        MediaStore.Images.Media._ID,
-        MediaStore.Images.Media.SIZE,
-        MediaStore.Images.Media.DISPLAY_NAME,
-        MediaStore.Images.Media.DATA,
-        MediaStore.Images.Media.DATE_ADDED
+        MediaStore.Files.FileColumns._ID,
+        MediaStore.Files.FileColumns.SIZE,
+        MediaStore.Files.FileColumns.DISPLAY_NAME,
+        MediaStore.Files.FileColumns.DATA,
+        MediaStore.Files.FileColumns.DATE_ADDED
     )
-    val selection = "${MediaStore.Images.Media.DATA} LIKE ?"
+//    val selection = "${MediaStore.Images.Media.DATA} LIKE ?"
+    val selection = "${MediaStore.Files.FileColumns.DATA} LIKE ?"
     val selectionArgs = arrayOf("%${path.split(":")[1]}%") // 指定目录
     // 查询目录下的文件
     val cursor: Cursor? = contentResolver.query(
-        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        MediaStore.Files.getContentUri("external"),
         projection,
         selection,
         selectionArgs,
@@ -109,11 +110,11 @@ actual fun scanFileUtil(
     )
 
     cursor?.use {
-        val id = it.getColumnIndex(MediaStore.Images.Media._ID)
-        val sizeIndex = it.getColumnIndex(MediaStore.Images.Media.SIZE)
-        val nameIndex = it.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)
-        val fileFillNameIndex = it.getColumnIndex(MediaStore.Images.Media.DATA)
-        val addedDateIndex = it.getColumnIndex(MediaStore.Images.Media.DATE_ADDED)
+        val id = it.getColumnIndex(MediaStore.Files.FileColumns._ID)
+        val sizeIndex = it.getColumnIndex(MediaStore.Files.FileColumns.SIZE)
+        val nameIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME)
+        val fileFillNameIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DATA)
+        val addedDateIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DATE_ADDED)
         while (it.moveToNext()) {
             val id = it.getString(id)
             val fileName = it.getString(nameIndex)
