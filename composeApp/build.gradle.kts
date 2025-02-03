@@ -116,11 +116,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.felinetech.localcat"
+    namespace = "com.felinetech.fast_file"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.felinetech.localcat"
+        applicationId = "com.felinetech.fast_file"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 16
@@ -152,7 +152,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.felinetech.localcat.MainKt"
+        mainClass = "com.felinetech.fast_file.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

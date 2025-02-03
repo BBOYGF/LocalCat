@@ -1,0 +1,35 @@
+package com.felinetech.fast_file.pojo
+
+import com.felinetech.fast_file.enums.FileType
+import com.felinetech.fast_file.enums.UploadState
+
+data class FileItemVo(
+    val fileId: String,
+    /**
+     * 文件类型
+     */
+    var fileType: FileType,
+    /**
+     * 文件名
+     */
+
+    val fileName: String,
+    /**
+     * 状态
+     */
+
+    var state: UploadState,
+
+    /**
+     * 当前进度
+     */
+
+    var percent: Int,
+    /**
+     * 文件大小
+     */
+
+    val fileSize: Long = 0,
+
+    val fileFillName: String,
+)
