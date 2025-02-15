@@ -18,4 +18,5 @@ enum class FileType(val imgId: DrawableResource, val suffix: String, val showNam
     mp4视频(Res.drawable.video_mp4, "mp4", "视频"),
     doc文档(Res.drawable.doc, "doc", "文档"),
     APK(Res.drawable.APK, "apk", "安装包"),
+    DMG(Res.drawable.APK, "dmg", "安装包"),
 }
