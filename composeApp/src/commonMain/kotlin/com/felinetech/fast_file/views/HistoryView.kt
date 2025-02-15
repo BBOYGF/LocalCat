@@ -95,7 +95,7 @@ fun History() {
                 contentColor = MaterialTheme.colorScheme.tertiary
             )
         ) {
-            Text("清空历史记录", fontWeight = FontWeight.Bold)
+            Text( getNames(Locale.getDefault().language).clearHistory, fontWeight = FontWeight.Bold)
         }
     }
     if (showDialog) {
@@ -151,7 +151,7 @@ fun History() {
                         ) {
 
                             Text(
-                                "是否删除所有记录？", modifier = Modifier.fillMaxWidth(),
+                                getNames(Locale.getDefault().language).deleteAllMsg, modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center,
                                 fontSize = TextUnit(20f, TextUnitType.Sp)
                             )

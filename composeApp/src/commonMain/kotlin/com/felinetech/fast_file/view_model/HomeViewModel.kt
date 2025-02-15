@@ -222,7 +222,6 @@ object HomeViewModel {
                     it.stop()
                     logger.info("关闭心跳服务！")
                 }
-
             }
             acceptSocket?.apply {
                 close()
@@ -404,7 +403,7 @@ object HomeViewModel {
             // 请先链接数据源
             startUpload = false
             showMsg = true
-            msg = "请先链接数据源！"
+            msg = getNames(Locale.getDefault().language).pleaseConnectTheReceiverFirst
             return
         }
         ioScope.launch {

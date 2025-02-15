@@ -13,7 +13,6 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "Local Cat",
-        icon = painterResource(Res.drawable.cat9),
         state = WindowState(width = 400.dp, height = 800.dp),
         resizable = true
     ) {

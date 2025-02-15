@@ -5,22 +5,33 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.felinetech.fast_file.Constants.BASE_URI
+import com.felinetech.fast_file.Constants.releaseType
 import com.felinetech.fast_file.enums.PayTypes
+import com.felinetech.fast_file.enums.ReleaseType
 import com.felinetech.fast_file.pojo.PayItem
 import com.felinetech.fast_file.pojo.RespBean
 import com.felinetech.fast_file.utlis.googlePay
 import com.felinetech.fast_file.utlis.startOtherAPP
 import com.felinetech.fast_file.view_model.MainViewModel.userID
 import com.google.gson.Gson
-import io.ktor.client.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import kotlinx.coroutines.*
-import localcat.composeapp.generated.resources.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.accept
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import localcat.composeapp.generated.resources.Alipay
+import localcat.composeapp.generated.resources.ApplePay
+import localcat.composeapp.generated.resources.GooglePay
+import localcat.composeapp.generated.resources.Res
+import localcat.composeapp.generated.resources.WechatPay
 import org.slf4j.Logger
-import java.util.*
+import java.util.Random
 
 object AboutViewModel {
     /**
@@ -62,40 +73,84 @@ object AboutViewModel {
     }
 
     init {
-        payTypeItemList.add(
-            PayItem(
-                PayTypes.微信支付,
-                "微信支付",
-                mutableStateOf(false),
-                Res.drawable.WechatPay
+        if (ReleaseType.GooglePlay == releaseType) {
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.支付宝,
+                    "支付宝支付",
+                    mutableStateOf(false),
+                    Res.drawable.Alipay
+                )
             )
-        )
-        payTypeItemList.add(
-            PayItem(
-                PayTypes.支付宝,
-                "支付宝支付",
-                mutableStateOf(false),
-                Res.drawable.Alipay
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.GooglePlay,
+                    "Google Pay",
+                    mutableStateOf(false),
+                    Res.drawable.GooglePay
+                )
             )
-        )
-        payTypeItemList.add(
-            PayItem(
-                PayTypes.GooglePlay,
-                "Google Pay",
-                mutableStateOf(false),
-                Res.drawable.GooglePay
+        } else if (ReleaseType.Android == releaseType) {
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.支付宝,
+                    "支付宝支付",
+                    mutableStateOf(false),
+                    Res.drawable.Alipay
+                )
             )
-        )
-        payTypeItemList.add(
-            PayItem(
-                PayTypes.ApplePay,
-                "Apple Pay",
-                mutableStateOf(false),
-                Res.drawable.ApplePay
+        } else if (ReleaseType.Win == releaseType) {
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.支付宝,
+                    "支付宝支付",
+                    mutableStateOf(false),
+                    Res.drawable.Alipay
+                )
             )
-        )
-
-
+        } else if (ReleaseType.Mac == releaseType) {
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.支付宝,
+                    "支付宝支付",
+                    mutableStateOf(false),
+                    Res.drawable.Alipay
+                )
+            )
+        } else {
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.微信支付,
+                    "微信支付",
+                    mutableStateOf(false),
+                    Res.drawable.WechatPay
+                )
+            )
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.支付宝,
+                    "支付宝支付",
+                    mutableStateOf(false),
+                    Res.drawable.Alipay
+                )
+            )
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.GooglePlay,
+                    "Google Pay",
+                    mutableStateOf(false),
+                    Res.drawable.GooglePay
+                )
+            )
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.ApplePay,
+                    "Apple Pay",
+                    mutableStateOf(false),
+                    Res.drawable.ApplePay
+                )
+            )
+        }
     }
 
     /**
@@ -192,24 +247,24 @@ object AboutViewModel {
         callback: (result: Boolean, msh: String) -> Unit
     ) {
         val job = ioScope.launch {
-//            val response = client.get("$BASE_URI/alipay/payRewardQR") {
-//                // 设置查询参数
-//                parameter("userID", userID)
-//                // 设置请求头
-//                accept(ContentType.Application.Json)
-//            }
-//            val content = response.bodyAsText()
-//            if (content.isEmpty()) {
-//                callback(false, "支付失败！")
-//            } else {
-//                if (content.startsWith("https:")) {
-//                    callback(true, content)
-//                } else {
-//                    callback(false, content)
-//                }
-//            }
-            delay(1000)
-            callback(true, "/alipay/payRewardQR")
+            val response = client.get("$BASE_URI/alipay/payRewardQR") {
+                // 设置查询参数
+                parameter("userID", userID)
+                // 设置请求头
+                accept(ContentType.Application.Json)
+            }
+            val content = response.bodyAsText()
+            if (content.isEmpty()) {
+                callback(false, "支付失败！")
+            } else {
+                if (content.startsWith("https:")) {
+                    callback(true, content)
+                } else {
+                    callback(false, content)
+                }
+            }
+//            delay(1000)
+//            callback(true, "/alipay/payRewardQR")
         }
         job.join()
     }

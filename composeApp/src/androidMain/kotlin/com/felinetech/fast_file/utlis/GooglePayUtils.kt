@@ -102,12 +102,12 @@ class GooglePayUtils {
                     logger.i("连接Google Play 成功！")
                     continuation.resume(billingClient)
                 } else {
-                    continuation.resumeWithException(Error("连接失败！" + billingResult.debugMessage))
+                    continuation.resumeWithException(Exception("连接失败！" + billingResult.debugMessage))
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                continuation.resumeWithException(Error("关闭连接！"))
+                continuation.resumeWithException(Exception("关闭连接！"))
                 // 连接端口后回调
                 logger.i("连接Google Play 失败！")
             }

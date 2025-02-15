@@ -1,5 +1,7 @@
 package com.felinetech.fast_file
 
+import com.felinetech.fast_file.enums.ReleaseType
+
 object Constants {
     /**
      * 基础域名
@@ -28,10 +30,6 @@ object Constants {
 
     private val SUB_URL = "/alipay/buyMember?buyType="
 
-    /**
-     * Google Play 是否是 google支付
-     */
-    val GOOGLE_PLAY = true
 
     /**
      * 产品3年定价
@@ -92,5 +90,8 @@ object Constants {
 
     val THREAD_COUNT = 1
 
-    const val BASE_URI="https://felinetech.cn:81"
+    const val BASE_URI = "https://felinetech.cn:81"
+
+    // 发版
+    val releaseType: ReleaseType = ReleaseType.Android
 }
