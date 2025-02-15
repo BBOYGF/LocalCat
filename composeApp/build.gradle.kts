@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 
-    id("org.jetbrains.compose-hot-reload") version "1.0.0-dev.32.1"
+//    id("org.jetbrains.compose-hot-reload") version "1.0.0-dev.32.1"
 }
 
 kotlin {
@@ -87,6 +87,10 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
+            // mac x86 系统专用
+//            implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.8.18")
+            runtimeOnly("org.jetbrains.androidx.navigation:navigation-compose-desktop:2.8.0-alpha10")
+
             implementation(libs.kotlinx.coroutines.swing)
             implementation(compose.components.resources)
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0")
@@ -159,7 +163,7 @@ compose.desktop {
             packageName = "localcat"
             packageVersion = "1.0.0"
             macOS {
-                iconFile.set(project.file("icon.icns"))
+                iconFile.set(project.file("src/commonMain/composeResources/drawable/icon.icns"))
             }
             windows {
                 iconFile.set(project.file("src/commonMain/composeResources/drawable/ico.ico"))
@@ -181,6 +185,6 @@ dependencies {
     ksp(libs.room.compiler)
 }
 
-composeCompiler {
-    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
-}
+//composeCompiler {
+//    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
+//}
