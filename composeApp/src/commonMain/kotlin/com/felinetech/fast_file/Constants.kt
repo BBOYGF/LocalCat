@@ -90,8 +90,9 @@ object Constants {
 
     val THREAD_COUNT = 1
 
-    const val BASE_URI = "https://felinetech.cn:81"
+    const val BASE_URI = "http://felinetech.cn:8888"
+
 
     // 发版
-    val releaseType: ReleaseType = ReleaseType.Android
+    val releaseType: ReleaseType = ReleaseType.Win
 }

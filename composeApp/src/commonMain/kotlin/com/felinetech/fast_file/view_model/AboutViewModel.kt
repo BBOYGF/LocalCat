@@ -4,6 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import co.touchlab.kermit.Logger
+import co.touchlab.kermit.loggerConfigInit
+import co.touchlab.kermit.platformLogWriter
 import com.felinetech.fast_file.Constants.BASE_URI
 import com.felinetech.fast_file.Constants.releaseType
 import com.felinetech.fast_file.enums.PayTypes
@@ -12,6 +15,7 @@ import com.felinetech.fast_file.pojo.PayItem
 import com.felinetech.fast_file.pojo.RespBean
 import com.felinetech.fast_file.utlis.googlePay
 import com.felinetech.fast_file.utlis.startOtherAPP
+import com.felinetech.fast_file.view_model.MainViewModel.msgPair
 import com.felinetech.fast_file.view_model.MainViewModel.userID
 import com.google.gson.Gson
 import io.ktor.client.HttpClient
@@ -30,7 +34,7 @@ import localcat.composeapp.generated.resources.ApplePay
 import localcat.composeapp.generated.resources.GooglePay
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.WechatPay
-import org.slf4j.Logger
+
 import java.util.Random
 
 object AboutViewModel {
@@ -62,7 +66,8 @@ object AboutViewModel {
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
 
-    private var logger: Logger = org.slf4j.LoggerFactory.getLogger(javaClass)
+    // Local
+    val logger = Logger.withTag("SharedClass")
 
     private val gson = Gson()
 
@@ -106,6 +111,14 @@ object AboutViewModel {
                     "支付宝支付",
                     mutableStateOf(false),
                     Res.drawable.Alipay
+                )
+            )
+            payTypeItemList.add(
+                PayItem(
+                    PayTypes.微信支付,
+                    "微信支付",
+                    mutableStateOf(false),
+                    Res.drawable.WechatPay
                 )
             )
         } else if (ReleaseType.Mac == releaseType) {
@@ -164,76 +177,149 @@ object AboutViewModel {
             if (payItem.type == PayTypes.支付宝) {
                 ioScope.launch {
                     val payID = userID + ":" + Random().nextInt(1000).toString()
-                    logger.info("patID:{}", payID)
-                    aliPay(payID, 9.0) { result, msg ->
-                        if (result) {
-                            // 如果是桌面显示支付二维码
-                            println("二维码是：$msg")
-                            waitingDialog = false
-                            qrUrl = msg
-                            payMsg = "请用支付宝扫码！"
-                            showQsDialog = true
-                            // 如果是Android 调用支付宝
-                            startOtherAPP(qrUrl)
-                            // 异步请求判断是否已支付
-                            ioScope.launch {
-                                for (i in 0..30) {
-                                    if (!showQsDialog) {
+                    logger.i("patID:$payID")
+                    val (result, msg) = aliPay(payID, 9.0)
+                    if (result) {
+                        // 如果是桌面显示支付二维码
+                        println("二维码是：$msg")
+                        waitingDialog = false
+                        qrUrl = msg
+                        payMsg = "请用支付宝扫码！"
+                        showQsDialog = true
+                        // 如果是Android 调用支付宝
+                        startOtherAPP(qrUrl)
+                        // 异步请求判断是否已支付
+                        for (i in 0..30) {
+                            if (!showQsDialog) {
+                                break
+                            }
+                            try {
+                                delay(2000)
+                                val response = client.get("$BASE_URI/alipay/queryOrder") {
+                                    // 设置查询参数
+                                    parameter("orderId", payID)
+                                    // 设置请求头
+                                    accept(ContentType.Application.Json)
+                                }
+                                val bodyAsText = response.bodyAsText(Charsets.UTF_8)
+                                logger.i("响应字符串是：$bodyAsText")
+                                val repBean: RespBean =
+                                    gson.fromJson(bodyAsText, RespBean::class.java)
+                                if (200L == repBean.code) {
+                                    if ("等待支付" == repBean.message) {
+                                        payMsg = "正在支付..."
+                                    }
+                                    if ("支付成功" == repBean.message) {
+                                        payMsg = "支付已完成！"
+                                        delay(1000)
+                                        showQsDialog = false
+                                        logger.i("已支付成功！")
                                         break
                                     }
-                                    try {
-                                        delay(2000)
-                                        val response = client.get("$BASE_URI/alipay/queryOrder") {
-                                            // 设置查询参数
-                                            parameter("orderId", payID)
-                                            // 设置请求头
-                                            accept(ContentType.Application.Json)
-                                        }
-                                        val bodyAsText = response.bodyAsText(Charsets.UTF_8)
-                                        logger.info("响应字符串是：{}", bodyAsText)
-                                        val repBean: RespBean =
-                                            gson.fromJson(bodyAsText, RespBean::class.java)
-                                        if (200L == repBean.code) {
-                                            if ("等待支付" == repBean.message) {
-                                                payMsg = "正在支付..."
-                                            }
-                                            if ("支付成功" == repBean.message) {
-                                                payMsg = "支付已完成！"
-                                                delay(1000)
-                                                showQsDialog = false
-                                                logger.info("已支付成功！")
-                                                break
-                                            }
-                                            if ("交易超时" == repBean.message) {
-                                                payMsg = "交易超时"
-                                                delay(1000)
-                                                showQsDialog = false
-                                                logger.info("交易超时！")
-                                                break
-                                            }
-                                            if ("交易结束" == repBean.message) {
-                                                payMsg = "交易结束"
-                                                delay(1000)
-                                                showQsDialog = false
-                                                logger.info("交易超时！")
-                                                break
-                                            }
-
-                                        }
-                                    } catch (e: Exception) {
-                                        logger.info("查询订单状态异常", e)
+                                    if ("交易超时" == repBean.message) {
+                                        payMsg = "交易超时"
+                                        delay(1000)
+                                        showQsDialog = false
+                                        logger.i("交易超时！")
+                                        break
                                     }
+                                    if ("交易结束" == repBean.message) {
+                                        payMsg = "交易结束"
+                                        delay(1000)
+                                        showQsDialog = false
+                                        logger.i("交易超时！")
+                                        break
+                                    }
+
                                 }
+                            } catch (e: Exception) {
+                                logger.i("查询订单状态异常", e)
                             }
-                        } else {
-                            println("支付失败！$msg")
-                            waitingDialog = false
-                            // todo 异常消息 Dialog
                         }
+
+                    } else {
+                        println("支付失败！$msg")
+                        waitingDialog = false
+                        // todo 异常消息 Dialog
+                        MainViewModel.showDialog = true
+                        msgPair = Pair("提示", msg)
                     }
+
                 }
             } else if (payItem.type == PayTypes.GooglePlay) {
                 googlePay()
+            } else if (payItem.type == PayTypes.微信支付) {
+                ioScope.launch {
+                    val payID = userID + ":" + Random().nextInt(1000).toString()
+//                    val payID = "out_trade_no_003";
+                    logger.i("patID:$payID")
+                    val (result, msg) = weChatPay(payID, 9.0)
+                    if (result) {
+                        // 如果是桌面显示支付二维码
+                        println("二维码是：$msg")
+                        waitingDialog = false
+                        qrUrl = msg
+                        payMsg = "请用微信扫码！"
+                        showQsDialog = true
+                        // 如果是Android 调用支付宝
+//                        startOtherAPP(qrUrl)
+                        // 异步请求判断是否已支付
+                        for (i in 0..30) {
+                            if (!showQsDialog) {
+                                break
+                            }
+                            try {
+                                delay(2000)
+                                val response = client.get("$BASE_URI/wechatpay/queryOrder") {
+                                    // 设置查询参数
+                                    parameter("payOrderId", payID)
+                                    // 设置请求头
+                                    accept(ContentType.Application.Json)
+                                }
+                                val bodyAsText = response.bodyAsText(Charsets.UTF_8)
+                                logger.i("响应字符串是：$bodyAsText")
+                                val repBean: RespBean =
+                                    gson.fromJson(bodyAsText, RespBean::class.java)
+                                if (200L == repBean.code) {
+                                    if ("用户支付" == repBean.message) {
+                                        payMsg = "正在支付..."
+                                    }
+                                    if ("支付成功" == repBean.message) {
+                                        payMsg = "支付已完成！"
+                                        delay(1000)
+                                        showQsDialog = false
+                                        logger.i("已支付成功！")
+                                        break
+                                    }
+                                    if ("订单关闭" == repBean.message) {
+                                        payMsg = "交易超时"
+                                        delay(1000)
+                                        showQsDialog = false
+                                        logger.i("交易超时！")
+                                        break
+                                    }
+                                    if ("订单取消" == repBean.message) {
+                                        payMsg = "交易结束"
+                                        delay(1000)
+                                        showQsDialog = false
+                                        logger.i("交易超时！")
+                                        break
+                                    }
+
+                                }
+                            } catch (e: Exception) {
+                                logger.i("查询订单状态异常", e)
+                            }
+                        }
+
+                    } else {
+                        println("支付失败！$msg")
+                        waitingDialog = false
+                        // todo 异常消息 Dialog
+                        MainViewModel.showDialog = true
+                        msgPair = Pair("提示", msg)
+                    }
+                }
             }
         }
     }
@@ -243,30 +329,50 @@ object AboutViewModel {
      */
     suspend fun aliPay(
         userID: String,
-        amount: Double,
-        callback: (result: Boolean, msh: String) -> Unit
-    ) {
-        val job = ioScope.launch {
-            val response = client.get("$BASE_URI/alipay/payRewardQR") {
-                // 设置查询参数
-                parameter("userID", userID)
-                // 设置请求头
-                accept(ContentType.Application.Json)
-            }
-            val content = response.bodyAsText()
-            if (content.isEmpty()) {
-                callback(false, "支付失败！")
-            } else {
-                if (content.startsWith("https:")) {
-                    callback(true, content)
-                } else {
-                    callback(false, content)
-                }
-            }
-//            delay(1000)
-//            callback(true, "/alipay/payRewardQR")
+        amount: Double
+    ): Pair<Boolean, String> {
+        val response = client.get("$BASE_URI/alipay/payRewardQR") {
+            // 设置查询参数
+            parameter("userID", userID)
+            // 设置请求头
+            accept(ContentType.Application.Json)
         }
-        job.join()
+        val content = response.bodyAsText()
+        return if (content.isEmpty()) {
+            Pair(false, "支付失败！")
+        } else {
+            if (content.startsWith("https:")) {
+                Pair(true, content)
+            } else {
+                Pair(false, content)
+            }
+        }
     }
+
+    /**
+     * 阿里支付
+     */
+    suspend fun weChatPay(
+        userID: String,
+        amount: Double
+    ): Pair<Boolean, String> {
+        val response = client.get("$BASE_URI/wechatpay/payQR") {
+            // 设置查询参数
+            parameter("userID", userID)
+            // 设置请求头
+            accept(ContentType.Application.Json)
+        }
+        val content = response.bodyAsText()
+        return if (content.isEmpty()) {
+            Pair(false, "支付失败！")
+        } else {
+            if (content.startsWith("weixin:")) {
+                Pair(true, content)
+            } else {
+                Pair(false, content)
+            }
+        }
+    }
+
 
 }

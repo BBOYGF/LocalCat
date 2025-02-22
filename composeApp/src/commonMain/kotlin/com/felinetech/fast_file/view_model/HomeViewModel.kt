@@ -71,7 +71,7 @@ object HomeViewModel {
 
     /**
 
-     * 显示异常信息
+     * 显示异常信息F
      */
     var showMsg by mutableStateOf(false)
     var msg by mutableStateOf("")
