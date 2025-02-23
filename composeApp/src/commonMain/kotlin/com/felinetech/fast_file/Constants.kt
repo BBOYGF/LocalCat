@@ -28,6 +28,8 @@ object Constants {
      */
     val AILPAY_STRING = "alipays://platformapi/startapp?saId=10000007&qrcode="
 
+    val WECHATPAY_STRING = "weixin://dl/business/?appid=wx128a8920d271e734&qrcode="
+
     private val SUB_URL = "/alipay/buyMember?buyType="
 
 
@@ -90,7 +92,7 @@ object Constants {
 
     val THREAD_COUNT = 1
 
-    const val BASE_URI = "http://felinetech.cn:8888"
+    const val BASE_URI = "https://felinetech.cn:81"
 
 
     // 发版

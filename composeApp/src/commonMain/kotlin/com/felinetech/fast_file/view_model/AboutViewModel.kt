@@ -5,8 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import co.touchlab.kermit.Logger
-import co.touchlab.kermit.loggerConfigInit
-import co.touchlab.kermit.platformLogWriter
+import com.felinetech.fast_file.Constants.AILPAY_STRING
 import com.felinetech.fast_file.Constants.BASE_URI
 import com.felinetech.fast_file.Constants.releaseType
 import com.felinetech.fast_file.enums.PayTypes
@@ -34,7 +33,6 @@ import localcat.composeapp.generated.resources.ApplePay
 import localcat.composeapp.generated.resources.GooglePay
 import localcat.composeapp.generated.resources.Res
 import localcat.composeapp.generated.resources.WechatPay
-
 import java.util.Random
 
 object AboutViewModel {
@@ -187,7 +185,7 @@ object AboutViewModel {
                         payMsg = "请用支付宝扫码！"
                         showQsDialog = true
                         // 如果是Android 调用支付宝
-                        startOtherAPP(qrUrl)
+                        startOtherAPP(AILPAY_STRING + qrUrl)
                         // 异步请求判断是否已支付
                         for (i in 0..30) {
                             if (!showQsDialog) {
@@ -250,10 +248,16 @@ object AboutViewModel {
                 googlePay()
             } else if (payItem.type == PayTypes.微信支付) {
                 ioScope.launch {
-                    val payID = userID + ":" + Random().nextInt(1000).toString()
-//                    val payID = "out_trade_no_003";
+                    var payID = userID + "_" + Random().nextInt(1000).toString()
+                    // 支付订单号不能打印32位
+                    val length: Int = payID.length
+                    if (length > 32) {
+                        logger.i("订单号：$payID 大于32位自动截断")
+                        val i = length - 32
+                        payID = payID.substring(i, length)
+                    }
                     logger.i("patID:$payID")
-                    val (result, msg) = weChatPay(payID, 9.0)
+                    val (result, msg) = weChatPay(payID, 0.1)
                     if (result) {
                         // 如果是桌面显示支付二维码
                         println("二维码是：$msg")
@@ -262,7 +266,7 @@ object AboutViewModel {
                         payMsg = "请用微信扫码！"
                         showQsDialog = true
                         // 如果是Android 调用支付宝
-//                        startOtherAPP(qrUrl)
+//                        startOtherAPP(WECHATPAY_STRING + qrUrl)
                         // 异步请求判断是否已支付
                         for (i in 0..30) {
                             if (!showQsDialog) {
@@ -356,7 +360,7 @@ object AboutViewModel {
         userID: String,
         amount: Double
     ): Pair<Boolean, String> {
-        val response = client.get("$BASE_URI/wechatpay/payQR") {
+        val response = client.get("$BASE_URI/wechatpay/payRewardQR") {
             // 设置查询参数
             parameter("userID", userID)
             // 设置请求头

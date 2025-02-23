@@ -415,7 +415,7 @@ object HomeViewModel {
                         "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${encode(fileItemVo.fileName, Charsets.UTF_8)}"
                     ) {
                         timeout {
-                            requestTimeoutMillis = 10 * 60 * 1000
+                            requestTimeoutMillis = 100 * 60 * 1000
                         }
                         val total = File(fileItemVo.fileFillName).length()
                         headers {

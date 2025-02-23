@@ -12,7 +12,6 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.felinetech.fast_file.Constants.AILPAY_STRING
 import com.felinetech.fast_file.MainActivity
 import com.felinetech.fast_file.MainActivity.Companion.instance
 import com.felinetech.fast_file.database.Database
@@ -211,7 +210,7 @@ actual fun openUrl(url: String) {
  */
 actual fun startOtherAPP(qrUrl: String) {
     try {
-        val intent = Intent.parseUri(AILPAY_STRING + qrUrl, Intent.URI_INTENT_SCHEME)
+        val intent = Intent.parseUri( qrUrl, Intent.URI_INTENT_SCHEME)
         intent.addCategory("android.intent.category.BROWSABLE")
         instance.startActivity(intent)
     } catch (e: Exception) {
