@@ -7,5 +7,7 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
 
-    id("org.jetbrains.compose-hot-reload") version "1.0.0-dev.32.1"
+//    id("org.jetbrains.compose-hot-reload") version "v1.0.0-dev.33.5"
+//    id("org.jetbrains.compose.hot-reload") version "1.0.0-dev-65"
+    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha01"
 }

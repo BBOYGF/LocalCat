@@ -1,6 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
-
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -12,7 +11,9 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 
-    id("org.jetbrains.compose-hot-reload") version "1.0.0-dev.32.1"
+//    id("org.jetbrains.compose-hot-reload") version "v1.0.0-dev.33.5"
+//    id("org.jetbrains.compose.hot-reload") version "1.0.0-dev-65"
+    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha01"
 }
 
 kotlin {

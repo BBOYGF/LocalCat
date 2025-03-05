@@ -13,12 +13,12 @@ androidx-material = "1.12.0"
 androidx-test-junit = "1.2.1"
 compose-plugin = "1.7.0"
 junit = "4.13.2"
-kotlin = "2.1.0-firework.32"
+kotlin = "2.1.10-firework.33"
 kotlinx-coroutines = "1.9.0"
 foundationDesktop = "1.7.0"
 # room 版本配置
-room = "2.7.0-alpha12"
-ksp = "2.0.21-1.0.25"
+room = "2.7.0-beta01"
+ksp = "2.1.10-1.0.31"
 sqlite = "2.5.0-SNAPSHOT"
 
 

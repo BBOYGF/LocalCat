@@ -74,9 +74,7 @@ fun App() {
             }
         }
         PermissionRequest()
-
         BottomSheetPar()
-
         if (showDialog) {
             MessageDialog()
         }

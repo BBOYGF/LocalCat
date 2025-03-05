@@ -96,5 +96,5 @@ object Constants {
 
 
     // 发版
-    val releaseType: ReleaseType = ReleaseType.Win
+    val releaseType: ReleaseType = ReleaseType.Android
 }
