@@ -13,7 +13,7 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.felinetech.fast_file.Constants.product1year
-import com.felinetech.fast_file.MainActivity.Companion.instance
+import com.felinetech.fast_file.MainActivity.Companion.mainActivity
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 import kotlin.coroutines.resume
@@ -90,7 +90,7 @@ class GooglePayUtils {
      * 1、初始化Google Pay
      */
     private suspend fun connectGooglePlay(): BillingClient = suspendCoroutine { continuation ->
-        val billingClient: BillingClient = BillingClient.newBuilder(instance)
+        val billingClient: BillingClient = BillingClient.newBuilder(mainActivity)
             .setListener(purchasesUpdatedListener)
             .enablePendingPurchases() // 关键修复点
             .build()
@@ -159,7 +159,7 @@ class GooglePayUtils {
             )
             .build()
 
-        val billingResult = billingClient.launchBillingFlow(instance, params)
+        val billingResult = billingClient.launchBillingFlow(mainActivity, params)
 
         if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
             continuation.resumeWithException(Exception("Launch billing failed: ${billingResult.debugMessage}"))

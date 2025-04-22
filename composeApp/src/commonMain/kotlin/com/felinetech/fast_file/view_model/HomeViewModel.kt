@@ -4,13 +4,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.felinetech.fast_file.Constants.ACCEPT_SERVER_POST
 import com.felinetech.fast_file.Constants.BROADCAST_PORT
 import com.felinetech.fast_file.Constants.FILE_CHUNK_SIZE
 import com.felinetech.fast_file.Constants.HEART_BEAT_SERVER_POST
 import com.felinetech.fast_file.dao.FileChunkDao
 import com.felinetech.fast_file.dao.FileEntityDao
 import com.felinetech.fast_file.enums.*
+import com.felinetech.fast_file.interfaces.DataService
+import com.felinetech.fast_file.interfaces.ReceiverService
 import com.felinetech.fast_file.po.FileChunkEntity
 import com.felinetech.fast_file.po.FileEntity
 import com.felinetech.fast_file.pojo.ClientVo
@@ -104,11 +105,6 @@ object HomeViewModel {
      */
     private val defaultScope = CoroutineScope(Dispatchers.Default)
 
-    /**
-     * 开始接收客户端链接
-     */
-    private var accept: Boolean = true
-
 
     /**
      * 搜索服务器
@@ -131,11 +127,6 @@ object HomeViewModel {
     private var keepConnect = false
 
 
-    /**
-     * 链接服务器
-     */
-    private var acceptSocket: DatagramSocket? = null
-
     private var logger: Logger = org.slf4j.LoggerFactory.getLogger(javaClass)
 
     /**
@@ -143,12 +134,8 @@ object HomeViewModel {
      */
     private var client: HttpClient
 
-    /**
-     * 服务端
-     */
-
-    private var service: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? =
-        null
+    private var receiverService: ReceiverService? = null
+    private var dataService: DataService? = null
 
     /**
      * 当前链接的IP地址
@@ -170,6 +157,8 @@ object HomeViewModel {
             }
             install(HttpTimeout)
         }
+        initReceiverService()
+        initDataService()
     }
 
     /**
@@ -207,188 +196,24 @@ object HomeViewModel {
             // 开始接收
             receiverButtonTitle.value = ServiceButtonState.关闭接收.name
             receiverAnimation.value = true
-            // 开启接收客户端
-            serverAccept()
-            // 开启心跳线程
-            serviceHeartbeat()
+            if (receiverService == null) {
+                receiverService = getReceiverService()
+            }
+            receiverService?.startReceiver()
+
+            if (dataService == null) {
+                dataService = getDataService()
+            }
+            dataService?.startDataService()
+
         } else {
             // 关闭接收
             receiverButtonTitle.value = ServiceButtonState.开始接收.name
             receiverAnimation.value = false
-            accept = false
             clineList.clear()
-            service?.let {
-                defaultScope.launch {
-                    it.stop()
-                    logger.info("关闭心跳服务！")
-                }
-            }
-            acceptSocket?.apply {
-                close()
-                logger.info("关闭接收服务！")
+            receiverService?.stopReceiver()
+            dataService?.stopDataService()
 
-            }
-        }
-    }
-
-    /**
-     * 心跳线程
-     */
-    private fun serviceHeartbeat() {
-        ioScope.launch {
-            service = embeddedServer(Netty, port = HEART_BEAT_SERVER_POST, host = "0.0.0.0") {
-                // 安装内容协商以支持 JSON
-                install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
-                    Gson()
-                }
-                routing {
-                    // 登录
-                    get("/login") {
-                        connectedIpAdd = call.request.local.remoteAddress
-                        clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
-                            val index = clineList.indexOf(it)
-                            clineList.removeAt(index)
-                            it.connectStatus = ConnectStatus.已连接
-                            clineList.add(index, it.copy())
-                        }
-
-                    }
-                    get("/logout") {
-                        connectedIpAdd = call.request.local.remoteAddress
-                        clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
-                            val index = clineList.indexOf(it)
-                            clineList.removeAt(index)
-
-                            it.connectStatus = ConnectStatus.被发现
-                            clineList.add(index, it.copy())
-                        }
-                    }
-                    // ping
-                    get("/ping") {
-                        try {
-                            call.respondText("回复心跳！")
-                        } catch (e: Exception) {
-                            logger.error("心跳异常：", e)
-                            connectedIpAdd?.let {
-                                clineList.find { clientVo -> connectedIpAdd == clientVo.ip }?.let {
-                                    val index = clineList.indexOf(it)
-                                    clineList.removeAt(index)
-                                    it.connectStatus = ConnectStatus.未连接
-                                    clineList.add(index, it.copy())
-                                }
-                            }
-                        }
-                    }
-                    // 下载文件
-                    post("/upload/{fileName}") {
-                        val filename = call.parameters["fileName"]
-                        val file = File(savedPosition, filename!!)
-                        val outputChannel = file.writeChannel()
-                        // 创建输出流
-                        val inputChannel = call.receiveChannel()
-                        // 获取 Content-Length 头
-                        val totalBytes = call.request.headers[HttpHeaders.ContentLength]
-                        val fileItemVo = FileItemVo(
-                            UUID.randomUUID().toString(),
-                            FileType.doc文档,
-                            file.name,
-                            UploadState.下载中,
-                            0,
-                            totalBytes!!.toLong(),
-                            fileFillName = file.absolutePath
-                        )
-
-                        toBeDownloadFileList.add(fileItemVo)
-                        println("读取的总字节数：$totalBytes")
-                        var bytesRead = 0L
-                        val bufferSize = 1024 // 每次读取的字节数
-                        val buffer = ByteArray(bufferSize)
-                        // 循环读取输入通道并写入输出通道
-                        while (true) {
-                            // 从输入通道读取数据
-                            val readCount = inputChannel.readAvailable(buffer)
-                            if (readCount == -1) break // 输入通道结束
-                            // 将读取的数据写入输出通道
-                            outputChannel.writeFully(buffer, 0, readCount)
-                            bytesRead += readCount
-
-                            // 计算并打印上传进度
-                            val progress =
-                                (bytesRead.toDouble() / totalBytes.toDouble() * 100).toInt()
-                            toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
-                                .takeIf { it != -1 }?.let { index ->
-
-                                    val item = toBeDownloadFileList[index]
-                                    // 直接更新percent
-                                    toBeDownloadFileList[index] = item.copy(percent = progress)
-
-                                }
-
-                        }
-                        toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }
-                            .takeIf { it != -1 }?.let { index ->
-                                val itemVo = toBeDownloadFileList[index]
-                                toBeDownloadFileList.remove(itemVo)
-                                downloadedFileList.add(itemVo)
-                                val filePo = fileVoToFilePo(itemVo)
-                                filePo.uploadState = UploadState.已下载
-                                fileEntityDao.insert(filePo)
-                            }
-                        outputChannel.flushAndClose()
-                        call.respondText("A file is uploaded")
-                    }
-                }
-            }
-            service?.start(wait = true)
-        }
-    }
-
-
-    /**
-     * 开启服务器接收
-     */
-    private fun serverAccept() {
-        accept = true
-        defaultScope.launch {
-            while (accept) {
-                try {
-                    acceptSocket = DatagramSocket(ACCEPT_SERVER_POST)
-                    val socket = acceptSocket!!
-                    socket.reuseAddress = true
-                    socket.soTimeout = 10000
-                    val buffer = ByteArray(1024)
-                    val packet = DatagramPacket(buffer, buffer.size)
-                    socket.receive(packet)
-                    println("监听客户接收到数据来自: " + packet.address)
-                    val response = "OK".toByteArray()
-                    val responsePacket =
-                        DatagramPacket(response, response.size, packet.address, packet.port)
-                    socket.send(responsePacket)
-                    val ip = packet.address.toString().replace("/", "")
-                    if (!clineList.any { clientVo -> clientVo.ip == ip }) {
-                        clineList.add(
-                            ClientVo(
-                                clineList.size + 1,
-                                packet.address.toString().replace("/", ""),
-                                ConnectStatus.被发现
-                            )
-                        )
-                    }
-                    socket.disconnect()
-                    socket.close()
-                } catch (e: Exception) {
-                    if (e is SocketTimeoutException) {
-                        logger.error("等待下一个客户...")
-                    } else if (e is BindException) {
-                        logger.error("接收服务端口$ACCEPT_SERVER_POST 被占用", e)
-                        acceptSocket?.reuseAddress = true;
-                        acceptSocket?.disconnect()
-                    } else {
-                        logger.error("监听客户产生了异常...${e.message} ", e)
-                    }
-                    acceptSocket?.close()
-                }
-            }
         }
     }
 
@@ -412,7 +237,12 @@ object HomeViewModel {
                 for (fileItemVo in fileItemList) {
                     // 上传数据
                     val response = client.post(
-                        "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${encode(fileItemVo.fileName, Charsets.UTF_8)}"
+                        "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
+                            encode(
+                                fileItemVo.fileName,
+                                Charsets.UTF_8
+                            )
+                        }"
                     ) {
                         timeout {
                             requestTimeoutMillis = 100 * 60 * 1000

@@ -13,11 +13,15 @@ import android.provider.MediaStore
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.fast_file.MainActivity
-import com.felinetech.fast_file.MainActivity.Companion.instance
+import com.felinetech.fast_file.MainActivity.Companion.mainActivity
 import com.felinetech.fast_file.database.Database
 import com.felinetech.fast_file.enums.UploadState
+import com.felinetech.fast_file.interfaces.DataService
+import com.felinetech.fast_file.interfaces.ReceiverService
 import com.felinetech.fast_file.po.FileEntity
 import com.felinetech.fast_file.pojo.IpInfo
+import com.felinetech.fast_file.services.AndroidDataService
+import com.felinetech.fast_file.services.AndroidReceiverServices
 import com.felinetech.fast_file.view_model.AboutViewModel.waitingDialog
 import com.felinetech.fast_file.view_model.MainViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -31,9 +35,9 @@ import java.util.UUID
 var ioScope = CoroutineScope(Dispatchers.IO)
 
 actual fun getDatabase(): Database {
-    val dbFile = MainActivity.instance.getDatabasePath("local_cat_database.db")
+    val dbFile = MainActivity.mainActivity.getDatabasePath("local_cat_database.db")
     return Room.databaseBuilder(
-        MainActivity.instance,
+        MainActivity.mainActivity,
         Database::class.java,
         dbFile.absolutePath
     ).setDriver(BundledSQLiteDriver())
@@ -44,7 +48,7 @@ actual fun getDatabase(): Database {
 
 
 actual fun createSettings(): Settings {
-    return AndroidSettings(context = instance)
+    return AndroidSettings(context = mainActivity)
 }
 
 /**
@@ -72,7 +76,7 @@ actual fun scanFileUtil(
     filter: (fileName: String, date: Date) -> Boolean
 ): MutableList<FileEntity> {
     val fileList = mutableListOf<FileEntity>()
-    val contentResolver = instance.contentResolver
+    val contentResolver = mainActivity.contentResolver
     val projection = arrayOf(
         MediaStore.Files.FileColumns._ID,
         MediaStore.Files.FileColumns.SIZE,
@@ -131,7 +135,7 @@ actual fun getIpInfo(): IpInfo? {
     var subnetMask = ""
     var netName = ""
     val connectivityManager =
-        instance.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        mainActivity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val activeNetwork: Network? = connectivityManager.activeNetwork
     if (activeNetwork != null) {
         val linkProperties: LinkProperties? = connectivityManager.getLinkProperties(activeNetwork)
@@ -148,7 +152,7 @@ actual fun getIpInfo(): IpInfo? {
                 // 如果当前连接的是 Wi-Fi，获取 SSID
                 if (isWifiConnected) {
                     val wifiManager: WifiManager =
-                        (instance.application.getSystemService(Context.WIFI_SERVICE)) as WifiManager
+                        (mainActivity.application.getSystemService(Context.WIFI_SERVICE)) as WifiManager
                     val ssid = getWifiSsid(wifiManager)
                     if (ssid != null) {
                         netName = ssid
@@ -196,7 +200,7 @@ private fun getWifiSsid(wifiManager: WifiManager): String? {
  * 打开网页
  */
 actual fun openUrl(url: String) {
-    val context = instance
+    val context = mainActivity
     try {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         context.startActivity(intent)
@@ -210,12 +214,12 @@ actual fun openUrl(url: String) {
  */
 actual fun startOtherAPP(qrUrl: String) {
     try {
-        val intent = Intent.parseUri( qrUrl, Intent.URI_INTENT_SCHEME)
+        val intent = Intent.parseUri(qrUrl, Intent.URI_INTENT_SCHEME)
         intent.addCategory("android.intent.category.BROWSABLE")
-        instance.startActivity(intent)
+        mainActivity.startActivity(intent)
     } catch (e: Exception) {
         println("发生异常：${e.message}")
-        waitingDialog=false
+        waitingDialog = false
         MainViewModel.showDialog = true
         MainViewModel.msgPair = Pair("异常", "当前软件内没安装支付宝！")
     }
@@ -231,7 +235,7 @@ actual fun googlePay() {
         val googlePayUtils = GooglePayUtils()
         val result = googlePayUtils.pay("1_fast_cat")
         if (!result.first) {
-            waitingDialog=false
+            waitingDialog = false
             MainViewModel.showDialog = true
             MainViewModel.msgPair = Pair("异常", result.second)
         }
@@ -239,3 +243,30 @@ actual fun googlePay() {
 
 }
 
+/**
+ * 获取接通服务
+ */
+actual fun initReceiverService() {
+    mainActivity.startService(Intent(mainActivity, AndroidReceiverServices::class.java)
+        .apply {
+            action = AndroidReceiverServices.ACTION_START
+        })
+}
+
+actual fun getReceiverService(): ReceiverService? {
+    return AndroidReceiverServices.receiverService
+}
+
+/**
+ * 获取接数据服务
+ */
+actual fun initDataService() {
+    mainActivity.startService(Intent(mainActivity, AndroidDataService::class.java)
+        .apply {
+            action = AndroidDataService.ACTION_START
+        })
+}
+
+actual fun getDataService(): DataService? {
+    return AndroidDataService.dataService
+}

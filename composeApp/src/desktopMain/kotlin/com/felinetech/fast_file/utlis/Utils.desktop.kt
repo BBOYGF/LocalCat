@@ -4,8 +4,12 @@ import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.fast_file.database.Database
 import com.felinetech.fast_file.enums.UploadState
+import com.felinetech.fast_file.interfaces.DataService
+import com.felinetech.fast_file.interfaces.ReceiverService
 import com.felinetech.fast_file.po.FileEntity
 import com.felinetech.fast_file.pojo.IpInfo
+import com.felinetech.fast_file.services.DesktopDataService
+import com.felinetech.fast_file.services.DesktopReceiverService
 import kotlinx.coroutines.Dispatchers
 import java.awt.Desktop
 import java.io.File
@@ -140,4 +144,30 @@ actual fun startOtherAPP(qrUrl: String) {
  */
 actual fun googlePay() {
     println("空方法")
+}
+
+var receiverService: ReceiverService? = null
+
+/**
+ * 获取接通服务
+ */
+actual fun initReceiverService() {
+    receiverService = DesktopReceiverService()
+}
+
+actual fun getReceiverService(): ReceiverService? {
+    return receiverService
+}
+
+var dataService: DataService? = null
+
+/**
+ * 获取接数据服务
+ */
+actual fun initDataService() {
+    dataService = DesktopDataService()
+}
+
+actual fun getDataService(): DataService? {
+    return dataService
 }

@@ -94,7 +94,9 @@ object Constants {
 
     const val BASE_URI = "https://felinetech.cn:81"
 
-
     // 发版
     val releaseType: ReleaseType = ReleaseType.Android
+
+    const val CHANNEL_ID = "LocalCat消息通道"
+    const val NOTIFICATION_ID = 101
 }

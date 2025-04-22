@@ -2,6 +2,8 @@ package com.felinetech.fast_file.utlis
 
 import com.felinetech.fast_file.database.Database
 import com.felinetech.fast_file.enums.FileType
+import com.felinetech.fast_file.interfaces.DataService
+import com.felinetech.fast_file.interfaces.ReceiverService
 import com.felinetech.fast_file.po.FileEntity
 import com.felinetech.fast_file.pojo.FileItemVo
 import com.felinetech.fast_file.pojo.IpInfo
@@ -123,3 +125,18 @@ expect fun startOtherAPP(qrUrl: String)
  */
 
 expect fun googlePay()
+
+/**
+ * 获取接通服务
+ */
+
+expect fun initReceiverService()
+expect fun getReceiverService(): ReceiverService?
+
+/**
+ * 获取接数据服务
+ */
+
+expect fun initDataService()
+
+expect fun getDataService(): DataService?

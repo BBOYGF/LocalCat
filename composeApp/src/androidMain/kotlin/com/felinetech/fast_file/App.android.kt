@@ -79,6 +79,7 @@ actual fun PermissionRequest() {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.NEARBY_WIFI_DEVICES,
             Manifest.permission.ACCESS_COARSE_LOCATION,
+
 //                Manifest.permission.READ_EXTERNAL_STORAGE,
 //                Manifest.permission.WRITE_EXTERNAL_STORAGE,
 //                Manifest.permission.REQUEST_INSTALL_PACKAGES,
@@ -163,7 +164,7 @@ actual fun PermissionRequest() {
                                     getNames(Locale.getDefault().language).privacyPolicyPermissions
                                 )
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL))
-                                MainActivity.instance.startActivity(intent)
+                                MainActivity.mainActivity.startActivity(intent)
                             }
                         )
 
@@ -174,7 +175,7 @@ actual fun PermissionRequest() {
                     ) {
                         Button(
                             onClick = {
-                                MainActivity.instance.finish()
+                                MainActivity.mainActivity.finish()
                             }, colors = ButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.White,

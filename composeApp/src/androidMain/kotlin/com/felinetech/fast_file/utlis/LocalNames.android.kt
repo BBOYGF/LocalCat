@@ -15,7 +15,7 @@ actual fun getNames(language: String): LocalNames {
 
     if (localName == null || prevStr != language) {
 
-        val context = MainActivity.instance
+        val context = MainActivity.mainActivity
         val inputStream = if (language == "zh") {
             context.resources.openRawResource(R.raw.names_zh)
         } else {

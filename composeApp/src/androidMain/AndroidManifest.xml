@@ -27,6 +27,14 @@
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!--    因为前台服务需要Notifications所以需要权限-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!--    前台服务权限-->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!--    数据同步权限-->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+
     <application
 
         android:allowBackup="true"
@@ -40,14 +48,24 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|mnc|colorMode|density|fontScale|fontWeightAdjustment|keyboard|layoutDirection|locale|mcc|navigation|smallestScreenSize|touchscreen|uiMode"
-            android:exported="true"
-            >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".services.AndroidReceiverServices"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+        <service
+            android:name=".services.AndroidDataService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
 </manifest>

@@ -35,7 +35,8 @@ kotlin {
             implementation("com.airbnb.android:lottie-compose:4.2.0")
             implementation("com.google.code.gson:gson:2.11.0")
             implementation("com.google.accompanist:accompanist-permissions:0.36.0")
-
+            // material3
+//            implementation("org.jetbrains.compose.material3:material3:1.7.0")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
             // google play 支付
@@ -61,7 +62,7 @@ kotlin {
 
             // 工具类
             implementation("org.apache.commons:commons-lang3:3.15.0")
-            implementation("com.blankj:utilcodex:1.31.1")
+            implementation ("com.blankj:utilcodex:1.31.1")
 
             // 网络ktor
             implementation("io.ktor:ktor-client-cio:3.0.2")
@@ -143,8 +144,6 @@ android {
 }
 
 dependencies {
-
-
     debugImplementation(compose.uiTooling)
 
 }

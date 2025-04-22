@@ -20,6 +20,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxDefaults
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
@@ -44,6 +45,7 @@ import localcat.composeapp.generated.resources.cat_empty
 import org.jetbrains.compose.resources.painterResource
 import java.util.Locale
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BottomSheetPar() {
 

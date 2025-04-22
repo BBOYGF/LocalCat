@@ -14,7 +14,7 @@ import io.github.vinceglb.filekit.core.FileKit
 
 class MainActivity : ComponentActivity() {
     companion object {
-        lateinit var instance: MainActivity
+        lateinit var mainActivity: MainActivity
 
     }
 
@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 //        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        instance = this // 设置全局实例
+        mainActivity = this // 设置全局实例
         FileKit.init(this)
         setContent {
             App()
