@@ -187,4 +187,8 @@ class AndroidReceiverServices : Service(), ReceiverService {
             FOREGROUND_SERVICE_TYPE_DATA_SYNC // 选择适合你的服务类型
         )
     }
+    override fun onDestroy() {
+        super.onDestroy()
+        stopReceiver()
+    }
 }

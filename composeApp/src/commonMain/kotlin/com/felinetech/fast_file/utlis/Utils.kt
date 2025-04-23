@@ -3,7 +3,9 @@ package com.felinetech.fast_file.utlis
 import com.felinetech.fast_file.database.Database
 import com.felinetech.fast_file.enums.FileType
 import com.felinetech.fast_file.interfaces.DataService
+import com.felinetech.fast_file.interfaces.KeepConnectService
 import com.felinetech.fast_file.interfaces.ReceiverService
+import com.felinetech.fast_file.interfaces.UploadService
 import com.felinetech.fast_file.po.FileEntity
 import com.felinetech.fast_file.pojo.FileItemVo
 import com.felinetech.fast_file.pojo.IpInfo
@@ -140,3 +142,17 @@ expect fun getReceiverService(): ReceiverService?
 expect fun initDataService()
 
 expect fun getDataService(): DataService?
+
+/**
+ * 获取客户端心跳服务
+ */
+expect fun initKeepConnectService()
+
+expect fun getKeepConnectService(): KeepConnectService?
+
+/**
+ * 获取客户端心跳服务
+ */
+expect fun initUploadService()
+
+expect fun getUploadService(): UploadService?

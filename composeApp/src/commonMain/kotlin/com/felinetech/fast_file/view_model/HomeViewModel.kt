@@ -11,7 +11,9 @@ import com.felinetech.fast_file.dao.FileChunkDao
 import com.felinetech.fast_file.dao.FileEntityDao
 import com.felinetech.fast_file.enums.*
 import com.felinetech.fast_file.interfaces.DataService
+import com.felinetech.fast_file.interfaces.KeepConnectService
 import com.felinetech.fast_file.interfaces.ReceiverService
+import com.felinetech.fast_file.interfaces.UploadService
 import com.felinetech.fast_file.po.FileChunkEntity
 import com.felinetech.fast_file.po.FileEntity
 import com.felinetech.fast_file.pojo.ClientVo
@@ -63,7 +65,6 @@ object HomeViewModel {
 
     var scanFile by mutableStateOf(false)
 
-    val refresh = MutableStateFlow(false)
 
     /**
      * 开始上传文件
@@ -121,12 +122,6 @@ object HomeViewModel {
     private val uiScope = CoroutineScope(Dispatchers.Main)
 
 
-    /**
-     * 保持链接
-     */
-    private var keepConnect = false
-
-
     private var logger: Logger = org.slf4j.LoggerFactory.getLogger(javaClass)
 
     /**
@@ -136,11 +131,18 @@ object HomeViewModel {
 
     private var receiverService: ReceiverService? = null
     private var dataService: DataService? = null
+    private var keepConnectService: KeepConnectService? = null
+    private var uploadService: UploadService? = null
 
     /**
      * 当前链接的IP地址
      */
     var connectedIpAdd: String? = null
+
+    /**
+     * 保持链接
+     */
+    var keepConnect = false
 
     /**
      * 初始化
@@ -159,6 +161,8 @@ object HomeViewModel {
         }
         initReceiverService()
         initDataService()
+        initKeepConnectService()
+        initUploadService()
     }
 
     /**
@@ -231,79 +235,11 @@ object HomeViewModel {
             msg = getNames(Locale.getDefault().language).pleaseConnectTheReceiverFirst
             return
         }
-        ioScope.launch {
-            val fileItemList = toBeUploadFileList.toList()
-            try {
-                for (fileItemVo in fileItemList) {
-                    // 上传数据
-                    val response = client.post(
-                        "http://${connectedIpAdd}:${HEART_BEAT_SERVER_POST}/upload/${
-                            encode(
-                                fileItemVo.fileName,
-                                Charsets.UTF_8
-                            )
-                        }"
-                    ) {
-                        timeout {
-                            requestTimeoutMillis = 100 * 60 * 1000
-                        }
-                        val total = File(fileItemVo.fileFillName).length()
-                        headers {
-                            append(HttpHeaders.ContentLength, total.toString())
-                        }
-                        setBody(
-                            File(fileItemVo.fileFillName).inputStream()
-                        )
-                        contentType(ContentType.Application.OctetStream)
-                        onUpload { bytesSentTotal, contentLength ->
-                            var t = contentLength
-                            if (contentLength == null) {
-                                t = total
-                            }
-                            println("Sent $bytesSentTotal bytes from $t ${bytesSentTotal.toDouble() / t!!.toDouble()}")
-                            val progress =
-                                (bytesSentTotal.toDouble() / t.toDouble() * 100).toInt()
-                            toBeUploadFileList.indexOfFirst { vo -> vo.fileId == fileItemVo.fileId }
-                                .takeIf { it != -1 }?.let {
-                                    val itemVo = toBeUploadFileList[it]
-                                    toBeUploadFileList[it] = itemVo.copy(percent = progress)
-                                }
-                            if (!startUpload) {
-                                cancel()
-                                return@onUpload
-                            }
-                        }
-                    }
-
-                    if (response.status == HttpStatusCode.OK) {
-                        val responseStr = response.body<String>()
-                        println("客户端上传结果：$responseStr")
-                        // 下载结束后
-                        toBeUploadFileList.indexOfFirst { itemVo -> itemVo.fileId == fileItemVo.fileId }
-                            .takeIf { it != -1 }?.let { index ->
-                                val element = toBeUploadFileList[index]
-                                toBeUploadFileList.removeAt(index)
-                                uploadedFileList.add(element)
-                                val fileItemPo = fileEntityDao.getFileById(element.fileId)
-                                fileItemPo?.let {
-                                    it.uploadState = UploadState.已上传
-                                    fileEntityDao.update(it)
-                                }
-                            }
-                        // 上传成功
-                    } else {
-                        showMsg = true
-                        msg = "上传结束！"
-                        startUpload = false
-                    }
-                }
-            } catch (e: Exception) {
-                logger.error("上传异常：", e);
-            }
-            showMsg = true
-            msg = "上传结束！"
-            startUpload = false
+        if (uploadService == null) {
+            uploadService = getUploadService()
         }
+        // 启动上传服务
+        uploadService?.startUpload()
     }
 
 
@@ -396,7 +332,7 @@ object HomeViewModel {
      * 结束上传文件
      */
     fun closeUploadFile() {
-        startUpload = false
+        uploadService?.stopUpload()
     }
 
     /**
@@ -536,48 +472,25 @@ object HomeViewModel {
      */
     fun startClientHeartbeat(servicePo: ServicePo) {
         println("链接服务器$servicePo")
-        keepConnect = true
-        // 与接收者链接发送心跳信息
-        // 启动心跳协程
-        ioScope.launch {
-            client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/login")
-            updateServiceState(servicePo, ConnectButtonState.断开)
-            connectedIpAdd = servicePo.ip
-            while (keepConnect) {
-                try {
-                    val pingResult =
-                        client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/ping")
-                    if (pingResult.status == HttpStatusCode.OK) {
-                        println("请求结果是${pingResult.body<String>()}")
-                        delay(1000)
-                    } else {
-                        keepConnect = false
-                    }
-                } catch (e: Exception) {
-                    println("请求异常！${e.message}")
-                    keepConnect = false
-                    updateServiceState(servicePo, ConnectButtonState.连接)
-                }
-            }
+
+        if (keepConnectService == null) {
+            keepConnectService = getKeepConnectService()
         }
+        keepConnectService?.stareKeepConnect(servicePo)
     }
 
     /**
      * 断开链接
      */
     fun closeDataSources(servicePo: ServicePo) {
-        keepConnect = false
-        updateServiceState(servicePo, ConnectButtonState.连接)
-        ioScope.launch {
-            client.get("http://${servicePo.ip}:${HEART_BEAT_SERVER_POST}/logout")
-        }
+        keepConnectService?.stopConnect(servicePo)
     }
 
 
     /**
      * 更新Button状态
      */
-    private fun updateServiceState(servicePo: ServicePo, buttonState: ConnectButtonState) {
+    public fun updateServiceState(servicePo: ServicePo, buttonState: ConnectButtonState) {
         serviceList.find { it == servicePo }.let {
             val index = serviceList.indexOf(servicePo)
             serviceList.removeAt(index)

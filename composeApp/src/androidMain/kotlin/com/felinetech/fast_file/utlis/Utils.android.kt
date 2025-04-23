@@ -17,11 +17,15 @@ import com.felinetech.fast_file.MainActivity.Companion.mainActivity
 import com.felinetech.fast_file.database.Database
 import com.felinetech.fast_file.enums.UploadState
 import com.felinetech.fast_file.interfaces.DataService
+import com.felinetech.fast_file.interfaces.KeepConnectService
 import com.felinetech.fast_file.interfaces.ReceiverService
+import com.felinetech.fast_file.interfaces.UploadService
 import com.felinetech.fast_file.po.FileEntity
 import com.felinetech.fast_file.pojo.IpInfo
 import com.felinetech.fast_file.services.AndroidDataService
+import com.felinetech.fast_file.services.AndroidKeepConnectService
 import com.felinetech.fast_file.services.AndroidReceiverServices
+import com.felinetech.fast_file.services.AndroidUploadService
 import com.felinetech.fast_file.view_model.AboutViewModel.waitingDialog
 import com.felinetech.fast_file.view_model.MainViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -269,4 +273,32 @@ actual fun initDataService() {
 
 actual fun getDataService(): DataService? {
     return AndroidDataService.dataService
+}
+
+/**
+ * 获取客户端心跳服务
+ */
+actual fun initKeepConnectService() {
+    mainActivity.startService(Intent(mainActivity, AndroidKeepConnectService::class.java)
+        .apply {
+            action = AndroidKeepConnectService.ACTION_START
+        })
+}
+
+actual fun getKeepConnectService(): KeepConnectService? {
+    return AndroidKeepConnectService.keepConnectService
+}
+
+/**
+ * 获取客户端心跳服务
+ */
+actual fun initUploadService() {
+    mainActivity.startService(Intent(mainActivity, AndroidUploadService::class.java)
+        .apply {
+            action = AndroidUploadService.ACTION_START
+        })
+}
+
+actual fun getUploadService(): UploadService? {
+    return AndroidUploadService.uploadService
 }

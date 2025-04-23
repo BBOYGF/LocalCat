@@ -5,11 +5,15 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.felinetech.fast_file.database.Database
 import com.felinetech.fast_file.enums.UploadState
 import com.felinetech.fast_file.interfaces.DataService
+import com.felinetech.fast_file.interfaces.KeepConnectService
 import com.felinetech.fast_file.interfaces.ReceiverService
+import com.felinetech.fast_file.interfaces.UploadService
 import com.felinetech.fast_file.po.FileEntity
 import com.felinetech.fast_file.pojo.IpInfo
 import com.felinetech.fast_file.services.DesktopDataService
+import com.felinetech.fast_file.services.DesktopKeepConnectService
 import com.felinetech.fast_file.services.DesktopReceiverService
+import com.felinetech.fast_file.services.DesktopUploadService
 import kotlinx.coroutines.Dispatchers
 import java.awt.Desktop
 import java.io.File
@@ -170,4 +174,30 @@ actual fun initDataService() {
 
 actual fun getDataService(): DataService? {
     return dataService
+}
+
+var keepConnectService: DesktopKeepConnectService? = null
+
+/**
+ * 获取客户端心跳服务
+ */
+actual fun initKeepConnectService() {
+    keepConnectService = DesktopKeepConnectService()
+}
+
+actual fun getKeepConnectService(): KeepConnectService? {
+    return keepConnectService
+}
+
+var uploadService: UploadService? = null
+
+/**
+ * 获取客户端心跳服务
+ */
+actual fun initUploadService() {
+    uploadService = DesktopUploadService()
+}
+
+actual fun getUploadService(): UploadService? {
+    return uploadService
 }

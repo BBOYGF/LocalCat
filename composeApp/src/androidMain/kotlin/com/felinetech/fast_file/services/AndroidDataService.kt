@@ -114,6 +114,7 @@ class AndroidDataService : Service(), DataService {
             .setOngoing(true)
             .build()
     }
+
     private fun updateNotification(title: String, content: String) {
         val notification = buildContentNotification(title, content)
         notificationManager.notify(NOTIFICATION_ID, notification)
@@ -256,5 +257,10 @@ class AndroidDataService : Service(), DataService {
             }
         }
         updateNotification("接收者模式", "关闭心跳")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopDataService()
     }
 }
