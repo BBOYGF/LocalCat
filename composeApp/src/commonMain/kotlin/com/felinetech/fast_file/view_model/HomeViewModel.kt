@@ -99,7 +99,7 @@ object HomeViewModel {
      */
     val receiverButtonTitle =
         MutableStateFlow(getNames(Locale.getDefault().language).startReceiving)
-    val receiverAnimation = MutableStateFlow(false)
+    val receiverAnimation = mutableStateOf(false)
 
     /**
      * 默认协程

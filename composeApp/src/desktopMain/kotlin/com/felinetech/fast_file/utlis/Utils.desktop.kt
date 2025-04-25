@@ -150,54 +150,49 @@ actual fun googlePay() {
     println("空方法")
 }
 
-var receiverService: ReceiverService? = null
-
 /**
  * 获取接通服务
  */
 actual fun initReceiverService() {
-    receiverService = DesktopReceiverService()
+
 }
 
 actual fun getReceiverService(): ReceiverService? {
-    return receiverService
+    return DesktopReceiverService()
 }
 
-var dataService: DataService? = null
 
 /**
  * 获取接数据服务
  */
 actual fun initDataService() {
-    dataService = DesktopDataService()
+
 }
 
 actual fun getDataService(): DataService? {
-    return dataService
+    return DesktopDataService()
 }
 
-var keepConnectService: DesktopKeepConnectService? = null
 
 /**
  * 获取客户端心跳服务
  */
 actual fun initKeepConnectService() {
-    keepConnectService = DesktopKeepConnectService()
+
 }
 
 actual fun getKeepConnectService(): KeepConnectService? {
-    return keepConnectService
+    return  DesktopKeepConnectService()
 }
 
-var uploadService: UploadService? = null
 
 /**
  * 获取客户端心跳服务
  */
 actual fun initUploadService() {
-    uploadService = DesktopUploadService()
+
 }
 
 actual fun getUploadService(): UploadService? {
-    return uploadService
+    return DesktopUploadService()
 }

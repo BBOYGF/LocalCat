@@ -62,7 +62,7 @@ kotlin {
 
             // 工具类
             implementation("org.apache.commons:commons-lang3:3.15.0")
-            implementation ("com.blankj:utilcodex:1.31.1")
+            implementation("com.blankj:utilcodex:1.31.1")
 
             // 网络ktor
             implementation("io.ktor:ktor-client-cio:3.0.2")
@@ -78,11 +78,14 @@ kotlin {
             implementation("io.github.vinceglb:filekit-core:0.8.8")
             implementation("io.github.vinceglb:filekit-compose:0.8.8")
 
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
             // 二维码
             implementation("io.github.alexzhirkevich:qrose:1.0.1")
 
             // 日志
             implementation("co.touchlab:kermit:2.0.0") // 使用最新版本
+
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -93,14 +96,15 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(compose.components.resources)
             runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0")
-            // tollie Desktop 用
-            implementation("io.github.alexzhirkevich:compottie:2.0.0-rc01")
-            implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc01")
-            implementation("io.github.alexzhirkevich:compottie-network:2.0.0-rc01")
-            implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc01")
 
+            // tollie Desktop 用
+            implementation("io.github.alexzhirkevich:compottie:2.0.0-rc04")
+            implementation("io.github.alexzhirkevich:compottie-dot:2.0.0-rc04")
+            implementation("io.github.alexzhirkevich:compottie-network:2.0.0-rc04")
+            implementation("io.github.alexzhirkevich:compottie-resources:2.0.0-rc04")
 
             implementation("com.google.code.gson:gson:2.11.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
         }
 
 

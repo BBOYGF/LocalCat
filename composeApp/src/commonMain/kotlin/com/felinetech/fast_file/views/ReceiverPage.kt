@@ -53,7 +53,7 @@ fun Receiver(turnState: Boolean) {
     val start = remember { Animatable(if (turnState) 180f else 0f) }
     val deepStart = remember { Animatable(if (turnState) 0.6f else 1f) }
     val receiverBT by receiverButtonTitle.collectAsState()
-    val receiverAnima by receiverAnimation.collectAsState()
+
 
 
     if (turnState) {
@@ -95,7 +95,7 @@ fun Receiver(turnState: Boolean) {
                     .fillMaxWidth()
                     .height(200.dp), color = Color(0x00ffffff), shape = RoundedCornerShape(5.dp)
             ) {
-                if (receiverAnima) {
+                if (receiverAnimation.value) {
                     ReceiverAnimation()
                 }
             }

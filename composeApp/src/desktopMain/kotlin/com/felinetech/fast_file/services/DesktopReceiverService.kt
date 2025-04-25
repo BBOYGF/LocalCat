@@ -69,7 +69,7 @@ class DesktopReceiverService : ReceiverService {
                     socket.close()
                 } catch (e: Exception) {
                     if (e is SocketTimeoutException) {
-                        logger.e("等待下一个客户...")
+                        logger.e("超时等待下一个客户...")
                     } else if (e is BindException) {
                         logger.e("接收服务端口$ACCEPT_SERVER_POST 被占用", e)
                         acceptSocket?.reuseAddress = true;
@@ -86,7 +86,6 @@ class DesktopReceiverService : ReceiverService {
     override fun stopReceiver() {
         logger.i("停止接收")
         accept = false
-        scope.cancel()
         acceptSocket?.apply {
             close()
             logger.i("关闭接收服务！")
