@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.felinetech.fast_file.Constants.BROADCAST_PORT
 import com.felinetech.fast_file.Constants.FILE_CHUNK_SIZE
-import com.felinetech.fast_file.Constants.HEART_BEAT_SERVER_POST
 import com.felinetech.fast_file.dao.FileChunkDao
 import com.felinetech.fast_file.dao.FileEntityDao
 import com.felinetech.fast_file.enums.*
@@ -24,8 +23,6 @@ import com.felinetech.fast_file.utlis.*
 import com.felinetech.fast_file.view_model.HistoryViewModel.downloadedFileList
 import com.felinetech.fast_file.view_model.HistoryViewModel.uploadedFileList
 import com.felinetech.fast_file.view_model.SettingViewModel.ruleList
-import com.felinetech.fast_file.view_model.SettingViewModel.savedPosition
-import com.google.gson.Gson
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -44,12 +41,9 @@ import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.slf4j.Logger
-import java.io.File
 import java.io.IOException
 import java.net.*
-import java.net.URLEncoder.encode
 import java.util.*
-import kotlin.text.toByteArray
 
 
 object HomeViewModel {

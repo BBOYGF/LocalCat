@@ -13,13 +13,13 @@ plugins {
 
 //    id("org.jetbrains.compose-hot-reload") version "v1.0.0-dev.33.5"
 //    id("org.jetbrains.compose.hot-reload") version "1.0.0-dev-65"
-    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha01"
+//    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha01"
 }
 
 kotlin {
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
@@ -91,7 +91,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
             // mac x86 系统专用
 //            implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.8.18")
-            runtimeOnly("org.jetbrains.androidx.navigation:navigation-compose-desktop:2.8.0-alpha10")
+            // 打包时使用
+            runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.9.4")
 
             implementation(libs.kotlinx.coroutines.swing)
             implementation(compose.components.resources)
@@ -142,8 +143,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
@@ -183,6 +184,6 @@ dependencies {
     ksp(libs.room.compiler)
 }
 
-composeCompiler {
-    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
-}
+//composeCompiler {
+//    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
+//}
