@@ -5,6 +5,7 @@ import com.felinetech.fast_file.Constants.HEART_BEAT_SERVER_POST
 import com.felinetech.fast_file.enums.ConnectButtonState
 import com.felinetech.fast_file.interfaces.KeepConnectService
 import com.felinetech.fast_file.pojo.ServicePo
+import com.felinetech.fast_file.view_model.HomeViewModel
 import com.felinetech.fast_file.view_model.HomeViewModel.connectedIpAdd
 import com.felinetech.fast_file.view_model.HomeViewModel.updateServiceState
 import io.ktor.client.HttpClient
@@ -51,6 +52,7 @@ class DesktopKeepConnectService : KeepConnectService {
             client.get("http://${servicePo.ip}:$HEART_BEAT_SERVER_POST/login")
             updateServiceState(servicePo, ConnectButtonState.断开)
             connectedIpAdd = servicePo.ip
+            HomeViewModel.keepConnect = true
             while (keepConnect) {
                 try {
                     val pingResult =

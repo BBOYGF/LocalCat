@@ -40,7 +40,7 @@ import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.slf4j.Logger
+import co.touchlab.kermit.Logger
 import java.io.IOException
 import java.net.*
 import java.util.*
@@ -116,7 +116,7 @@ object HomeViewModel {
     private val uiScope = CoroutineScope(Dispatchers.Main)
 
 
-    private var logger: Logger = org.slf4j.LoggerFactory.getLogger(javaClass)
+    private var logger: Logger = Logger.withTag("DataServices")
 
     /**
      * 请求客户端
@@ -402,7 +402,7 @@ object HomeViewModel {
                 // 方案2 扫描默认广播位
                 for (i in 0..25) {
                     if (!scanService) {
-                        logger.info("停止扫描服务器！")
+                        logger.i("停止扫描服务器！")
                         return@launch
                     }
                     val ip = "192.168.$i.255"
@@ -416,17 +416,17 @@ object HomeViewModel {
                                 buttonState = ConnectButtonState.连接
                             )
                         )
-                        logger.info("接收到响应来自: $ipString")
+                        logger.i("接收到响应来自: $ipString")
                         scanService = false
                         return@launch
                     } catch (e: IOException) {
-                        logger.error("产生异常：${e.message}", e)
+                        logger.e("产生异常：${e.message}", e)
                     }
                 }
                 scanService = false
             }
         } else {
-            logger.info("停止扫描")
+            logger.i("停止扫描")
         }
     }
 
@@ -484,12 +484,23 @@ object HomeViewModel {
     /**
      * 更新Button状态
      */
-    public fun updateServiceState(servicePo: ServicePo, buttonState: ConnectButtonState) {
+    fun updateServiceState(servicePo: ServicePo, buttonState: ConnectButtonState) {
         serviceList.find { it == servicePo }.let {
             val index = serviceList.indexOf(servicePo)
             serviceList.removeAt(index)
             servicePo.buttonState = buttonState
             serviceList.add(index, servicePo.copy())
         }
+    }
+
+    /**
+     * 删除待上传item
+     */
+    fun deleteToBeUpload(item: FileItemVo) {
+        ioScope.launch {
+            fileEntityDao.deleteFileById(item.fileId)
+            toBeUploadFileList.remove(item)
+        }
+
     }
 }

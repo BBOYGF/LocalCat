@@ -184,6 +184,6 @@ dependencies {
     ksp(libs.room.compiler)
 }
 
-//composeCompiler {
-//    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
-//}
+composeCompiler {
+    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
+}

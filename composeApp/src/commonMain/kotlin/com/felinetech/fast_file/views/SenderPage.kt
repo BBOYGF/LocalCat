@@ -1,5 +1,6 @@
 package com.felinetech.fast_file.views
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -13,11 +14,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +48,7 @@ import com.felinetech.fast_file.theme.borderColor
 import com.felinetech.fast_file.utlis.getNames
 import com.felinetech.fast_file.view_model.HomeViewModel.closeDataSources
 import com.felinetech.fast_file.view_model.HomeViewModel.closeUploadFile
+import com.felinetech.fast_file.view_model.HomeViewModel.deleteToBeUpload
 import com.felinetech.fast_file.view_model.HomeViewModel.msg
 import com.felinetech.fast_file.view_model.HomeViewModel.scanFile
 import com.felinetech.fast_file.view_model.HomeViewModel.scanService
@@ -53,6 +65,7 @@ import java.util.*
 /**
  * 发送者
  */
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Sender(turnState: Boolean) {
     val turn = remember { Animatable(if (turnState) -180f else 0f) }
@@ -212,8 +225,46 @@ fun Sender(turnState: Boolean) {
                 modifier = Modifier
                     .weight(1f)
             ) {
-                items(toBeUploadFileList) { item ->
-                    FileItem(item)
+                items(items = toBeUploadFileList, key = {it.fileId}) { item ->
+                    // 添加滑动事件
+                    val dismissState = rememberDismissState(
+                        confirmStateChange = { dismissValue ->
+                            // 当滑动达到消除状态时，执行删除操作
+                            if (dismissValue == DismissValue.DismissedToEnd) {
+                                deleteToBeUpload(item)
+                            }
+                            // 返回 true 表示状态更改有效，不再恢复
+                            true
+                        }
+                    )
+                    SwipeToDismiss(
+                        state = dismissState,
+                        directions = setOf(DismissDirection.StartToEnd), // 允许从左向右滑
+                        background = {
+                            // 后台展示删除提示，比如显示红色背景和删除图标
+                            val color by animateColorAsState(
+                                if (dismissState.targetValue == DismissValue.Default)
+                                    Color(0x000000) else borderColor
+                            )
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete",
+                                    tint = Color.White
+                                )
+                            }
+                        },
+                        dismissContent = {
+                            // 列表项的实际内容
+                            FileItem(item)
+                        }
+                    )
                 }
             }
         }
@@ -221,8 +272,7 @@ fun Sender(turnState: Boolean) {
             modifier = Modifier
                 .fillMaxSize()
                 .align(alignment = Alignment.BottomEnd)
-                .offset(y = (-70).dp)
-            ,
+                .offset(y = (-70).dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {
@@ -261,7 +311,7 @@ fun Sender(turnState: Boolean) {
             }
         }
     }
-    if(showMsg){
+    if (showMsg) {
         Dialog(
             onDismissRequest = { showMsg = false },
         ) {
