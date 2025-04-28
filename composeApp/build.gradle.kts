@@ -11,9 +11,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 
-//    id("org.jetbrains.compose-hot-reload") version "v1.0.0-dev.33.5"
-//    id("org.jetbrains.compose.hot-reload") version "1.0.0-dev-65"
-//    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha01"
+    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha08"
+
 }
 
 kotlin {
@@ -166,6 +165,9 @@ compose.desktop {
             }
             windows {
                 iconFile.set(project.file("src/commonMain/composeResources/drawable/ico.ico"))
+                shortcut = true
+                menu = true
+
             }
             linux {
                 iconFile.set(project.file("icon.png"))
@@ -186,4 +188,6 @@ dependencies {
 
 composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
+
 }
+

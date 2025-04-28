@@ -116,6 +116,7 @@ fun About() {
                 openUrl(productHome)
             }
         )
+
     }
 
     // 注册码弹窗
