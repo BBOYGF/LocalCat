@@ -59,11 +59,9 @@ fun BottomSheetPar() {
     // 监听 ViewModel 中的状态变化
     LaunchedEffect(bottomSheetVisible) {
         if (bottomSheetVisible) {
-            sheetState.show()
             offsetY.animateTo(targetValue = 0f, animationSpec = tween(500))
         } else {
-            sheetState.hide()
-            offsetY.animateTo(targetValue = 450f, animationSpec = tween(500))
+            offsetY.animateTo(targetValue = 400f, animationSpec = tween(500))
         }
     }
 
