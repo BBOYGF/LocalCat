@@ -8,6 +8,8 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -46,6 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.felinetech.fast_file.Constants.PRIVACY_URL
 import com.felinetech.fast_file.utlis.getNames
+import com.felinetech.fast_file.utlis.initDataService
+import com.felinetech.fast_file.utlis.initKeepConnectService
+import com.felinetech.fast_file.utlis.initReceiverService
+import com.felinetech.fast_file.utlis.initUploadService
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -68,6 +74,31 @@ actual fun PermissionRequest() {
             )
         )
     }
+    val multiplePermissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(), // 使用请求多个权限的协定
+        onResult = { permissionsStatusMap: Map<String, Boolean> -> // 回调接收 Map
+            Log.d("PermissionsDemo", "权限请求结果: $permissionsStatusMap")
+            // --- 5. 处理请求结果 ---
+            // 检查 Map 中是否 *所有* 权限都被授予了
+            val allGranted = permissionsStatusMap.all { entry -> entry.value }
+
+
+            if (allGranted) {
+                Log.i("PermissionsDemo", "所有请求的权限均已授予!")
+                // 可以执行需要所有权限的操作
+                initService()
+            } else {
+                Log.w("PermissionsDemo", "部分或全部权限被拒绝")
+                // 可以检查哪些权限被拒绝了
+                permissionsStatusMap.forEach { (permission, isGranted) ->
+                    if (!isGranted) {
+                        Log.w("PermissionsDemo", "$permission 权限被拒绝")
+                        // 可以针对性地提示用户或禁用功能
+                    }
+                }
+            }
+        }
+    )
 
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -85,12 +116,42 @@ actual fun PermissionRequest() {
 //                Manifest.permission.REQUEST_INSTALL_PACKAGES,
         )
     )
+    val permissionsToRequest = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+
+            arrayOf(
+                Manifest.permission.POST_NOTIFICATIONS,
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_VIDEO,
+                Manifest.permission.READ_MEDIA_AUDIO,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.NEARBY_WIFI_DEVICES,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            )
+        } else {
+            // Android 12 及以下
+            arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_EXTERNAL_STORAGE, // 请求旧的存储权限
+                Manifest.permission.POST_NOTIFICATIONS,
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_VIDEO,
+                Manifest.permission.READ_MEDIA_AUDIO,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.NEARBY_WIFI_DEVICES,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            )
+        }
+    }
     // 检查权限状态
     LaunchedEffect(permissionsState) {
         if (permissionsState.allPermissionsGranted) {
             // 所有权限均已授予
             Toast.makeText(context, "权限都已授权！", Toast.LENGTH_LONG).show()
             sharedPreferences.edit().putBoolean(Constants.PRIVACY, false).apply()
+            initService()
         } else {
             // 至少有一个权限未被授予
             Toast.makeText(
@@ -102,6 +163,9 @@ actual fun PermissionRequest() {
                 permissionsState.revokedPermissions,
                 permissionsState.shouldShowRationale
             )
+            if(!showPrivate) {
+                multiplePermissionsLauncher.launch(permissionsToRequest)
+            }
         }
     }
     if (showPrivate) {
@@ -190,10 +254,10 @@ actual fun PermissionRequest() {
 
                         Button(
                             onClick = {
-                                permissionsState.launchMultiplePermissionRequest()
+//                                permissionsState.launchMultiplePermissionRequest()
+                                multiplePermissionsLauncher.launch(permissionsToRequest)
                                 showPrivate = false
-                                sharedPreferences.edit().putBoolean(Constants.PRIVACY, false)
-                                    .apply()
+
                             },
 
                             colors = ButtonColors(
@@ -213,6 +277,13 @@ actual fun PermissionRequest() {
             }
         }
     }
+}
+
+private fun initService() {
+    initReceiverService()
+    initDataService()
+    initKeepConnectService()
+    initUploadService()
 }
 
 @OptIn(ExperimentalPermissionsApi::class)

@@ -59,6 +59,7 @@ class AndroidReceiverServices : Service(), ReceiverService {
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         // 创建通知通道
         createNotificationChannel()
+        logger.i("接收服务创建成功...")
     }
 
     @SuppressLint("ForegroundServiceType")
@@ -114,7 +115,7 @@ class AndroidReceiverServices : Service(), ReceiverService {
                         acceptSocket?.reuseAddress = true;
                         acceptSocket?.disconnect()
                     } else {
-                        logger.e("监听客户产生了异常...${e.message} ", e)
+                        logger.e("监听客户产生了异常...${e.message} ")
                     }
                     acceptSocket?.close()
                 }

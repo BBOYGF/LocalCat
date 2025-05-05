@@ -76,6 +76,7 @@ class AndroidDataService : Service(), DataService {
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         // 创建通知通道
         createNotificationChannel()
+        logger.i("数据传输服务创建成功...")
     }
 
     @SuppressLint("ForegroundServiceType")

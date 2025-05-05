@@ -80,6 +80,7 @@ class AndroidUploadService: Service(),UploadService {
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         // 创建通知通道
         createNotificationChannel()
+        logger.i("数据上传服务创建成功...")
     }
 
     @SuppressLint("ForegroundServiceType")

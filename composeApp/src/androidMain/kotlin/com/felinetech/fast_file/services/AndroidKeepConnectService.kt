@@ -65,6 +65,7 @@ class AndroidKeepConnectService : Service(), KeepConnectService {
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         // 创建通知通道
         createNotificationChannel()
+        logger.i("心跳保持服务创建成功...")
     }
 
     @SuppressLint("ForegroundServiceType")

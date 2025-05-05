@@ -153,10 +153,7 @@ object HomeViewModel {
             }
             install(HttpTimeout)
         }
-        initReceiverService()
-        initDataService()
-        initKeepConnectService()
-        initUploadService()
+
     }
 
     /**
