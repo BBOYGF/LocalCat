@@ -230,6 +230,7 @@ class AndroidDataService : Service(), DataService {
                                     toBeDownloadFileList[index] = item.copy(percent = progress)
 
                                 }
+                            // 更新下载进度
 
                         }
                         toBeDownloadFileList.indexOfFirst { it.fileId == fileItemVo.fileId }

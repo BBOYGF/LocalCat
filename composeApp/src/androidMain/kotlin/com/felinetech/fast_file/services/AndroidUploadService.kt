@@ -7,7 +7,9 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+import android.os.Build
 import android.os.IBinder
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import co.touchlab.kermit.Logger
 import com.felinetech.fast_file.Constants.CHANNEL_ID
@@ -145,6 +147,7 @@ class AndroidUploadService: Service(),UploadService {
         return null
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun startUpload() {
         ioScope.launch {
             val fileItemList = toBeUploadFileList.toList()
@@ -183,6 +186,8 @@ class AndroidUploadService: Service(),UploadService {
                                     val itemVo = toBeUploadFileList[it]
                                     toBeUploadFileList[it] = itemVo.copy(percent = progress)
                                 }
+                            // todo 跟新通知
+//                            updateNotification()
                             if (!HomeViewModel.startUpload) {
                                 cancel()
                                 return@onUpload
