@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URLEncoder.encode
 
-class AndroidUploadService: Service(),UploadService {
+class AndroidUploadService : Service(), UploadService {
 
     private lateinit var notificationManager: NotificationManager
 
@@ -61,8 +61,6 @@ class AndroidUploadService: Service(),UploadService {
     private lateinit var client: HttpClient
 
     private var logger: Logger = Logger.withTag("AndroidUploadService")
-
-
 
 
     companion object {
@@ -122,8 +120,27 @@ class AndroidUploadService: Service(),UploadService {
             .build()
     }
 
-    private fun updateNotification(title: String, content: String) {
-        val notification = buildContentNotification(title, content)
+    /**
+     * 构建显示内容通知
+     */
+    private fun buildProgressNotification(
+        title: String,
+        content: String,
+        progress: Int
+    ): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setSmallIcon(R.drawable.cat9)
+            .setProgress(100, progress, false)
+            .setOnlyAlertOnce(true)
+            .setOngoing(true)
+            .build()
+    }
+
+
+    private fun updateNotification(title: String, content: String, progress: Int) {
+        val notification = buildProgressNotification(title, content, progress)
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
@@ -185,9 +202,14 @@ class AndroidUploadService: Service(),UploadService {
                                 .takeIf { it != -1 }?.let {
                                     val itemVo = toBeUploadFileList[it]
                                     toBeUploadFileList[it] = itemVo.copy(percent = progress)
+                                    // todo 跟新通知
+                                    updateNotification(
+                                        itemVo.fileName,
+                                        "进度：" + itemVo.percent + "%",
+                                        itemVo.percent
+                                    )
                                 }
-                            // todo 跟新通知
-//                            updateNotification()
+
                             if (!HomeViewModel.startUpload) {
                                 cancel()
                                 return@onUpload

@@ -121,6 +121,30 @@ class AndroidDataService : Service(), DataService {
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
+    /**
+     * 构建显示内容通知
+     */
+    private fun buildProgressNotification(
+        title: String,
+        content: String,
+        progress: Int
+    ): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setSmallIcon(R.drawable.cat9)
+            .setProgress(100, progress, false)
+            .setOnlyAlertOnce(true)
+            .setOngoing(true)
+            .build()
+    }
+
+
+    private fun updateNotification(title: String, content: String, progress: Int) {
+        val notification = buildProgressNotification(title, content, progress)
+        notificationManager.notify(NOTIFICATION_ID, notification)
+    }
+
 
     /**
      * 创建通知通道
@@ -228,7 +252,11 @@ class AndroidDataService : Service(), DataService {
                                     val item = toBeDownloadFileList[index]
                                     // 直接更新percent
                                     toBeDownloadFileList[index] = item.copy(percent = progress)
-
+                                    updateNotification(
+                                        item.fileName,
+                                        "接收进度：" + item.percent + "%",
+                                        item.percent
+                                    )
                                 }
                             // 更新下载进度
 
