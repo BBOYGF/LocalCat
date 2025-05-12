@@ -205,7 +205,7 @@ class AndroidUploadService : Service(), UploadService {
                                     // todo 跟新通知
                                     updateNotification(
                                         itemVo.fileName,
-                                        "进度：" + itemVo.percent + "%",
+                                        "上传进度：" + itemVo.percent + "%",
                                         itemVo.percent
                                     )
                                 }

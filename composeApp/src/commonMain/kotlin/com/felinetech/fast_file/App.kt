@@ -32,6 +32,7 @@ import com.felinetech.fast_file.components.BottomSheetPar
 import com.felinetech.fast_file.components.MenuButton
 import com.felinetech.fast_file.theme.LocalCatTheme
 import com.felinetech.fast_file.utlis.getNames
+import com.felinetech.fast_file.view_model.HomeViewModel.updateIpAble
 import com.felinetech.fast_file.view_model.MainViewModel.msgPair
 import com.felinetech.fast_file.view_model.MainViewModel.showDialog
 import com.felinetech.fast_file.views.About
@@ -51,7 +52,7 @@ import java.util.*
 @Composable
 @Preview
 fun App() {
-
+    updateIpAble=true
     LocalCatTheme(
         darkTheme = false,
         dynamicColor = true

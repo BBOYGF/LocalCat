@@ -79,14 +79,6 @@ object AboutViewModel {
         if (ReleaseType.GooglePlay == releaseType) {
             payTypeItemList.add(
                 PayItem(
-                    PayTypes.支付宝,
-                    "支付宝支付",
-                    mutableStateOf(false),
-                    Res.drawable.Alipay
-                )
-            )
-            payTypeItemList.add(
-                PayItem(
                     PayTypes.GooglePlay,
                     "Google Pay",
                     mutableStateOf(false),

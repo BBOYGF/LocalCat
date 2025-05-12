@@ -127,8 +127,8 @@ android {
         applicationId = "com.felinetech.fast_file"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 19
-        versionName = "1.4.0"
+        versionCode = 20
+        versionName = "1.4.1"
     }
     packaging {
         resources {

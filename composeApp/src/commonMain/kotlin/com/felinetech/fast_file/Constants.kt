@@ -46,7 +46,7 @@ object Constants {
     /**
      * 产品主页
      */
-    var productHome = "https://felinetech.cn/#/"
+    var productHome = "https://felinetech.cn/#/privacy"
 
     /**
      * 桌面端下载
@@ -74,7 +74,6 @@ object Constants {
      * UDP 服务接口
      */
     const val ACCEPT_SERVER_POST = 8200
-
     /**
      * 心跳端口号
      */
@@ -95,7 +94,7 @@ object Constants {
     const val BASE_URI = "https://felinetech.cn:81"
 
     // 发版
-    val releaseType: ReleaseType = ReleaseType.GooglePlay
+    val releaseType: ReleaseType = ReleaseType.Android
 
     const val CHANNEL_ID = "LocalCat消息通道"
     const val NOTIFICATION_ID = 101

@@ -106,6 +106,8 @@ object HomeViewModel {
      */
     var scanService by mutableStateOf(false)
 
+    var updateIpAble by mutableStateOf(false)
+
     val fileEntityDao: FileEntityDao
     var fileChunkDao: FileChunkDao
 

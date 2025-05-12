@@ -39,7 +39,7 @@
 
         android:allowBackup="true"
         android:icon="@drawable/cat9"
-        android:label="@string/app_name"
+        android:label="LocalCat文件过滤批传软件"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@drawable/cat9"
         android:supportsRtl="true"

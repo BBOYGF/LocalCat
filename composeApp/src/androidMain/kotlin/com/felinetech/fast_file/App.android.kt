@@ -52,6 +52,7 @@ import com.felinetech.fast_file.utlis.initDataService
 import com.felinetech.fast_file.utlis.initKeepConnectService
 import com.felinetech.fast_file.utlis.initReceiverService
 import com.felinetech.fast_file.utlis.initUploadService
+import com.felinetech.fast_file.view_model.HomeViewModel.updateIpAble
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -74,6 +75,7 @@ actual fun PermissionRequest() {
             )
         )
     }
+    updateIpAble = !showPrivate
     val multiplePermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(), // 使用请求多个权限的协定
         onResult = { permissionsStatusMap: Map<String, Boolean> -> // 回调接收 Map
@@ -159,11 +161,12 @@ actual fun PermissionRequest() {
             ).show()
             sharedPreferences.edit().putBoolean(Constants.PRIVACY, true).apply()
             showPrivate = true
+            updateIpAble=false
             getTextToShowGivenPermissions(
                 permissionsState.revokedPermissions,
                 permissionsState.shouldShowRationale
             )
-            if(!showPrivate) {
+            if (!showPrivate) {
                 multiplePermissionsLauncher.launch(permissionsToRequest)
             }
         }
@@ -257,7 +260,7 @@ actual fun PermissionRequest() {
 //                                permissionsState.launchMultiplePermissionRequest()
                                 multiplePermissionsLauncher.launch(permissionsToRequest)
                                 showPrivate = false
-
+                                updateIpAble=true
                             },
 
                             colors = ButtonColors(

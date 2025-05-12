@@ -1,7 +1,14 @@
 package com.felinetech.fast_file.views
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -26,12 +33,13 @@ import com.felinetech.fast_file.components.ColorBackground
 import com.felinetech.fast_file.theme.borderColor
 import com.felinetech.fast_file.utlis.getNames
 import com.felinetech.fast_file.view_model.HomeViewModel.netWork
+import com.felinetech.fast_file.view_model.HomeViewModel.updateIpAble
 import com.felinetech.fast_file.view_model.HomeViewModel.updateIpAddress
 import com.felinetech.fast_file.view_model.MainViewModel
 import com.felinetech.fast_file.view_model.MainViewModel.receiveState
 import com.felinetech.fast_file.view_model.MainViewModel.sendState
 import com.felinetech.fast_file.view_model.MainViewModel.turnFun
-import java.util.*
+import java.util.Locale
 
 
 @Composable
@@ -93,7 +101,9 @@ fun HomePage() {
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
-                updateIpAddress()
+                if(updateIpAble){
+                    updateIpAddress()
+                }
                 println("生命周期开始===")
             } else if (event == Lifecycle.Event.ON_STOP) {
                 println("生命周期结束")
